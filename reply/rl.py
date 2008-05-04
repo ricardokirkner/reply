@@ -1,4 +1,6 @@
-import numpy, random
+import cPickle as pickle
+import numpy
+import random
 
 def dimension(start, end, points):
     """
@@ -13,10 +15,8 @@ def dimension(start, end, points):
     for i in range(points):
         d[i] = start+step_size * i
     return d
-    
-    
-    
-    
+
+
 class Encoder(object):
     def __init__(self, problem):
         """
@@ -80,7 +80,8 @@ class DistanceEncoder(Encoder):
             action[i] = dim[j]
             #print n, j, m, dim[j], dim
         return action
-        
+
+
 class Storage(object):  
     def __init__(self, encoder):
         """
@@ -119,6 +120,19 @@ class Storage(object):
         The parameters are received in rl-encoding
         """
         raise NotImplementedError()
+
+    def load(self, filename):
+        """
+        This function retrieves a persisted storage from a file.
+        """
+        raise NotImplementedError()
+
+    def dump(self, filename):
+        """
+        This function persists the storage to a file.
+        """
+        raise NotImplementedError()
+
         
 class TableStorage(Storage):
     def __init__(self, encoder):
@@ -136,6 +150,15 @@ class TableStorage(Storage):
         
     def get_state_values(self, state):
         return self.state[ state ]
+
+    def load(self, filename):
+        file = open(filename, 'rb')
+        self.state = pickle.load(file)
+
+    def dump(self, filename):
+        file = open(filename, 'wb')
+        pickle.dump(self.state, file)
+
         
 class Learner(object):
     def __init__(self, storage):
@@ -252,6 +275,9 @@ class World(object):
         The action parameter is received in world encoding.
         """
         raise NotImplementedError()
+
+    def get_reward(self):
+        raise NotImplementedError()
         
 class ActionNotPossible(Exception):
     pass
@@ -269,50 +295,55 @@ class RL(object):
         self.selector.new_episode()
         self.episodes += 1
         
-        current_state = world.get_initial_state()
-        encoded_current_state = self.encoder.encode_state( current_state )
-        
-        total_reward = 0
-        for step in range(max_steps):
-            value_array = self.learner.storage.get_state_values( current_state )
-                        
-            while True:
-                try:
-                    # select an action using the current selection method
-                    encoded_action = self.selector.select_action(
-                            value_array
-                        )
-                    action = self.encoder.decode_action( encoded_action )
+        self.current_state = world.get_initial_state()
+        self.encoded_current_state = self.encoder.encode_state( self.current_state )
+        self.total_reward = 0
+
+    def step(self, world):
+
+        value_array = self.learner.storage.get_state_values( self.current_state )
                     
-                    # perform the action in the world
-                    next_state = world.do_action( self, action )
-                except ActionNotPossible:
-                    continue
-                break
-            encoded_next_state = self.encoder.encode_state( next_state )
-            
-            # observe the reward for this state
-            reward = world.get_reward( next_state )
-            total_reward += reward
-            
-            # perform the learning
-            self.learner.update(
-                encoded_current_state,
-                encoded_action,
-                reward,
-                encoded_next_state
-                )
+        while True:
+            try:
+                # select an action using the current selection method
+                encoded_action = self.selector.select_action(
+                        value_array
+                    )
+                action = self.encoder.decode_action( encoded_action )
                 
+                # perform the action in the world
+                next_state = world.do_action( self, action )
+            except ActionNotPossible:
+                continue
+            break
+        encoded_next_state = self.encoder.encode_state( next_state )
+        
+        # observe the reward for this state
+        reward = world.get_reward( next_state )
+        self.total_reward += reward
+        
+        # perform the learning
+        self.learner.update(
+            self.encoded_current_state,
+            encoded_action,
+            reward,
+            encoded_next_state
+            )
             
-            current_state = next_state
-            encoded_current_state = encoded_next_state
-            
-            self.total_steps += 1
-            
-            if world.is_final(current_state):
+        
+        self.current_state = next_state
+        self.encoded_current_state = encoded_next_state
+        
+        self.total_steps += 1
+        
+    def run(self, world, max_steps=1000):
+
+        self.new_episode()
+        for step in range(max_steps):
+            self.step(world)
+            if world.is_final(self.current_state):
                 break
-                
-        return total_reward, step
+        return self.total_reward, step
             
             
-            
+
