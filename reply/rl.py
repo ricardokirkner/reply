@@ -136,8 +136,8 @@ class Storage(object):
         
 class TableStorage(Storage):
     def __init__(self, encoder):
-        self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
-        #self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
+        #self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
+        self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
         
     def store_value(self, state, action, new_value):
         self.state[state, action] = new_value
@@ -314,7 +314,7 @@ class RL(object):
             # perform the learning
             self.learner.update(
                 self.encoded_current_state,
-                encoded_action,
+                self.encoded_action,
                 reward,
                 encoded_next_state
                 )
@@ -327,15 +327,15 @@ class RL(object):
 
 
 
-        value_array = self.learner.storage.get_state_values( self.current_state )
+        value_array = self.learner.storage.get_state_values( self.encoded_current_state )
                     
         while True:
             try:
                 # select an action using the current selection method
-                encoded_action = self.selector.select_action(
+                self.encoded_action = self.selector.select_action(
                         value_array
                     )
-                action = self.encoder.decode_action( encoded_action )
+                action = self.encoder.decode_action( self.encoded_action )
                 
                 # perform the action in the world
                 world.do_action( self, action )
