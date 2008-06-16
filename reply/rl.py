@@ -270,7 +270,7 @@ class World(object):
         
     def do_action(self, solver, action):
         """
-        Performs action in the world and returns the new state.
+        Performs action in the world.
         solver is the instance of RL performing the learning.
         The action parameter is received in world encoding.
         """
@@ -289,6 +289,7 @@ class RL(object):
         self.selector = selector
         self.total_steps = 0
         self.episodes = 0
+        self.last_state = None
         
     def new_episode(self, world, max_steps=1000):
         self.learner.new_episode()
@@ -301,6 +302,31 @@ class RL(object):
 
     def step(self, world):
 
+        if self.last_state:
+            # get new state and perform learning
+            next_state = world.get_state()
+            encoded_next_state = self.encoder.encode_state( next_state )
+            
+            # observe the reward for this state
+            reward = world.get_reward( next_state )
+            self.total_reward += reward
+            
+            # perform the learning
+            self.learner.update(
+                self.encoded_current_state,
+                encoded_action,
+                reward,
+                encoded_next_state
+                )
+                
+            
+            self.current_state = next_state
+            self.encoded_current_state = encoded_next_state
+            
+            self.total_steps += 1
+
+
+
         value_array = self.learner.storage.get_state_values( self.current_state )
                     
         while True:
@@ -312,30 +338,12 @@ class RL(object):
                 action = self.encoder.decode_action( encoded_action )
                 
                 # perform the action in the world
-                next_state = world.do_action( self, action )
+                world.do_action( self, action )
             except ActionNotPossible:
                 continue
             break
-        encoded_next_state = self.encoder.encode_state( next_state )
-        
-        # observe the reward for this state
-        reward = world.get_reward( next_state )
-        self.total_reward += reward
-        
-        # perform the learning
-        self.learner.update(
-            self.encoded_current_state,
-            encoded_action,
-            reward,
-            encoded_next_state
-            )
-            
-        
-        self.current_state = next_state
-        self.encoded_current_state = encoded_next_state
-        
-        self.total_steps += 1
-        
+        self.last_state = self.current_state
+                
     def run(self, world, max_steps=1000):
 
         self.new_episode()
