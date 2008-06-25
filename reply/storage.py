@@ -58,11 +58,14 @@ class TableStorage(Storage):
         @mappings: a dictionary with two keys, True and False, that contain a set of (state, action) pairs
         """
         super(TableStorage, self).__init__(encoder)
-        self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
         if mappings is not None:
+            self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
             for state, action in mappings.items():
                 encoded_state = self.encoder.encode_state( state )
                 self.state[encoded_state, action] = 1
+        else:
+            self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
+            #self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
     def store_value(self, state, action, new_value):
         self.state[state, action] = new_value
         

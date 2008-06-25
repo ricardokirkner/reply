@@ -57,13 +57,13 @@ class RL(object):
         self.selector = selector
         self.total_steps = 0
         self.episodes = 0
-        self.last_state = None
+        
         
     def new_episode(self, world, max_steps=1000):
         self.learner.new_episode()
         self.selector.new_episode()
         self.episodes += 1
-        
+        self.last_state = None
         self.current_state = world.get_initial_state()
         self.encoded_current_state = self.encoder.encode_state( self.current_state )
         self.total_reward = 0
@@ -74,7 +74,6 @@ class RL(object):
             # get new state and perform learning
             next_state = world.get_state()
             encoded_next_state = self.encoder.encode_state( next_state )
-            
             # observe the reward for this state
             reward = world.get_reward( next_state )
             self.total_reward += reward
@@ -92,7 +91,8 @@ class RL(object):
             self.encoded_current_state = encoded_next_state
             
             self.total_steps += 1
-
+            if world.is_final(self.current_state):
+                return False
 
 
         value_array = self.learner.storage.get_state_values( self.encoded_current_state )
@@ -111,14 +111,15 @@ class RL(object):
                 continue
             break
         self.last_state = self.current_state
+        return True
                 
     def run(self, world, max_steps=1000):
         self.new_episode(world)
         self.step(world)
         for step in range(max_steps):
-            self.step(world)
-            if world.is_final(self.current_state):
+            if not self.step(world):
                 break
+            
         return self.total_reward, step
             
             

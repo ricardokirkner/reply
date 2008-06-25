@@ -44,9 +44,11 @@ class QLearner(Learner):
             prev_value + self.alpha *  
             ( reward + self.gamma*max_value_next - prev_value )       
             )
-            
-        #print prev_value, "->", new_value, 
+          
+        
+        #print "state:", state, prev_value, "->", new_value, 
         #print "(r=%i, a=%i)"%(reward, action)
         #print "max_next", max_value_next
         self.storage.store_value(state, action, new_value)
+        
             

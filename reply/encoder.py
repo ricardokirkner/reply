@@ -67,3 +67,21 @@ class DistanceEncoder(Encoder):
             action[i] = dim[j]
             #print n, j, m, dim[j], dim
         return action
+
+if __name__=="__main__":
+    import rl
+    en = DistanceEncoder( 
+        [ rl.dimension(0,3,4) ],
+        [ rl.dimension(0,3,4) ] 
+        )
+    for i in range(4):
+        print i, "-->", en.encode_state( [i] )
+        
+    print "--"*20
+    en = DistanceEncoder( 
+        [ rl.dimension(0,3,4), rl.dimension(0,5,6) ],
+        [ rl.dimension(0,3,4) ] 
+        )
+    for i in range(4):
+        for j in range(6):
+            print i,j, "-->", en.encode_state( (i, j) )
