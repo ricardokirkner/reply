@@ -51,10 +51,12 @@ class ActionNotPossible(Exception):
     pass
     
 class RL(object):
-    def __init__(self, learner, encoder, selector):
+    def __init__(self, learner, storage, encoder, selector):
         self.learner = learner
         self.encoder = encoder
         self.selector = selector
+        self.storage = storage
+        storage.rl = learner.rl = encoder.rl = selector.rl = self
         self.total_steps = 0
         self.episodes = 0
         
@@ -62,6 +64,7 @@ class RL(object):
     def new_episode(self, world, max_steps=1000):
         self.learner.new_episode()
         self.selector.new_episode()
+        self.storage.new_episode()
         self.episodes += 1
         self.last_state = None
         self.current_state = world.get_initial_state()
@@ -83,7 +86,7 @@ class RL(object):
                 self.encoded_current_state,
                 self.encoded_action,
                 reward,
-                encoded_next_state
+                encoded_next_state,
                 )
                 
             
@@ -94,14 +97,12 @@ class RL(object):
             if world.is_final(self.current_state):
                 return False
 
-
-        value_array = self.learner.storage.get_state_values( self.encoded_current_state )
                     
         while True:
             try:
                 # select an action using the current selection method
                 self.encoded_action = self.selector.select_action(
-                        value_array
+                        self.encoded_current_state
                     )
                 action = self.encoder.decode_action( self.encoded_action )
                 

@@ -101,17 +101,22 @@ if __name__ == "__main__":
                    (3,5),
                    (3,6), (4,6), (5,6), (6,6)
                ])
-    e = reply.encoder.DistanceEncoder(g.get_state_space(), g.get_action_space())
-    storage = reply.storage.TableStorage(e)
+    space = g.get_state_space(), g.get_action_space()
+    encoder = reply.encoder.DistanceEncoder(*space)
+    storage = reply.storage.TableStorage(encoder)
+    learner = reply.learner.SarsaLearner(1, 0.01,0.99, 0.05)
+    selector = reply.selector.EGreedySelector(0.1, 1)
+    
     r = reply.RL(
-            reply.learner.QLearner(storage, 1, 0.01,0.99),
-            e, 
-            reply.selector.EGreedySelector(0.1, 1)
+            learner, 
+            storage,
+            encoder, 
+            selector
         )
     delta = 0
     cellsize = 24 + delta * 2
     sx, sy = g.size
-    window = pyglet.window.Window(width=sx*cellsize, height=sy*cellsize)
+    window = pyglet.window.Window(width=max(200, sx*cellsize), height=sy*cellsize+100)
     up = pyglet.resource.image('up.png')
     down = pyglet.resource.image('down.png')
     left = pyglet.resource.image('left.png')
@@ -120,6 +125,14 @@ if __name__ == "__main__":
     mine = pyglet.resource.image('mine.png')
     
 
+    class Mouse: pass
+    mouse = Mouse()
+    mouse.x = mouse.y = 0
+    @window.event
+    def on_mouse_motion(x, y, dx, dy):
+        mouse.x = x
+        mouse.y = y
+        
     def get_path():
         current = g.enter
         visit = {}
@@ -127,7 +140,7 @@ if __name__ == "__main__":
         while not current in visit:
             path.append( current )
             visit[current]=1
-            current = g.move( current, numpy.argmax(storage.get_state_values( e.encode_state( current ) )) )
+            current = g.move( current, numpy.argmax(storage.get_state_values( encoder.encode_state( current ) )) )
             if current in g.exits:
                 path.append(current)
                 break
@@ -136,6 +149,28 @@ if __name__ == "__main__":
     @window.event
     def on_draw():
         window.clear()
+        #paint white BG
+        gl.glColor4f(1,1,1,1) 
+        gl.glBegin(gl.GL_QUADS)
+        gl.glVertex2f( 0, 0 )
+        gl.glVertex2f( 0, window.height )
+        gl.glVertex2f( window.width, window.height )
+        gl.glVertex2f( window.width, 0 )
+        gl.glEnd()
+        
+
+        # draw cell values
+        x = mouse.x // cellsize
+        y = mouse.y // cellsize
+        if x < sx and y < sy:
+            vals = storage.get_state_values( encoder.encode_state( (x,y) ) )
+            label = pyglet.text.HTMLLabel(
+                '<pre>cell %i,%i:\nup   : %e\ndown : %e\nleft : %e\nright: %e</font></pre>'%(x,y, vals[0], vals[1], vals[2], vals[3]),
+                          x=0, y=window.height,multiline=True, width=window.width, anchor_y='top'
+                          )
+            label.draw()
+
+        # draw cell direction
         for x in range(sx):
             for y in range(sy):
                 if (x,y) in g.mines:
@@ -144,9 +179,11 @@ if __name__ == "__main__":
                     img = exit
                 else:
                     img = [up, down, left, right][
-                        numpy.argmax(storage.get_state_values( e.encode_state( (x,y) ) ))
+                        numpy.argmax(storage.get_state_values( encoder.encode_state( (x,y) ) ))
                         ]
                 img.blit(x*(cellsize)+delta, y*cellsize+delta)
+                
+        # draw best path
         path = get_path()
         gl.glLineWidth(2)
         gl.glColor4f(0,255,0,255)
@@ -163,7 +200,7 @@ if __name__ == "__main__":
         global episode
         total_reward,steps  = r.run(g)
         err = 0
-        print 'Espisode: ',r.episodes,'  Steps:',steps,'  Reward:',total_reward
+        print 'Espisode: ',r.episodes,'  Steps:',steps,'  Reward:',total_reward, "alpha", learner.alpha
         episode += 1
 
     

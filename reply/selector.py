@@ -25,7 +25,8 @@ class EGreedySelector(Selector):
     def new_episode(self):
         self.epsilon *= self.decay
         
-    def select_action(self, action_value_array):
+    def select_action(self, encoded_state):
+        action_value_array = self.rl.storage.get_state_values( encoded_state )
         if random.random() < self.epsilon:
             #print "R",
             action = random.randint(0, numpy.size(action_value_array)-1)
