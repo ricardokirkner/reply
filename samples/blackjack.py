@@ -6,13 +6,10 @@ import reply
 import random
 
 # cards
-SPADES, HEARTS, DIAMONDS, CLUBS = range(4)
-SUITES = [SPADES, HEARTS, DIAMONDS, CLUBS]
-DECK = ((number,suit) for number in xrange(1,14) for suit in SUITES)
+DECK = [ number for number in range(1,10)+[10,10,10] for suit in range(4) ]
 CARDS = [card for card in DECK for deck in xrange(8)]
 # actions
-#HIT, STAND, SPLIT = range(4,7)
-HIT, STAND = range(4,6)
+HIT, STAND = range(2)
 
 class Dealer:
     def __init__(self):
@@ -28,6 +25,7 @@ class Dealer:
     def deal(self, player, cards=2):
         for card in xrange(cards):
             player.cards.append(self.deck.pop())
+            player.total_points = eval_hand( player.cards )
 
     def setup(self):
         self.deal(self, 1)
@@ -40,15 +38,22 @@ class Dealer:
         self.cards = []
 
     def play(self):
-        self.total_points, self.soft_hand = eval_hand(self.cards)
+        self.total_points = eval_hand(self.cards)
         while self.total_points < 17:
             self.deal(self, 1)
-            self.total_points, self.soft_hand = eval_hand(self.cards)
+            self.total_points = eval_hand(self.cards)
 
-
+def record(f):
+    def inner(self, solver, action):
+        s = self.get_state()[0]
+        r = f(self, solver, action[0])
+        self.history.append( (s,action) )
+        return r
+    return inner
 
 class Player(reply.World):
     def __init__(self, dealer):
+        self.history = []
         self.dealer = dealer
         self.cards = []
         self.total_points = 0
@@ -58,27 +63,24 @@ class Player(reply.World):
 
     @staticmethod
     def get_state_space():
-        return [ reply.dimension(0, 30, 31), 
-                 reply.dimension(1, 13, 13),
-                 reply.dimension(0, 1, 2),
-                 reply.dimension(0, 1, 2)]
+        return [ reply.dimension(2,22, 21), 
+                 ]
 
     @staticmethod
     def get_action_space():
-        #return [ reply.dimension(HIT, SPLIT, 3) ]
-        return [ reply.dimension(HIT, STAND, 2) ]
+        return [ reply.dimension(0, 1, 2) ]
 
     def get_reward(self, state):
         reward = 0
         if self.is_final(state):
             if self.is_busted():
-                reward = -self.bet
+                reward = -1
             else:
                 self.dealer.play()
                 if self.has_won():
-                    reward = self.bet
+                    reward = +1
                 else:
-                    reward = -self.bet
+                    reward = -1
         return reward
 
     def is_busted(self):
@@ -86,10 +88,10 @@ class Player(reply.World):
 
     def has_won(self):
         if self.dealer.total_points == 21:
-            print 'DEALER BLACK JACK'
+            #print 'DEALER BLACK JACK'
             return False
         elif self.dealer.total_points > 21:
-            print 'DEALER BUSTED'
+            #print 'DEALER BUSTED'
             return True
         elif self.total_points > 21:
             print 'PLAYER BUSTED'
@@ -104,16 +106,14 @@ class Player(reply.World):
         else:
             return self._is_final
 
+    @record
     def do_action(self, solver, action):
         if action == HIT:
-            print 'HIT'
+            #print "HIT", self.get_state(), self.cards
             self.dealer.deal(self, 1)
         elif action == STAND:
-            print 'STAND'
+            #print "STAND", self.get_state()
             self._is_final = True
-        #elif action == SPLIT:
-        #    print 'SPLIT'
-        #    pass
         else:
             print 'ACTION', action, 'is not available.'
             sys.exit(1)
@@ -123,35 +123,11 @@ class Player(reply.World):
         return self.get_state()
 
     def get_state(self):
-        self.total_points, self.soft_hand = eval_hand(self.cards)
-        state = (self.total_points, self.dealer.cards[1][0], self.soft_hand, self.is_split_hand())
-        return state
+        return [min(22, self.total_points)]
 
-    def is_split_hand(self):
-        return self.cards[-1] == self.cards[-2]
 
-    def do_hit(self):
-        return HIT
-    def do_stand(self):
-        return STAND
-    #def do_split(self):
-    #    return SPLIT
-    
 def eval_hand(cards):
-    points = 0
-    soft_hand = False
-    cards.sort(lambda x, y: x[0] > y[0])
-    softs = 0
-    for number,suit in cards:
-        if number == 1:
-            softs += 1
-        points += number
-    # use 1 as 11 if we want to
-    for item in xrange(softs):
-        if points + 10 < 22:
-            points += 10
-            soft_hand = True
-    return points, soft_hand
+    return sum(cards)
 
 
 if __name__ == '__main__':
@@ -168,16 +144,21 @@ if __name__ == '__main__':
     rl = reply.RL(learner, storage, encoder, selector)
 
     #dealer = Dealer()
-    cash = 1000
-    for episode in xrange(10000):
-        if cash == 0:
-            break
+    wins = 0.0
+    #rl.storage.state[20,0] = rl.storage.state[20,1] = -10
+    for episode in xrange(100000):
         dealer = Dealer()
         player = Player(dealer)
-        player.bet = min(5, cash)
         dealer.players = [player]
         dealer.setup()
         total_reward, steps = rl.run(player)
+        if total_reward > 0:
+            wins += 1
         dealer.teardown()
-        cash += total_reward
-        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, '  Cash: ', cash
+        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins/(episode+1)
+        continue
+        s = rl.storage.state
+        for i in range(0,21):
+            print "%02d   "%(i+2), "%012f     %012f"%(s[i,0], s[i,1]), ["H","S"][( s[i, 0] < s[i, 1])]
+
+        #raw_input("next")

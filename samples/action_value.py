@@ -53,7 +53,7 @@ if __name__ == "__main__":
             reply.selector.EGreedySelector(0.9, 1)
         )
         
-    for episode in range(1000):    
+    for episode in range(100000):    
         total_reward,steps  = r.run(g)
         err = 0
         for i,v in enumerate(r.storage.state[0]):
