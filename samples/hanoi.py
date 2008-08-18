@@ -1,11 +1,14 @@
 import sys
 sys.path.insert(0, '..')
 
+import pickle
 from reply import *
 import math
 
 NUM_PEGS = 3
-NUM_DISCS = 3
+NUM_DISCS = 6
+
+DEBUG = 0
 
 def prime_generator():
     # yield the only even prime
@@ -46,18 +49,9 @@ class Peg(object):
     def num_discs(self):
         return len(self.discs)
 
-    @property
-    def state(self):
-        state = 1
-        primes = prime_generator()
-        for disc in self.discs:
-            prime = primes.next()
-            state *= prime**disc
-        return state
-
 
     def fill(self, num_discs):
-        self.discs = range(num_discs, 0, -1)
+        self.discs = list(reversed(range(num_discs)))
 
     def empty(self):
         self.discs = []
@@ -70,13 +64,9 @@ class Peg(object):
 
     def __repr__(self):
         return '<%s: number: %d discs: %s>' % (self.__class__.__name__, self.number, str(self.discs))
-
-import operator
-def factorial(n):
-    return reduce(operator.mul, xrange(1,n+1), 1)
-
-def permutations(n, r):
-    return float(factorial(n)) / factorial(n-r)
+    
+    def __contains__(self, disc):
+        return disc in self.discs
 
 
 class Player(rl.World):
@@ -89,28 +79,24 @@ class Player(rl.World):
         self.pegs[self.initial_peg].fill(self.num_discs)
 
     def get_action_space(self):
-        return [ rl.dimension(0, 2, 3), rl.dimension(0, 2, 3) ]
+        return [ rl.dimension(0, NUM_PEGS-1, NUM_PEGS),rl.dimension(0, NUM_PEGS-1, NUM_PEGS) ]
     
     def get_problem_space(self):
-#        max_value = max_peg_state(self.num_discs)
-#        #num_values = sum([permutations(self.num_discs, discs) for discs in xrange(self.num_discs+1)])
-#        num_values = 2**(self.num_discs+1)
-#        return [ rl.dimension(1, max_value, num_values),
-#                 rl.dimension(1, max_value, num_values),
-#                 rl.dimension(1, max_value, num_values) ]
-        return [ rl.dimension(0, self.num_pegs, self.num_pegs+1) for i in xrange(self.num_discs) ] 
+        return [ rl.dimension(0, self.num_pegs-1, self.num_pegs) for i in xrange(self.num_discs) ] 
         
     def get_reward(self, state):
         reward = 0
         for peg in self.pegs:
             if not peg.is_valid:
                 # invalid disc layout
-                print 'peg is invalid', peg.discs
+                if DEBUG:
+                    print 'peg is invalid', peg.discs
                 reward = -1
                 break
             elif self.discs_moved(peg):
                 # all discs moved to another peg
-                #print 'all discs moved to peg %d' % peg.number, peg.discs
+                if DEBUG:
+                    print 'all discs moved to peg %d' % peg.number, peg.discs
                 reward = 1
                 break
         return reward
@@ -122,31 +108,45 @@ class Player(rl.World):
     def is_final(self, state):
         is_final = False
         for peg in self.pegs:
-            is_final |= not peg.is_valid or self.discs_moved(peg)
+            is_final |= self.discs_moved(peg)
         return is_final
         
     def do_action(self, solver, action):
         #print 'action', action
         from_peg_num, to_peg_num = action
-        print 'moving from peg %d to peg %d' % (from_peg_num, to_peg_num)
+        if DEBUG:
+            print 'moving from peg %d to peg %d' % (from_peg_num, to_peg_num)
         from_peg = self.pegs[int(from_peg_num)]
         to_peg = self.pegs[int(to_peg_num)]
         
-        if len(from_peg.discs) < 1:
+        if not from_peg.discs:
+            if DEBUG:
+                print "move invalid: empty"
             raise rl.ActionNotPossible()
-        if len(to_peg.discs) > 0 and \
-           from_peg.discs[-1] > to_peg.discs[-1]:
+        
+        if to_peg.discs and from_peg.discs[-1] > to_peg.discs[-1]:
+            if DEBUG:
+                print "move invalid: too big"
             raise rl.ActionNotPossible()
+        
         disc = from_peg.pop()
         to_peg.push(disc)
+        if DEBUG:
+            print "\t".join( [ str(peg.discs) for peg in self.pegs ] )
         return self.pegs
         
     def get_initial_state(self):
         return self.get_state()
 
     def get_state(self):
-        return [peg.state for peg in self.pegs]
+        return [ self.find_peg(disc) for disc in range(self.num_discs) ]
 
+    def find_peg(self, disc):
+        for i,peg in enumerate(self.pegs):
+            if disc in peg:
+                return i
+        raise Exception("disc not found")
+    
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, str(self.pegs))
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                 learner.QLearner(0.9, 0.8, 0.999, 0.0001 ),
                 storage.TableStorage(e),
                 e, 
-                selector.EGreedySelector(0.5, 1)
+                selector.EGreedySelector(0.9, 0.995)
             )
         try:
             r.storage.load(FILENAME)
@@ -201,14 +201,15 @@ if __name__ == "__main__":
         sys.exit(1)
         
     #initial = r.storage.state
-
+    avsteps = 10000
+    t = 50
     for episode in range(num_steps):    
         p = Player(NUM_DISCS)
         #print 'Initial state:', p
-        total_reward,steps = r.run(p)
+        total_reward,steps = r.run(p, max_steps = 100000)
         #print 'Final state:', p
-    
-        print 'Espisode:',episode,'  Steps:',steps,'  Reward:',total_reward,' epsilon:',r.selector.epsilon, "alpha:", r.learner.alpha
+        avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
+        print 'Espisode:',episode,'  Steps:',steps,'  Reward:',total_reward,' epsilon:',r.selector.epsilon, "alpha:", r.learner.alpha, "avsteps:", avsteps
         #print '-'*80
     #final = r.storage.state
     #print 'learned?', initial != final
