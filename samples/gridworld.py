@@ -37,7 +37,7 @@ class GridWorld(reply.World):
         
     def get_reward(self, state):
         if self.position in self.exits:
-            return 1
+            return 10
         if self.position in self.mines:
             return -1
         return -0.01
@@ -104,7 +104,8 @@ if __name__ == "__main__":
     space = g.get_state_space(), g.get_action_space()
     encoder = reply.encoder.DistanceEncoder(*space)
     storage = reply.storage.TableStorage(encoder)
-    learner = reply.learner.QLearner(1, 0.01,0.99, 0.05)
+    #learner = reply.learner.QLearner(1, 0.01,0.99, 0.05)
+    learner = reply.learner.SarsaLearner(1, 0.01,0.99, 0.05)
     selector = reply.selector.EGreedySelector(0.1, 1)
     
     r = reply.RL(

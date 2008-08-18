@@ -73,7 +73,7 @@ class Player(reply.World):
     def get_reward(self, state):
         reward = 0
         if self.is_final(state):
-            if self.is_busted():
+            if self.total_points > 21:
                 reward = -1
             else:
                 self.dealer.play()
@@ -83,28 +83,24 @@ class Player(reply.World):
                     reward = -1
         return reward
 
-    def is_busted(self):
-        return self.total_points > 21
 
     def has_won(self):
         if self.dealer.total_points == 21:
             #print 'DEALER BLACK JACK'
             return False
-        elif self.dealer.total_points > 21:
-            #print 'DEALER BUSTED'
-            return True
         elif self.total_points > 21:
             print 'PLAYER BUSTED'
             return False
+        elif self.dealer.total_points > 21:
+            #print 'DEALER BUSTED'
+            return True
         else:
             return self.dealer.total_points < self.total_points
 
     def is_final(self, state):
-        total_points = state[0]
-        if total_points > 21:
+        if state[0] == 22:
             return True
-        else:
-            return self._is_final
+        
 
     @record
     def do_action(self, solver, action):
@@ -115,7 +111,7 @@ class Player(reply.World):
             #print "STAND", self.get_state()
             self._is_final = True
         else:
-            print 'ACTION', action, 'is not available.'
+            #print 'ACTION', action, 'is not available.'
             sys.exit(1)
         return self.get_state()
 
@@ -123,6 +119,8 @@ class Player(reply.World):
         return self.get_state()
 
     def get_state(self):
+        if self._is_final:
+            return [22]
         return [min(22, self.total_points)]
 
 
@@ -134,17 +132,18 @@ if __name__ == '__main__':
     space = Player.get_state_space(), Player.get_action_space()
     encoder = reply.encoder.DistanceEncoder(*space)
     storage = reply.storage.TableStorage(encoder)
-    alpha = 0.9
+    alpha = 0.1
     epsilon = 0.1
     gamma = 0.9
     alpha_decay = 1.0
-    epsilon_decay = 1.0
-    learner = reply.learner.QLearner(alpha, epsilon, gamma, alpha_decay)
+    epsilon_decay = 0.999
+    learner = reply.learner.QLearner(alpha, gamma, alpha_decay)
     selector = reply.selector.EGreedySelector(epsilon, epsilon_decay)
     rl = reply.RL(learner, storage, encoder, selector)
 
     #dealer = Dealer()
     wins = 0.0
+    time_avg = 1.0/500
     #rl.storage.state[20,0] = rl.storage.state[20,1] = -10
     for episode in xrange(100000):
         dealer = Dealer()
@@ -153,12 +152,14 @@ if __name__ == '__main__':
         dealer.setup()
         total_reward, steps = rl.run(player)
         if total_reward > 0:
-            wins += 1
+            wins = time_avg + (1-time_avg) * wins
+        else:
+            wins = (1-time_avg) * wins
         dealer.teardown()
-        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins/(episode+1)
+        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins, 'epsilon:', selector.epsilon
         continue
         s = rl.storage.state
         for i in range(0,21):
             print "%02d   "%(i+2), "%012f     %012f"%(s[i,0], s[i,1]), ["H","S"][( s[i, 0] < s[i, 1])]
 
-        #raw_input("next")
+        raw_input("next")
