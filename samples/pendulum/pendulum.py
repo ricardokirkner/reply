@@ -8,7 +8,6 @@ import random, cPickle
 import math
 
 from pyglet import window
-import primitives as draw
 from pyglet import clock
 from pyglet.gl import *
 
@@ -23,6 +22,10 @@ matplotlib.use("cairo")
 import matplotlib.pyplot
 import numpy
 
+
+import primitives as draw
+
+
 INFINITY = float("infinity")
 BACKGROUND = cp.cpBodyNew(INFINITY, INFINITY)
 
@@ -36,7 +39,7 @@ dt = 1.0/30.0
 
 
 class Ball:
-    def __init__(self, space, mass, radius, pos=(300,300), color=(0.,.9,0.,1.)):
+    def __init__(self, space, mass, radius, pos=(300,300), color=(0,240,0,255)):
         self.color = color
         self.mass = mass
         self.radius = radius
@@ -54,14 +57,14 @@ class Ball:
 
     def render(self):
         p = self.body.contents.p
-        c = draw.Circle(p[0], p[1] ,width=self.radius*2,color=self.color, style=GLU_FILL, stroke=1)
-        c.render()
+        c = draw.circle((p[0]%800, p[1]), self.radius ,self.color)
+        c.draw(GL_TRIANGLE_FAN)
 
     def __str__(self):
         return "<ball %s>"%self.body.contents.p
 
 class Wall:
-    def __init__(self, space, start, end, color=(0.,1.,1.,1.), radius=50):
+    def __init__(self, space, start, end, color=(0,255,255,255), radius=50):
         self.color = color
         self.start = start
         self.end = end
@@ -71,16 +74,16 @@ class Wall:
         self.shape.contents.e = 0.1
         self.shape.contents.u = 0.2
         cp.cpSpaceAddStaticShape(space, self.shape)
-        self.line = draw.Line(
-            (start[0], start[1]+radius),
-            (end[0], end[1]+radius)
-            ,stroke=2,color=color)
+        self.line = draw.rectangle(
+            start[0], start[1],
+            end[0], end[1]+radius
+            ,color)
 
     def render(self):
-        self.line.render()
+        self.line.draw(GL_QUADS)
 
 class Box:
-    def __init__(self, space, mass, width, height, pos, color=(1,0,0,1)):
+    def __init__(self, space, mass, width, height, pos, color=(255,0,0,255)):
         poly = [
             [ width/2, height/2 ],
             [ width/2, -height/2 ],
@@ -116,13 +119,14 @@ class Box:
             cpvadd(body.contents.p,
                 cpvrotate(verts[i], body.contents.rot))
             for i in range(num)]
-        for i,p in enumerate(ps):
-            draw.Line(
-                (p.x, p.y),
-                (ps[(i+1)%num].x, ps[(i+1)%num].y),
-                stroke=5,color=self.color
-            ).render()
-        glColor4ub(255,255,255,255)
+        avg = (ps[0][0]+ps[1][0])/2
+        points = []
+        [ points.extend([p[0]-avg+avg%800, p[1]]) for p in ps ]
+        pyglet.graphics.draw(4, GL_QUADS,
+            ("v2f", points),
+            ("c4B", list(self.color)*4)
+            )
+
 
     def __str__(self):
         return "<box %s>"%self.body.contents.p
@@ -177,7 +181,7 @@ class Pendulum(reply.World):
             # base velocity
             reply.dimension(-100,100,4),
             # ball x velocity
-            reply.dimension(-100,100,4),
+            reply.dimension(-100,100,2),
             # ball y velocity
             reply.dimension(-100,100,6),
         ]
@@ -209,16 +213,17 @@ class Pendulum(reply.World):
         # returns new state
         #print "DO:", action
         action = action[0]
-        cp.cpBodyApplyForce(self.base.body, vec2d(action*20000,0), vec2d(0,0))
+        cp.cpBodyApplyForce(self.base.body, vec2d(action*10000,0), vec2d(0,0))
         cp.cpSpaceStep(self.space, dt+random.random()*1.0/100.0)
         cp.cpBodyResetForces(self.base.body)
 
         clock.tick()
         self.win.dispatch_events()
 
-
         self.win.clear()
+
         if self.figure: self.figure.blit(0,0)
+
         self.ball.render()
         self.floor.render()
         self.base.render()
