@@ -1,3 +1,4 @@
+import cPickle as pickle
 import numpy
 
 class Storage(object):  
