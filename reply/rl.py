@@ -12,6 +12,8 @@ def dimension(start, end, points):
     """
     if points == 1:
         return numpy.array([0])
+    end = float(end)
+    start = float(start)
     step_size = (end - start)/(points-1)
     d = numpy.zeros(points)
     for i in range(points):
@@ -22,19 +24,19 @@ def dimension(start, end, points):
 
 
 
-class World(object):    
+class World(object):
     def get_initial_state(self):
         """
         Initializes the world and returns the initial state
         """
         raise NotImplementedError()
-    
+
     def get_state(self):
         """
         Returns current state
         """
         raise NotImplementedError()
-            
+
 
     def do_action(self, solver, action):
         """
@@ -46,10 +48,10 @@ class World(object):
 
     def get_reward(self):
         raise NotImplementedError()
-        
+
 class ActionNotPossible(Exception):
     pass
-    
+
 class RL(object):
     def __init__(self, learner, storage, encoder, selector):
         self.learner = learner
@@ -59,8 +61,8 @@ class RL(object):
         storage.rl = learner.rl = encoder.rl = selector.rl = self
         self.total_steps = 0
         self.episodes = 0
-        
-        
+
+
     def new_episode(self, world, max_steps=1000):
         self.learner.new_episode()
         self.selector.new_episode()
@@ -80,7 +82,7 @@ class RL(object):
             # observe the reward for this state
             reward = world.get_reward( next_state )
             self.total_reward += reward
-            
+
             # perform the learning
             self.learner.update(
                 self.encoded_current_state,
@@ -88,16 +90,16 @@ class RL(object):
                 reward,
                 encoded_next_state,
                 )
-                
-            
+
+
             self.current_state = next_state
             self.encoded_current_state = encoded_next_state
-            
+
             self.total_steps += 1
             if world.is_final(self.current_state):
                 return False
 
-                    
+
         while True:
             try:
                 # select an action using the current selection method
@@ -105,7 +107,7 @@ class RL(object):
                         self.encoded_current_state
                     )
                 action = self.encoder.decode_action( self.encoded_action )
-                
+
                 # perform the action in the world
                 world.do_action( self, action )
             except ActionNotPossible:
@@ -113,15 +115,15 @@ class RL(object):
             break
         self.last_state = self.current_state
         return True
-                
+
     def run(self, world, max_steps=1000):
         self.new_episode(world)
         self.step(world)
         for step in range(max_steps):
             if not self.step(world):
                 break
-            
+
         return self.total_reward, step
-            
-            
+
+
 

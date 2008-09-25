@@ -9,7 +9,7 @@ class Selector(object):
         Histories and traces should be cleared here.
         """
         pass
-        
+
     def select_action(self, action_value_array):
         """
         Implements an action selection procedure. The input parameter is
@@ -20,13 +20,14 @@ class Selector(object):
 
 
 class EGreedySelector(Selector):
-    def __init__(self, epsilon, decay=1):
+    def __init__(self, epsilon, decay=1, min_epsilon=0):
         self.epsilon = epsilon
         self.decay = decay
-        
+        self.min_epsilon = min_epsilon
+
     def new_episode(self):
-        self.epsilon *= self.decay
-        
+        self.epsilon = max(self.min_epsilon, self.epsilon*self.decay)
+
     def select_action(self, encoded_state):
         action_value_array = self.rl.storage.get_state_values( encoded_state )
         if random.random() < self.epsilon:

@@ -1,39 +1,39 @@
 import cPickle as pickle
 import numpy
 
-class Storage(object):  
+class Storage(object):
     def __init__(self, encoder):
         """
         Encoder provides the size of the problem
         """
         self.encoder = encoder
-        
+
     def new_episode(self):
         """
         This function is called whenever a new episode is started.
-        Histories and traces should be cleared here. 
+        Histories and traces should be cleared here.
         """
         pass
-        
+
     def store_value(self, state, action, new_value):
         """
         The parameters are received in rl-encoding
         """
         raise NotImplementedError()
-    
+
     def get_value(self, state, action):
         """
         The parameters are received in rl-encoding
         """
         raise NotImplementedError()
-        
+
     def get_state_values(self, state):
         """
         Returns an array of the action values for this state
         The parameters are received in rl-encoding
         """
         raise NotImplementedError()
-        
+
     def get_max_value(self, state):
         """
         The parameters are received in rl-encoding
@@ -52,7 +52,7 @@ class Storage(object):
         """
         raise NotImplementedError()
 
-        
+
 class TableStorage(Storage):
     def __init__(self, encoder, mappings=None):
         """parameters:
@@ -65,17 +65,17 @@ class TableStorage(Storage):
                 encoded_state = self.encoder.encode_state( state )
                 self.state[encoded_state, action] = 1
         else:
-            self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
-            #self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
+            #self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
+            self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
     def store_value(self, state, action, new_value):
         self.state[state, action] = new_value
-        
+
     def get_value(self, state, action):
         return self.state[state, action]
-        
+
     def get_max_value(self, state):
         return max(self.state[ state ])
-        
+
     def get_state_values(self, state):
         return self.state[ state ]
 
@@ -87,4 +87,21 @@ class TableStorage(Storage):
         file = open(filename, 'wb')
         pickle.dump(self.state, file)
 
-        
+
+class DebugTableStorage(TableStorage):
+    @property
+    def median_hits(self):
+        return numpy.median(self.debug_state)
+
+    @property
+    def count_hits(self):
+        return numpy.sum(self.debug_state)
+
+    def __init__(self, encoder, mappings=None):
+        super(DebugTableStorage, self).__init__(encoder)
+        self.debug_state = numpy.zeros( (encoder.input_size, encoder.output_size) )
+
+    def store_value(self, state, action, new_value):
+        super(DebugTableStorage, self).store_value(state, action, new_value)
+        self.debug_state[state, action]+=1
+
