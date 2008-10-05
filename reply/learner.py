@@ -33,9 +33,10 @@ class QLearner(Learner):
         if self.min_alpha is not None:
             self.alpha = max(self.min_alpha, self.alpha)
         
-    def update(self, state, action, reward, next_state):
-        prev_value = self.rl.storage.get_value(state, action)
-        max_value_next = self.rl.storage.get_max_value( next_state )
+    def update(self, policy, state, action, reward, next_state):
+        policy = self.agent.policy
+        prev_value = policy.get_value(state, action)
+        max_value_next = policy.get_max_value(next_state)
         
         new_value = (
             prev_value + self.alpha *  
@@ -48,15 +49,14 @@ class QLearner(Learner):
         #print "state:", state, prev_value, "->", next_state, new_value, 
         #print "(r=%i, a=%i)"%(reward, action)
         #print "max_next", max_value_next
-        self.rl.storage.store_value(state, action, new_value)
+        policy.update(state, action, new_value)
             
 class SarsaLearner(QLearner):       
     def update(self, state, action, reward, next_state):
-        prev_value = self.rl.storage.get_value(state, action)
-        next_action = self.rl.selector.select_action(
-             next_state 
-            )
-        max_value_next = self.rl.storage.get_value(next_state, next_action)
+        policy = self.agent.policy
+        prev_value = policy.get_value(state, action)
+        next_action = policy.get_action(next_state)
+        max_value_next = policy.get_value(next_state, next_action)
         
         new_value = (
             prev_value + self.alpha *  
@@ -67,4 +67,4 @@ class SarsaLearner(QLearner):
         #print "state:", state, prev_value, "->", new_value, 
         #print "(r=%i, a=%i)"%(reward, action)
         #print "max_next", max_value_next
-        self.rl.storage.store_value(state, action, new_value)
+        policy.update(state, action, new_value)

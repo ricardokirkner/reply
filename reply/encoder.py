@@ -21,6 +21,13 @@ class Encoder(object):
         """    
         raise NotImplementedError()
         
+    def encode_action(self, action):
+        """
+        The parameters are received in world-encoding and returned
+        in rl-encoding
+        """
+        raise NotImplementedError()
+        
     def decode_action(self, action_n):
         """
         The parameters are received in rl-encoding and returned
@@ -51,6 +58,18 @@ class DistanceEncoder(Encoder):
             state_n += n*m
             m *= len(dim)
         return state_n
+        
+    def encode_action(self, action):
+        """
+        do base conversion from variable-base action to 10-base action number
+        """
+        m = 1
+        action_n = 0
+        for dim, v in zip(self.action_space, action):
+            n = numpy.argmin( (dim-v)**2 )
+            action_n += n*m
+            m *= len(dim)
+        return action_n
         
     def decode_action(self, action_n):
         """

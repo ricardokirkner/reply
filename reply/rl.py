@@ -49,70 +49,106 @@ class World(object):
     def get_reward(self):
         raise NotImplementedError()
 
+
 class ActionNotPossible(Exception):
     pass
 
-class RL(object):
-    def __init__(self, learner, storage, encoder, selector):
-        self.learner = learner
+
+class Policy(object):
+
+    def __init__(self, storage, encoder, selector):
         self.encoder = encoder
         self.selector = selector
         self.storage = storage
-        storage.rl = learner.rl = encoder.rl = selector.rl = self
+
+    @apply
+    def agent():
+        def fget(self):
+            return self.encoder.agent
+
+        def fset(self, value):
+            self.encoder.agent = value
+            self.selector.agent = value
+            self.storage.agent = value
+
+        return property(**locals())
+
+    def get_action(self, state):
+        encoded_state = self.encoder.encode_state(state)
+        encoded_action = self.selector.select_action(encoded_state)
+        action = self.encoder.decode_action(encoded_action)
+        return action
+
+    def new_episode(self):
+        self.selector.new_episode()
+        self.storage.new_episode()
+
+    def get_value(self, state, action):
+        encoded_state = self.encoder.encode_state(state)
+        encoded_action = self.encoder.encode_action(action)
+        return self.storage.get_value(encoded_state, encoded_action)
+
+    def get_max_value(self, state):
+        encoded_state = self.encoder.encode_state(state)
+        return self.storage.get_max_value(encoded_state)
+
+    def update(self, state, action, value):
+        encoded_state = self.encoder.encode_state(state)
+        encoded_action = self.encoder.encode_action(action)
+        self.storage.store_value(encoded_state, encoded_action, value)
+
+    def load(self, filename):
+        self.storage.load(filename)
+
+    def dump(self, filename):
+        self.storage.dump(filename)
+
+
+class Agent(object):
+
+    def __init__(self, policy):
+        self.policy = policy
+        self.policy.agent = self
         self.total_steps = 0
         self.episodes = 0
 
-
-    def new_episode(self, world, max_steps=1000):
-        self.learner.new_episode()
-        self.selector.new_episode()
-        self.storage.new_episode()
+    def new_episode(self, world):
+        self.policy.new_episode()
         self.episodes += 1
         self.last_state = None
         self.current_state = world.get_initial_state()
-        self.encoded_current_state = self.encoder.encode_state( self.current_state )
-        self.total_reward = 0
 
     def step(self, world):
-
         if self.last_state:
-            # get new state and perform learning
+            # get new state 
             next_state = world.get_state()
-            encoded_next_state = self.encoder.encode_state( next_state )
-            # observe the reward for this state
-            reward = world.get_reward( next_state )
-            self.total_reward += reward
 
-            # perform the learning
-            self.learner.update(
-                self.encoded_current_state,
-                self.encoded_action,
-                reward,
-                encoded_next_state,
-                )
+            # hook into the step 
+            self._step_hook(world, next_state)
 
-
+            # update current state
             self.current_state = next_state
-            self.encoded_current_state = encoded_next_state
 
+            # update step count
             self.total_steps += 1
+
+            # test episode halting condition
             if world.is_final(self.current_state):
                 return False
 
-
+        # select next action to execute
         while True:
             try:
-                # select an action using the current selection method
-                self.encoded_action = self.selector.select_action(
-                        self.encoded_current_state
-                    )
-                action = self.encoder.decode_action( self.encoded_action )
+                # select an action using the current policy
+                self.current_action = self.policy.get_action(self.current_state)
 
                 # perform the action in the world
-                world.do_action( self, action )
+                world.do_action(self, self.current_action)
             except ActionNotPossible:
                 continue
             break
+
+        # remember state for next step
         self.last_state = self.current_state
         return True
 
@@ -123,7 +159,41 @@ class RL(object):
             if not self.step(world):
                 break
 
-        return self.total_reward, step
+        return step
+
+    def _step_hook(self, world, next_state):
+        pass
 
 
+class LearningAgent(Agent):
 
+    def __init__(self, learner, policy):
+        super(LearningAgent, self).__init__(policy)
+        self.learner = learner
+        learner.agent = self
+
+    def new_episode(self, world):
+        self.learner.new_episode()
+        self.total_reward = 0
+        super(LearningAgent, self).new_episode(world)
+
+    def _step_hook(self, world, next_state):
+        # observe the reward for this state
+        reward = world.get_reward(next_state)
+        self.total_reward += reward
+
+        # perform the learning
+        self.learner.update(
+            self.policy,
+            self.current_state,
+            self.current_action,
+            reward,
+            next_state,
+            )
+
+    def run(self, world, max_steps=1000):
+        steps = super(LearningAgent, self).run(world, max_steps=max_steps)
+        return self.total_reward, steps
+
+# backwards compatibility
+RL = LearningAgent
