@@ -67,6 +67,7 @@ class TableStorage(Storage):
         else:
             #self.state = numpy.random.random( (encoder.input_size, encoder.output_size) )
             self.state = numpy.zeros( (encoder.input_size, encoder.output_size) )
+
     def store_value(self, state, action, new_value):
         self.state[state, action] = new_value
 

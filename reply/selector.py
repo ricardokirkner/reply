@@ -3,6 +3,26 @@ import random
 
 
 class Selector(object):
+    def __init__(self, storage=None):
+        self._storage = storage
+
+    @apply
+    def storage():
+        """
+        Storage getter/setter. A selector has to be bound to a storage
+        as it doesn't make sense otherwise.
+        """
+        def fget(self):
+            if self._storage is not None:
+                return self._storage
+            else:
+                raise ValueError('Storage has not yet been set.')
+
+        def fset(self, value):
+            self._storage = value
+
+        return property(**locals())
+
     def new_episode(self):
         """
         This function is called whenever a new episode is started.
@@ -20,7 +40,8 @@ class Selector(object):
 
 
 class EGreedySelector(Selector):
-    def __init__(self, epsilon, decay=1, min_epsilon=0):
+    def __init__(self, epsilon, decay=1, min_epsilon=0, storage=None):
+        super(EGreedySelector, self).__init__(storage=storage)
         self.epsilon = epsilon
         self.decay = decay
         self.min_epsilon = min_epsilon
@@ -29,8 +50,7 @@ class EGreedySelector(Selector):
         self.epsilon = max(self.min_epsilon, self.epsilon*self.decay)
 
     def select_action(self, encoded_state):
-        storage = self.agent.policy.storage
-        action_value_array = storage.get_state_values(encoded_state)
+        action_value_array = self.storage.get_state_values(encoded_state)
         if random.random() < self.epsilon:
             #print "R",
             action = random.randint(0, numpy.size(action_value_array)-1)
@@ -42,12 +62,12 @@ class EGreedySelector(Selector):
 
 
 class SoftMaxSelector(Selector):
-    def __init__(self, temperature):
+    def __init__(self, temperature, storage=None):
+        super(SoftMaxSelector, self).__init__(storage=storage)
         self.temperature = temperature
 
     def select_action(self, encoded_state):
-        storage = self.agent.policy.storage
-        action_value_array = storage.get_state_values(encoded_state)
+        action_value_array = self.storage.get_state_values(encoded_state)
         if self.temperature == 0:
             # this should be absolute greedy selection
             action = numpy.argmax(action_value_array)

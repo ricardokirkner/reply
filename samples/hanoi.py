@@ -6,7 +6,7 @@ from reply import *
 import math
 
 NUM_PEGS = 3
-NUM_DISCS = 6
+NUM_DISCS = 3
 
 DEBUG = 0
 
@@ -158,6 +158,10 @@ if __name__ == "__main__":
             p.get_problem_space(),
             p.get_action_space(),
         )
+    _storage = storage.TableStorage(e)
+    egreedy = selector.EGreedySelector(0.9, 0.995)
+    greedy = selector.EGreedySelector(0)
+    policy = rl.Policy(_storage, e, egreedy)
     
     import sys
     if len(sys.argv) < 2:
@@ -172,26 +176,18 @@ if __name__ == "__main__":
         FILENAME = 'hanoi.exp'
 
     if action == 'learn':
-        r = rl.RL(
-                learner.QLearner(0.9, 0.8, 0.999, 0.0001 ),
-                storage.TableStorage(e),
-                e, 
-                selector.EGreedySelector(0.9, 0.995)
-            )
+        _learner = learner.QLearner(0.9, 0.8, 0.999, 0.0001)
+        agent = rl.LearningAgent(policy, _learner)
         try:
-            r.storage.load(FILENAME)
+            agent.policy.load(FILENAME)
         except:
             # file did not exist
             pass
     elif action == 'eval':
-        r = rl.RL(
-                learner.QLearner(1.0, 0.0),
-                storage.TableStorage(e),
-                e,
-                selector.EGreedySelector(0)
-            )
+        policy.selector = greedy
+        agent = rl.Agent(policy)
         try:
-            r.storage.load(FILENAME)
+            agent.policy.load(FILENAME)
         except:
             # file did not exist
             print 'saved state was not found. evaluating does not make sense'
@@ -200,19 +196,25 @@ if __name__ == "__main__":
         print "Usage: %s [learn|eval]" % __file__
         sys.exit(1)
         
-    #initial = r.storage.state
+    #initial = agent.storage.state
     avsteps = 10000
     t = 50
     for episode in range(num_steps):    
         p = Player(NUM_DISCS)
+        agent.world = p
         #print 'Initial state:', p
-        total_reward,steps = r.run(p, max_steps = 100000)
-        #print 'Final state:', p
-        avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
-        print 'Espisode:',episode,'  Steps:',steps,'  Reward:',total_reward,' epsilon:',r.selector.epsilon, "alpha:", r.learner.alpha, "avsteps:", avsteps
+        result = agent.run(max_steps = 100000)
+        if action == 'learn':
+            total_reward, steps = result
+            avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
+            print 'Espisode:',episode,'  Steps:',steps,'  Reward:',total_reward,' epsilon:',agent.policy.selector.epsilon, "alpha:", agent.learner.learning_rate, "avsteps:", avsteps
+        elif action == 'eval':
+            steps = result
+            avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
+            print 'Espisode:',episode,'  Steps:',steps,'  epsilon:',agent.policy.selector.epsilon, "avsteps:", avsteps
         #print '-'*80
-    #final = r.storage.state
+    #final = agent.storage.state
     #print 'learned?', initial != final
     if action == 'learn':
-        r.storage.dump(FILENAME)
+        agent.policy.dump(FILENAME)
         
