@@ -2,6 +2,7 @@
 import math
 
 import pyglet
+from pyglet.gl import *
 
 def circle(position, radius, color):
     circumference = 2*math.pi*radius
@@ -17,14 +18,13 @@ def circle(position, radius, color):
         points += [xc+x,yc+y]
 
     num_points = steps+2
-    vertex_list = pyglet.graphics.vertex_list(num_points,
+    vertex_list = pyglet.graphics.draw(num_points, GL_TRIANGLE_FAN,
         ('v2f', points),
         ('c4B', list(color)*num_points)
         )
-    return vertex_list
 
 def rectangle(x1, y1, x2, y2, color):
-    return pyglet.graphics.vertex_list(4,
+    return pyglet.graphics.draw(4, GL_QUADS,
             ('v2f', [x1, y1, x2, y1, x2, y2, x1, y2]),
             ('c4B', color*4)
         )
