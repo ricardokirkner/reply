@@ -1,7 +1,7 @@
 import numpy
 
 class Encoder(object):
-    def __init__(self, state_space, action_space):
+    def __init__(self, rl):
         """
         state_space is a list of dimensions where each one has the list of posible
         values for that dimension. A world encoded representation of a state
@@ -11,8 +11,9 @@ class Encoder(object):
         values for that dimension. A world encoded representation of an action
         is a list with one value picked from each dimension.
         """
-        self.state_space = state_space
-        self.action_space = action_space
+        self.rl = rl
+        self.state_space = self.rl.get_state_space()
+        self.action_space = self.rl.get_action_space()
         
     def encode_state(self, state):
         """
@@ -42,8 +43,8 @@ class DistanceEncoder(Encoder):
             pz *= len(dim)
         return pz
         
-    def __init__(self, state_space, action_space):
-        super(DistanceEncoder, self).__init__(state_space, action_space)
+    def __init__(self, rl):
+        super(DistanceEncoder, self).__init__(rl)
         self.input_size = self.get_space_size(self.state_space)
         self.output_size = self.get_space_size(self.action_space)
         
@@ -54,7 +55,7 @@ class DistanceEncoder(Encoder):
         m = 1
         state_n = 0
         for dim, v in zip(self.state_space, state):
-            n = numpy.argmin( (dim-v)**2 )
+            n = numpy.argmin( (dim.points-v)**2 )
             state_n += n*m
             m *= len(dim)
         return state_n
@@ -66,7 +67,7 @@ class DistanceEncoder(Encoder):
         m = 1
         action_n = 0
         for dim, v in zip(self.action_space, action):
-            n = numpy.argmin( (dim-v)**2 )
+            n = numpy.argmin( (dim.points-v)**2 )
             action_n += n*m
             m *= len(dim)
         return action_n

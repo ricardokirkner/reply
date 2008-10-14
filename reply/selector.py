@@ -3,25 +3,8 @@ import random
 
 
 class Selector(object):
-    def __init__(self, storage=None):
-        self._storage = storage
-
-    @apply
-    def storage():
-        """
-        Storage getter/setter. A selector has to be bound to a storage
-        as it doesn't make sense otherwise.
-        """
-        def fget(self):
-            if self._storage is not None:
-                return self._storage
-            else:
-                raise ValueError('Storage has not yet been set.')
-
-        def fset(self, value):
-            self._storage = value
-
-        return property(**locals())
+    def __init__(self, rl):
+        self.rl = rl
 
     def new_episode(self):
         """
@@ -40,34 +23,41 @@ class Selector(object):
 
 
 class EGreedySelector(Selector):
-    def __init__(self, epsilon, decay=1, min_epsilon=0, storage=None):
-        super(EGreedySelector, self).__init__(storage=storage)
-        self.epsilon = epsilon
-        self.decay = decay
-        self.min_epsilon = min_epsilon
+    def __init__(self, rl):
+        super(EGreedySelector, self).__init__(rl)
+        self.random_action_rate = getattr(rl, "random_action_rate", 0.)
+        self.random_action_rate_decay = getattr(
+            rl, "random_action_rate_decay", 1.)
+        self.random_action_rate_min = getattr(
+            rl, "random_action_rate_min", 0.)
 
     def new_episode(self):
-        self.epsilon = max(self.min_epsilon, self.epsilon*self.decay)
+        self.random_action_rate = max(
+            self.random_action_rate_min,
+            self.random_action_rate*self.random_action_rate_decay)
 
-    def select_action(self, encoded_state):
-        action_value_array = self.storage.get_state_values(encoded_state)
-        if random.random() < self.epsilon:
-            #print "R",
+    def end_episode(self):
+        self.rl.current_episode.random_action_rate = self.random_action_rate
+        
+    def select_action(self, state):
+        action_value_array = self.rl.storage.get_state_values(state)
+        if random.random() < self.random_action_rate:
             action = random.randint(0, numpy.size(action_value_array)-1)
         else:
-            #print action_value_array,
             action = numpy.argmax(action_value_array)
-        #print action
         return action
 
 
 class SoftMaxSelector(Selector):
-    def __init__(self, temperature, storage=None):
-        super(SoftMaxSelector, self).__init__(storage=storage)
-        self.temperature = temperature
+    def __init__(self, rl):
+        super(SoftMaxSelector, self).__init__(rl)
+        self.temperature = getattr(rl, "temperature", 0.)
 
-    def select_action(self, encoded_state):
-        action_value_array = self.storage.get_state_values(encoded_state)
+    def end_episode(self):
+        self.rl.current_episode.temperature = self.temperature
+        
+    def select_action(self, state):
+        action_value_array = self.rl.storage.get_state_values(state)
         if self.temperature == 0:
             # this should be absolute greedy selection
             action = numpy.argmax(action_value_array)

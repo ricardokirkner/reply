@@ -10,39 +10,53 @@ from numpy import array
 import random
 
 class ActionValue(reply.World):
-    def __init__(self, ps):
+    def __init__(self, rl):
         " ps == win probability array for each action (implies number of actions)"
-        self.ps = ps
+        self.ps = getattr(rl, "action_win_probability_array")
 
+    def is_final(self, state):
+        return True
+        
+    def do_action(self, solver, action):
+        selection = action[0]
+        if random.random() < self.ps[int(selection)]:
+            self.won = True
+        
+    def new_episode(self):
+        self.won = 0
+    
+    def get_state(self):
+        return [0]
+        
+class ActionValueAgent(rl.LearningAgent):
+    action_win_probability_array = [ p/10.0 for p in range(10) ]
+    
+    learning_rate = 1
+    learning_rate_decay = 0.9
+    
+    random_action_rate = 1
+    random_action_rate_decay = 0.9
+    
+    world_class = ActionValue
+    learner_class = reply.learner.QLearner
+    selector_class = reply.selector.EGreedySelector
+    storage_class = reply.storage.TableStorage
+    encoder_class = reply.encoder.DistanceEncoder
+    
     def get_action_space(self):
-        return [ reply.dimension(0,len(self.ps)-1,len(self.ps))  ]
+        return [ reply.Dimension(0, len(self.action_win_probability_array)-1), ]
     
     def get_state_space(self):
         return [ reply.dimension(1,1,1) ]
         
     def get_reward(self, state):
-        if self.won:
+        if self.world.won:
             return 1
         return 0
-        
-    def is_final(self, state):
-        return True
-        
-    def do_action(self, solver, action):
-
-        selection = action[0]
-        if random.random() < self.ps[int(selection)]:
-            self.won = True
-        return [0]
-        
-    def get_initial_state(self):
-        self.won = 0
-        return [0]
-    def get_state(self):
-        return [0]
-        
     
 if __name__ == "__main__":
+    rl.Experiment(ActionValueAgent()).run()
+    
     ps = [ p/10.0 for p in range(10) ]
     g = ActionValue(ps)
     e = reply.encoder.DistanceEncoder(g.get_state_space(), g.get_action_space())
