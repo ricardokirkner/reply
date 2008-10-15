@@ -3,7 +3,7 @@ import numpy
 import random
 
 __all__ = ["Dimension", "World", "ActionNotPossible", "Episode",
-           "Agent", "LearningAgent"]
+           "Agent", "LearningAgent", "Experiment"]
 
 class Dimension(object):
     def __init__(self, name, start, end, points=None):
@@ -12,6 +12,7 @@ class Dimension(object):
         Start and end are the minimum and maximum values and will be included
         in the range. The range will have 'points' points.
         """
+        self.name = name
         if points is None:
             points = abs(end-start)+1
         if points == 1:
@@ -29,11 +30,17 @@ class Dimension(object):
         return len(self.points)
 
 class World(object):
-    def get_initial_state(self):
+    def __init__(self, rl):
+        self.rl = rl
+        
+    def new_episode(self):
         """
         Initializes the world and returns the initial state
         """
         raise NotImplementedError()
+    
+    def is_final(self):
+        return False
 
     def get_state(self):
         """
@@ -50,40 +57,45 @@ class World(object):
         """
         raise NotImplementedError()
 
-    def get_reward(self):
-        raise NotImplementedError()
-
-
 class ActionNotPossible(Exception):
     pass
 
 class Episode(object):
-    pass
+    def __str__(self):
+        return ", ".join("%s:%s"%(k,v) for k,v in self.__dict__.items())
 
 class Agent(object):
     def __init__(self):
         self.world = self.world_class(self)
         self.selector = self.selector_class(self)
         self.encoder = self.encoder_class(self)
-        self.storage = self.storate_class(self)
+        self.storage = self.storage_class(self)
         self.episodes = 0
 
     def new_episode(self):
         self.current_episode = Episode()
-        self.current_episode.steps = 0
-        self.policy.new_episode()
-        self.world.new_episode()
         self.episodes += 1
+        self.current_episode.episode = self.episodes
+
+        self.current_episode.steps = 0
+        self.selector.new_episode()
+        self.storage.new_episode()
+        self.encoder.new_episode()
+        self.world.new_episode()
+        
         self.last_state = None
-        self.current_state = self.encoder.encode_state(world.get_state())
+        self.current_state = self.encoder.encode_state(self.world.get_state())
 
     def end_episode(self):
-        self.policy.end_episode()
+        self.selector.end_episode()
+        self.storage.end_episode()
+        self.encoder.end_episode()
         self.world.end_episode()
+        
         
     def step(self):
         world = self.world
-        if self.last_state:
+        if self.last_state is not None:
             # get new state 
             next_state = self.encoder.encode_state(world.get_state())
 
@@ -97,7 +109,7 @@ class Agent(object):
             self.current_episode.steps += 1
 
             # test episode halting condition
-            if world.is_final(self.current_state):
+            if world.is_final():
                 self.end_episode()
                 return False
 
@@ -117,7 +129,7 @@ class Agent(object):
         self.last_state = self.current_state
         return True
 
-    def run(self, world, max_steps=1000):
+    def run(self, max_steps=1000):
         self.new_episode()
         step = 0
         while step < max_steps or max_steps < 0:
@@ -127,8 +139,9 @@ class Agent(object):
         
         return self.current_episode
 
-    def _step_hook(self, world, next_state):
+    def _step_hook(self, next_state):
         pass
+    
 
 
 class LearningAgent(Agent):
@@ -139,13 +152,13 @@ class LearningAgent(Agent):
     def new_episode(self):
         super(LearningAgent, self).new_episode()
         self.learner.new_episode()
-        self.episode.total_reward = 0
+        self.current_episode.total_reward = 0
 
     def _step_hook(self, next_state):
         super(LearningAgent, self)._step_hook(next_state)
         # observe the reward for this state
-        reward = self.world.get_reward(next_state)
-        self.episode.total_reward += reward
+        reward = self.get_reward()
+        self.current_episode.total_reward += reward
 
         # perform the learning
         self.learner.update(
@@ -154,5 +167,19 @@ class LearningAgent(Agent):
             reward,
             next_state,
             )
+        
+    def get_reward(self):
+        raise NotImplementedError()
 
+
+class Experiment(object):
+    def __init__(self, agent):
+        self.agent = agent
+        
+    def run(self):
+        self.agent.new_episode()
+        step = 0
+        while True:
+            episode = self.agent.run()
+            print episode
 

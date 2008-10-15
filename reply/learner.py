@@ -1,20 +1,7 @@
 
 class Learner(object):        
-    def __init__(self, policy=None):
-        self._policy = policy
-
-    @apply
-    def policy():
-        def fget(self):
-            if self._policy is not None:
-                return self._policy
-            else:
-                raise ValueError('Policy has not yet been set.')
-
-        def fset(self, value):
-            self._policy = value
-
-        return property(**locals())
+    def __init__(self, rl):
+        self.rl = rl
 
     def new_episode(self):
         """
@@ -32,29 +19,30 @@ class Learner(object):
         
         
 class QLearner(Learner):
-    def __init__(self, learning_rate, value_discount, learning_rate_decay = 1, min_learning_rate=None, policy=None):
+    def __init__(self, rl):
         """
         implements Q-Learning
         learning_rate: learning rate
         value_discount: value discount
         """
-        super(QLearner, self).__init__(policy=policy)
-        self.learning_rate = learning_rate
-        self.learning_rate_decay = learning_rate_decay
-        self.min_learning_rate = min_learning_rate
-        self.value_discount = value_discount
+        super(QLearner, self).__init__(rl)
+        self.learning_rate = getattr(self.rl, "learning_rate")
+        self.learning_rate_decay = getattr(self.rl, "learning_rate_decay", 1)
+        self.learning_rate_min = getattr(self.rl, "learning_rate_min", 0)
+        self.value_discount = getattr(self.rl, "value_discount", 1)
         
     def new_episode(self):
         super(QLearner, self).new_episode()
         self.learning_rate *= self.learning_rate_decay
-        if self.min_learning_rate is not None:
-            self.learning_rate = max(self.min_learning_rate, self.learning_rate)
+        self.learning_rate = max(self.learning_rate_min, self.learning_rate)
+        self.rl.current_episode.learning_rate = self.learning_rate
         
     def update(self, state, action, reward, next_state):
-        policy = self.policy
-        prev_value = policy.get_value(state, action)
-        max_value_next = policy.get_max_value(next_state)
-        
+        prev_value = self.rl.storage.get_value(state, action)
+        if self.rl.world.is_final():
+            max_value_next = 0    
+        else:
+            max_value_next = self.rl.storage.get_max_value(next_state)
         new_value = (
             prev_value + self.learning_rate *  
             ( reward + self.value_discount*max_value_next - prev_value )       
@@ -66,7 +54,7 @@ class QLearner(Learner):
         #print "state:", state, prev_value, "->", next_state, new_value, 
         #print "(r=%i, a=%i)"%(reward, action)
         #print "max_next", max_value_next
-        policy.update(state, action, new_value)
+        self.rl.storage.store_value(state, action, new_value)
             
 class SarsaLearner(QLearner):       
     def update(self, state, action, reward, next_state):

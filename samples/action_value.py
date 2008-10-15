@@ -12,30 +12,40 @@ import random
 class ActionValue(reply.World):
     def __init__(self, rl):
         " ps == win probability array for each action (implies number of actions)"
+        super(ActionValue, self).__init__(rl)
         self.ps = getattr(rl, "action_win_probability_array")
 
-    def is_final(self, state):
+    def is_final(self):
         return True
         
     def do_action(self, solver, action):
         selection = action[0]
+        self.choice = action
         if random.random() < self.ps[int(selection)]:
             self.won = True
         
     def new_episode(self):
         self.won = 0
     
-    def get_state(self):
-        return [0]
+    def end_episode(self):
+        err = 0
+        for i,v in enumerate(self.rl.storage.state[0]):
+            err += abs(self.ps[i]-v)
+        self.rl.current_episode.error = err
         
-class ActionValueAgent(rl.LearningAgent):
+    def get_state(self):
+        return dict(
+                state=0
+            )
+        
+class ActionValueAgent(reply.LearningAgent):
     action_win_probability_array = [ p/10.0 for p in range(10) ]
     
     learning_rate = 1
-    learning_rate_decay = 0.9
+    learning_rate_decay = 0.99
+    learning_rate_min = 0.001
     
     random_action_rate = 1
-    random_action_rate_decay = 0.9
     
     world_class = ActionValue
     learner_class = reply.learner.QLearner
@@ -44,32 +54,15 @@ class ActionValueAgent(rl.LearningAgent):
     encoder_class = reply.encoder.DistanceEncoder
     
     def get_action_space(self):
-        return [ reply.Dimension(0, len(self.action_win_probability_array)-1), ]
+        return [ reply.Dimension("choice", 0, len(self.action_win_probability_array)-1), ]
     
     def get_state_space(self):
-        return [ reply.dimension(1,1,1) ]
+        return [ reply.Dimension("state", 1,1) ]
         
-    def get_reward(self, state):
+    def get_reward(self):
         if self.world.won:
             return 1
         return 0
     
 if __name__ == "__main__":
-    rl.Experiment(ActionValueAgent()).run()
-    
-    ps = [ p/10.0 for p in range(10) ]
-    g = ActionValue(ps)
-    e = reply.encoder.DistanceEncoder(g.get_state_space(), g.get_action_space())
-    r = reply.RL(
-            reply.learner.QLearner(0.001, 0.01,1),
-            reply.storage.TableStorage(e),
-            e, 
-            reply.selector.EGreedySelector(0.9, 1)
-        )
-        
-    for episode in range(100000):    
-        total_reward,steps  = r.run(g)
-        err = 0
-        for i,v in enumerate(r.storage.state[0]):
-            err += abs(ps[i]-v)
-        print 'Espisode: ',episode,'  Steps:',steps,'  Reward:',total_reward,' error:',err
+    reply.Experiment(ActionValueAgent()).run()

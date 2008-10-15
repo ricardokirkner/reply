@@ -14,6 +14,9 @@ class Storage(object):
         Histories and traces should be cleared here.
         """
         pass
+    
+    def end_episode(self):
+        pass
 
     def store_value(self, state, action, new_value):
         """

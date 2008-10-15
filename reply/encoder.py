@@ -15,6 +15,11 @@ class Encoder(object):
         self.state_space = self.rl.get_state_space()
         self.action_space = self.rl.get_action_space()
         
+    def new_episode(self):
+        pass
+    def end_episode(self):
+        pass
+    
     def encode_state(self, state):
         """
         The parameters are received in world-encoding and returned
@@ -52,6 +57,8 @@ class DistanceEncoder(Encoder):
         """
         do base convertion from variable-base state to 10-based state number
         """
+        state = [ state[dim.name] for dim in self.state_space]
+            
         m = 1
         state_n = 0
         for dim, v in zip(self.state_space, state):
@@ -84,7 +91,7 @@ class DistanceEncoder(Encoder):
             n = len(dim)
             j = ( action_n/m ) % n
             m *= n
-            action[i] = dim[j]
+            action[i] = dim.points[j]
             #print n, j, m, dim[j], dim
         return action
 
