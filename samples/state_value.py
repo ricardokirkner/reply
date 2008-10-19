@@ -19,7 +19,7 @@ class StateValue(reply.World):
     def is_final(self):
         return True
 
-    def do_action(self, solver, action):
+    def do_action(self, action):
         selection = action[0]
         if random.random() < self.ps[int(self.state)]:
             self.won = True
