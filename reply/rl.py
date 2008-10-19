@@ -42,6 +42,13 @@ class World(object):
         """
         raise NotImplementedError()
 
+    def end_episode(self):
+        """
+        finalize the episode, save any interesting information
+        on self.rl.current_episode
+        """
+        pass
+
     def is_final(self):
         return False
 
@@ -123,7 +130,7 @@ class Agent(object):
                 self.current_action = self.selector.select_action(self.current_state)
 
                 # perform the action in the world
-                world.do_action(self, self.encoder.decode_action(self.current_action))
+                world.do_action(self.encoder.decode_action(self.current_action))
             except ActionNotPossible:
                 continue
             break
