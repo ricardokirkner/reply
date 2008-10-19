@@ -25,20 +25,23 @@ class Dimension(object):
             for i in range(points):
                 d[i] = start+step_size * i
             self.points = d
-            
+
     def __len__(self):
         return len(self.points)
+
+    def __iter__(self):
+        return self.points.__iter__()
 
 class World(object):
     def __init__(self, rl):
         self.rl = rl
-        
+
     def new_episode(self):
         """
         Initializes the world and returns the initial state
         """
         raise NotImplementedError()
-    
+
     def is_final(self):
         return False
 
@@ -82,7 +85,7 @@ class Agent(object):
         self.storage.new_episode()
         self.encoder.new_episode()
         self.world.new_episode()
-        
+
         self.last_state = None
         self.current_state = self.encoder.encode_state(self.world.get_state())
 
@@ -91,15 +94,15 @@ class Agent(object):
         self.storage.end_episode()
         self.encoder.end_episode()
         self.world.end_episode()
-        
-        
+
+
     def step(self):
         world = self.world
         if self.last_state is not None:
-            # get new state 
+            # get new state
             next_state = self.encoder.encode_state(world.get_state())
 
-            # hook into the step 
+            # hook into the step
             self._step_hook(next_state)
 
             # update current state
@@ -136,12 +139,12 @@ class Agent(object):
             if not self.step():
                 break
             step += 1
-        
+
         return self.current_episode
 
     def _step_hook(self, next_state):
         pass
-    
+
 
 
 class LearningAgent(Agent):
@@ -167,7 +170,7 @@ class LearningAgent(Agent):
             reward,
             next_state,
             )
-        
+
     def get_reward(self):
         raise NotImplementedError()
 
@@ -175,11 +178,10 @@ class LearningAgent(Agent):
 class Experiment(object):
     def __init__(self, agent):
         self.agent = agent
-        
+
     def run(self):
         self.agent.new_episode()
         step = 0
         while True:
             episode = self.agent.run()
             print episode
-
