@@ -272,9 +272,9 @@ class Experiment(object):
         """
         self.agent = agent
 
-    def run(self):
+    def run(self, max_steps=1000):
         """Perform the experiment."""
         self.agent.new_episode()
         while True:
-            episode = self.agent.run()
+            episode = self.agent.run(max_steps=max_steps)
             print episode

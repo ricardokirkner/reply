@@ -1,40 +1,14 @@
+import os
 import sys
-sys.path.insert(0, '..')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import pickle
-from reply import *
+import reply
 import math
 
 NUM_PEGS = 3
-NUM_DISCS = 3
+NUM_DISCS = 5
 
-DEBUG = 0
-
-def prime_generator():
-    # yield the only even prime
-    yield 2
-    # yield odd primes
-    current = 3
-    while True:
-        if is_odd_prime(current):
-            yield current
-        current += 2
-
-def is_odd_prime(number):
-    is_prime = True
-    sieve = int(math.sqrt(number))
-    for i in xrange(2, sieve+1):
-        if number % i == 0:
-            is_prime = False
-            break
-    return is_prime
-
-def max_peg_state(num_discs):
-    peg = Peg(0)
-    for disc in xrange(1,num_discs+1):
-        peg.discs.append(disc)
-    return peg.state
-
+DEBUG = False
 
 class Peg(object):
     def __init__(self, number):
@@ -49,7 +23,6 @@ class Peg(object):
     def num_discs(self):
         return len(self.discs)
 
-
     def fill(self, num_discs):
         self.discs = list(reversed(range(num_discs)))
 
@@ -63,56 +36,28 @@ class Peg(object):
         self.discs.append(disc)
 
     def __repr__(self):
-        return '<%s: number: %d discs: %s>' % (self.__class__.__name__, self.number, str(self.discs))
+        return '<%s: number: %d discs: %s>' % (
+            self.__class__.__name__, self.number, str(self.discs))
     
     def __contains__(self, disc):
         return disc in self.discs
 
 
-class Player(rl.World):
-    def __init__(self, num_discs, num_pegs=NUM_PEGS, initial_peg=0):
-        self.num_discs = num_discs
-        self.num_pegs = num_pegs
-        self.initial_peg = initial_peg
-        self.pegs = [Peg(i) for i in xrange(num_pegs)]
-        # initialize
-        self.pegs[self.initial_peg].fill(self.num_discs)
+class Hanoi(reply.World):
+    def __init__(self, rl):
+        super(Hanoi, self).__init__(rl)
+        self.num_discs = getattr(rl, "num_discs", NUM_DISCS)
+        self.num_pegs = getattr(rl, "num_pegs", NUM_PEGS)
+        self.initial_peg = getattr(rl, "initial_peg", 0)
+        self.pegs = [Peg(i) for i in xrange(self.num_pegs)]
 
-    def get_action_space(self):
-        return [ rl.dimension(0, NUM_PEGS-1, NUM_PEGS),rl.dimension(0, NUM_PEGS-1, NUM_PEGS) ]
-    
-    def get_problem_space(self):
-        return [ rl.dimension(0, self.num_pegs-1, self.num_pegs) for i in xrange(self.num_discs) ] 
-        
-    def get_reward(self, state):
-        reward = 0
-        for peg in self.pegs:
-            if not peg.is_valid:
-                # invalid disc layout
-                if DEBUG:
-                    print 'peg is invalid', peg.discs
-                reward = -1
-                break
-            elif self.discs_moved(peg):
-                # all discs moved to another peg
-                if DEBUG:
-                    print 'all discs moved to peg %d' % peg.number, peg.discs
-                reward = 1
-                break
-        return reward
-        
-    def discs_moved(self, peg):
-        return peg.number != self.initial_peg and \
-               peg.num_discs == self.num_discs
-
-    def is_final(self, state):
+    def is_final(self):
         is_final = False
         for peg in self.pegs:
             is_final |= self.discs_moved(peg)
         return is_final
         
-    def do_action(self, solver, action):
-        #print 'action', action
+    def do_action(self, action):
         from_peg_num, to_peg_num = action
         if DEBUG:
             print 'moving from peg %d to peg %d' % (from_peg_num, to_peg_num)
@@ -122,24 +67,33 @@ class Player(rl.World):
         if not from_peg.discs:
             if DEBUG:
                 print "move invalid: empty"
-            raise rl.ActionNotPossible()
+            raise reply.ActionNotPossible()
         
         if to_peg.discs and from_peg.discs[-1] > to_peg.discs[-1]:
             if DEBUG:
                 print "move invalid: too big"
-            raise rl.ActionNotPossible()
+            raise reply.ActionNotPossible()
         
         disc = from_peg.pop()
         to_peg.push(disc)
         if DEBUG:
             print "\t".join( [ str(peg.discs) for peg in self.pegs ] )
-        return self.pegs
-        
-    def get_initial_state(self):
-        return self.get_state()
+
+    def new_episode(self):
+        # reset all pegs
+        [peg.empty() for peg in self.pegs]
+        # initialize
+        self.pegs[self.initial_peg].fill(self.num_discs)
 
     def get_state(self):
-        return [ self.find_peg(disc) for disc in range(self.num_discs) ]
+        state = {}
+        for disc in range(self.num_discs):
+            state["disc_%d" % disc] = self.find_peg(disc)
+        return state
+
+    def discs_moved(self, peg):
+        return peg.number != self.initial_peg and \
+               peg.num_discs == self.num_discs
 
     def find_peg(self, disc):
         for i,peg in enumerate(self.pegs):
@@ -151,18 +105,55 @@ class Player(rl.World):
         return '<%s: %s>' % (self.__class__.__name__, str(self.pegs))
 
 
+class HanoiAgent(reply.Agent):
+    num_pegs = NUM_PEGS
+    num_discs = NUM_DISCS
+
+    random_action_rate = 0
+
+    world_class = Hanoi
+    selector_class = reply.selector.EGreedySelector
+    storage_class = reply.storage.TableStorage
+    encoder_class = reply.encoder.DistanceEncoder
+
+    def get_action_space(self):
+        return [ reply.Dimension("from_peg", 0, self.num_pegs-1),
+                 reply.Dimension("to_peg", 0, self.num_pegs-1) ]
+    
+    def get_state_space(self):
+        return [ reply.Dimension("disc_%d" % disc, 0, self.num_pegs-1) for disc in xrange(self.num_discs) ] 
+
+
+class HanoiLearningAgent(HanoiAgent, reply.LearningAgent):
+    learning_rate = 0.9
+    learning_rate_decay = 0.999
+    learning_rate_min = 0.0001
+    value_discount = 0.8
+
+    random_action_rate = 0.9
+    random_action_rate_decay = 0.995
+
+    learner_class = reply.learner.QLearner
+
+    def get_reward(self):
+        reward = 0
+        for peg in self.world.pegs:
+            if not peg.is_valid:
+                # invalid disc layout
+                if DEBUG:
+                    print 'peg is invalid', peg.discs
+                reward = -1
+                break
+            elif self.world.discs_moved(peg):
+                # all discs moved to another peg
+                if DEBUG:
+                    print 'all discs moved to peg %d' % peg.number, peg.discs
+                reward = 1
+                break
+        return reward
+
 
 if __name__ == "__main__":
-    p = Player(NUM_DISCS)
-    e = encoder.DistanceEncoder(
-            p.get_problem_space(),
-            p.get_action_space(),
-        )
-    _storage = storage.TableStorage(e)
-    egreedy = selector.EGreedySelector(0.9, 0.995)
-    greedy = selector.EGreedySelector(0)
-    policy = rl.Policy(_storage, e, egreedy)
-    
     import sys
     if len(sys.argv) < 2:
         print "Usage: %s [learn|eval]" % __file__
@@ -176,45 +167,15 @@ if __name__ == "__main__":
         FILENAME = 'hanoi.exp'
 
     if action == 'learn':
-        _learner = learner.QLearner(0.9, 0.8, 0.999, 0.0001)
-        agent = rl.LearningAgent(policy, _learner)
-        try:
-            agent.policy.load(FILENAME)
-        except:
-            # file did not exist
-            pass
+        agent = HanoiLearningAgent()
+        agent.num_steps = num_steps
     elif action == 'eval':
-        policy.selector = greedy
-        agent = rl.Agent(policy)
-        try:
-            agent.policy.load(FILENAME)
-        except:
-            # file did not exist
-            print 'saved state was not found. evaluating does not make sense'
-            sys.exit(1)
+        agent = HanoiAgent()
+        agent.num_steps = num_steps
     else:
         print "Usage: %s [learn|eval]" % __file__
         sys.exit(1)
         
-    #initial = agent.storage.state
-    avsteps = 10000
-    t = 50
-    for episode in range(num_steps):    
-        p = Player(NUM_DISCS)
-        agent.world = p
-        #print 'Initial state:', p
-        result = agent.run(max_steps = 100000)
-        if action == 'learn':
-            total_reward, steps = result
-            avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
-            print 'Espisode:',episode,'  Steps:',steps,'  Reward:',total_reward,' epsilon:',agent.policy.selector.epsilon, "alpha:", agent.learner.learning_rate, "avsteps:", avsteps
-        elif action == 'eval':
-            steps = result
-            avsteps = 1.0/t*steps + (1-1.0/t)*avsteps
-            print 'Espisode:',episode,'  Steps:',steps,'  epsilon:',agent.policy.selector.epsilon, "avsteps:", avsteps
-        #print '-'*80
-    #final = agent.storage.state
-    #print 'learned?', initial != final
-    if action == 'learn':
-        agent.policy.dump(FILENAME)
-        
+    max_steps = 10000
+    experiment = reply.Experiment(agent)
+    experiment.run(max_steps)
