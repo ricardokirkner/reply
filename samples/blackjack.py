@@ -11,6 +11,8 @@ CARDS = [card for card in DECK for deck in xrange(8)]
 # actions
 HIT, STAND = range(2)
 
+DEBUG = True
+
 class Dealer:
     def __init__(self):
         # deck only contains 80% of available cards
@@ -44,122 +46,131 @@ class Dealer:
             self.total_points = eval_hand(self.cards)
 
 def record(f):
-    def inner(self, solver, action):
-        s = self.get_state()[0]
-        r = f(self, solver, action[0])
+    def inner(self, action):
+        s = self.get_state()
+        r = f(self, action)
         self.history.append( (s,action) )
         return r
     return inner
 
-class Player(reply.World):
-    def __init__(self, dealer):
-        self.history = []
-        self.dealer = dealer
-        self.cards = []
-        self.total_points = 0
-        self.soft_hand = False
+class BlackJack(reply.World):
+    def __init__(self, rl):
+        super(BlackJack, self).__init__(rl)
         self._is_final = False
-        self.bet = 0
 
-    @staticmethod
-    def get_state_space():
-        return [ reply.dimension(2,22, 21), 
-                 ]
-
-    @staticmethod
-    def get_action_space():
-        return [ reply.dimension(0, 1, 2) ]
-
-    def get_reward(self, state):
-        reward = 0
-        if self.is_final(state):
-            if self.total_points > 21:
-                reward = -1
-            else:
-                self.dealer.play()
-                if self.has_won():
-                    reward = +1
-                else:
-                    reward = -1
-        return reward
-
-
-    def has_won(self):
-        if self.dealer.total_points == 21:
-            #print 'DEALER BLACK JACK'
-            return False
-        elif self.total_points > 21:
-            print 'PLAYER BUSTED'
-            return False
-        elif self.dealer.total_points > 21:
-            #print 'DEALER BUSTED'
-            return True
-        else:
-            return self.dealer.total_points < self.total_points
-
-    def is_final(self, state):
-        if state[0] == 22:
-            return True
-        
+    def is_final(self):
+        state = self.get_state()
+        return self._is_final or state['total_points'] == 22
 
     @record
-    def do_action(self, solver, action):
+    def do_action(self, action):
         if action == HIT:
-            #print "HIT", self.get_state(), self.cards
+            if DEBUG:
+                print "HIT", self.get_state(), self.cards
             self.dealer.deal(self, 1)
         elif action == STAND:
-            #print "STAND", self.get_state()
+            if DEBUG:
+                print "STAND", self.get_state()
             self._is_final = True
         else:
-            #print 'ACTION', action, 'is not available.'
+            if DEBUG:
+                print 'ACTION', action, 'is not available.'
             sys.exit(1)
         return self.get_state()
 
-    def get_initial_state(self):
-        return self.get_state()
-
     def get_state(self):
-        if self._is_final:
-            return [22]
-        return [min(22, self.total_points)]
+        #if self._is_final:
+        #    return {'total_points': 22}
+        return {'total_points': min(22, self.total_points)}
+
+    def new_episode(self):
+        self.history = []
+        self.cards = []
+        self.total_points = 0
+        self.soft_hand = False
+        self.bet = 0
+
+        self.dealer = Dealer()
+        self.dealer.players = [self]
+        self.dealer.setup()
+
+    def end_episode(self):
+        self.dealer.teardown()
 
 
 def eval_hand(cards):
     return sum(cards)
 
 
-if __name__ == '__main__':
-    space = Player.get_state_space(), Player.get_action_space()
-    encoder = reply.encoder.DistanceEncoder(*space)
-    storage = reply.storage.TableStorage(encoder)
-    alpha = 0.1
-    epsilon = 0.1
-    gamma = 0.9
-    alpha_decay = 1.0
-    epsilon_decay = 0.999
-    learner = reply.learner.QLearner(alpha, gamma, alpha_decay)
-    selector = reply.selector.EGreedySelector(epsilon, epsilon_decay)
-    rl = reply.RL(learner, storage, encoder, selector)
+class BlackJackAgent(reply.LearningAgent):
+    learning_rate = 0.1
+    learning_rate_decay = 1.0
+    discount_value = 0.9
 
-    #dealer = Dealer()
-    wins = 0.0
-    time_avg = 1.0/500
-    #rl.storage.state[20,0] = rl.storage.state[20,1] = -10
-    for episode in xrange(100000):
-        dealer = Dealer()
-        player = Player(dealer)
-        dealer.players = [player]
-        dealer.setup()
-        total_reward, steps = rl.run(player)
-        if total_reward > 0:
-            wins = time_avg + (1-time_avg) * wins
+    random_action_rate = 0.1
+    random_action_decay = 0.999
+
+    world_class = BlackJack
+    encoder_class = reply.encoder.DistanceEncoder
+    storage_class = reply.storage.TableStorage
+    learner_class = reply.learner.QLearner
+    selector_class = reply.selector.EGreedySelector
+
+    def get_state_space(self):
+        return [ reply.Dimension('total_points', 2, 22) ]
+
+    def get_action_space(self):
+        return [ reply.Dimension('action', 0, 1) ]
+
+    def get_reward(self):
+        reward = 0
+        if self.world.is_final():
+            if self.world.total_points > 21:
+                reward = -1
+            else:
+                self.world.dealer.play()
+                if self.has_won():
+                    reward = +1
+                else:
+                    reward = -1
+        return reward
+
+    def has_won(self):
+        if self.world.dealer.total_points == 21:
+            if DEBUG:
+                print 'DEALER BLACK JACK'
+            return False
+        elif self.world.total_points > 21:
+            if DEBUG:
+                print 'PLAYER BUSTED'
+            return False
+        elif self.world.dealer.total_points > 21:
+            if DEBUG:
+                print 'DEALER BUSTED'
+            return True
         else:
-            wins = (1-time_avg) * wins
-        dealer.teardown()
-        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins, 'epsilon:', selector.epsilon
-        continue
-        s = rl.storage.state
-        for i in range(0,21):
-            print "%02d   "%(i+2), "%012f     %012f"%(s[i,0], s[i,1]), ["H","S"][( s[i, 0] < s[i, 1])]
+            return self.world.dealer.total_points < self.world.total_points
 
-        raw_input("next")
+
+
+if __name__ == '__main__':
+    agent = BlackJackAgent()
+
+    experiment = reply.Experiment(agent)
+    experiment.run()
+
+#    wins = 0.0
+#    time_avg = 1.0/500
+#    for episode in xrange(100000):
+#        total_reward, steps = rl.run(player)
+#        if total_reward > 0:
+#            wins = time_avg + (1-time_avg) * wins
+#        else:
+#            wins = (1-time_avg) * wins
+#        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins, 'epsilon:', selector.epsilon
+#        continue
+#        s = rl.storage.state
+#        for i in range(0,21):
+#            print "%02d   "%(i+2), "%012f     %012f"%(s[i,0], s[i,1]), ["H","S"][( s[i, 0] < s[i, 1])]
+#
+#        raw_input("next")
