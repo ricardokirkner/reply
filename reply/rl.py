@@ -1,6 +1,8 @@
 """Agent and World classes."""
 import numpy
 
+from contrib import argparse
+
 __all__ = ["Dimension", "World", "ActionNotPossible", "Episode",
            "Agent", "LearningAgent", "Experiment"]
 
@@ -99,9 +101,8 @@ class Episode(object):
 
 
 class Agent(object):
-
     """Agent base class.
-    
+
     An agent must declare the following attributes:
 
     world_class    -- the class representing the world the agent lives in
@@ -111,12 +112,14 @@ class Agent(object):
     encoder_class  -- the class used for converting between rl- and world encodings
 
     storage_class  -- the class used for storing the agent's data
-    
+
     """
     world_class = None
     selector_class = None
     encoder_class = None
     storage_class = None
+
+    max_steps = 10000
 
     def __init__(self):
         """Initialize the agent."""
@@ -186,16 +189,16 @@ class Agent(object):
         self.last_state = self.current_state
         return True
 
-    def run(self, max_steps=1000):
+    def run_episode(self):
         """Perform a full episode in the world.
-        
+
         Arguments:
         max_steps -- maximum number of steps to perform
-        
+
         """
         self.new_episode()
         step = 0
-        while step < max_steps or max_steps < 0:
+        while step < self.max_steps or self.max_steps < 0:
             if not self.step():
                 break
             step += 1
@@ -213,14 +216,13 @@ class Agent(object):
 
 
 class LearningAgent(Agent):
-
     """A learning enabled agent.
-    
+
     Besides the classes needed by an agent, a LearningAgent needs to have
     the following classes declared:
-        
+
     learner_class -- the class used for the learning part of the agent
-    
+
     """
 
     def __init__(self):
@@ -258,9 +260,43 @@ class LearningAgent(Agent):
         """Return the reward obtainer after performing an action."""
         raise NotImplementedError()
 
+class Command(object):
+    #: the command name
+    name = "replace_me"
+
+    def register(self, parser):
+        """Register this command in the parser subparser"""
+        raise NotImplementedError()
+
+    def run(self, options):
+        """run the command with options"""
+        raise NotImplementedError()
+
+_commands = []
+def register_command(command_klass):
+    _commands.append(command_klass)
+
+class Run(Command):
+    """Run the experiment in foreground"""
+    name = "run"
+
+    def register(self, parser):
+        parser.add_argument("--max-episodes", type=int, dest="max_episodes",
+                            help="the maximum number of episodes to execute")
+
+
+    def run(self, agent, args):
+        agent.new_episode()
+        while True:
+            episode = agent.run_episode()
+            print episode
+            if args.max_episodes is not None:
+                if episode.episode >= args.max_episodes:
+                    break
+
+register_command(Run)
 
 class Experiment(object):
-
     """Experiment base class."""
 
     def __init__(self, agent):
@@ -272,9 +308,26 @@ class Experiment(object):
         """
         self.agent = agent
 
-    def run(self, max_steps=1000):
-        """Perform the experiment."""
-        self.agent.new_episode()
-        while True:
-            episode = self.agent.run(max_steps=max_steps)
-            print episode
+    def run(self):
+        parser = argparse.ArgumentParser(
+            description='control and run RL experiments.')
+        subparsers = parser.add_subparsers(dest="action")
+
+        parser.add_argument("--set", nargs=2, action="append",
+                            help="set the value of a parameter")
+
+        actions = {}
+        for klass in _commands:
+            klass_subparser = subparsers.add_parser(
+                klass.name,
+                help=klass.__doc__)
+            a = klass()
+            actions[a.name] = a
+            a.register(klass_subparser)
+
+        args = parser.parse_args()
+        if args.set is not None:
+            for name, value in args.set:
+                setattr(self.agent, name, eval(value))
+        selected_action = actions[args.action]
+        selected_action.run(self.agent, args)
