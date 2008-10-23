@@ -5,8 +5,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import reply
 import math
 
-NUM_PEGS = 3
-NUM_DISCS = 5
 
 DEBUG = False
 
@@ -14,7 +12,7 @@ class Peg(object):
     def __init__(self, number):
         self.number = number
         self.discs = []
-    
+
     @property
     def is_valid(self):
         return sorted(self.discs, reverse=True) == self.discs
@@ -38,7 +36,7 @@ class Peg(object):
     def __repr__(self):
         return '<%s: number: %d discs: %s>' % (
             self.__class__.__name__, self.number, str(self.discs))
-    
+
     def __contains__(self, disc):
         return disc in self.discs
 
@@ -46,8 +44,8 @@ class Peg(object):
 class Hanoi(reply.World):
     def __init__(self, rl):
         super(Hanoi, self).__init__(rl)
-        self.num_discs = getattr(rl, "num_discs", NUM_DISCS)
-        self.num_pegs = getattr(rl, "num_pegs", NUM_PEGS)
+        self.num_discs = getattr(rl, "num_discs", 5)
+        self.num_pegs = getattr(rl, "num_pegs", 3)
         self.initial_peg = getattr(rl, "initial_peg", 0)
         self.pegs = [Peg(i) for i in xrange(self.num_pegs)]
 
@@ -56,24 +54,24 @@ class Hanoi(reply.World):
         for peg in self.pegs:
             is_final |= self.discs_moved(peg)
         return is_final
-        
+
     def do_action(self, action):
         from_peg_num, to_peg_num = action
         if DEBUG:
             print 'moving from peg %d to peg %d' % (from_peg_num, to_peg_num)
         from_peg = self.pegs[int(from_peg_num)]
         to_peg = self.pegs[int(to_peg_num)]
-        
+
         if not from_peg.discs:
             if DEBUG:
                 print "move invalid: empty"
             raise reply.ActionNotPossible()
-        
+
         if to_peg.discs and from_peg.discs[-1] > to_peg.discs[-1]:
             if DEBUG:
                 print "move invalid: too big"
             raise reply.ActionNotPossible()
-        
+
         disc = from_peg.pop()
         to_peg.push(disc)
         if DEBUG:
@@ -100,14 +98,14 @@ class Hanoi(reply.World):
             if disc in peg:
                 return i
         raise Exception("disc not found")
-    
+
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, str(self.pegs))
 
 
 class HanoiAgent(reply.Agent):
-    num_pegs = NUM_PEGS
-    num_discs = NUM_DISCS
+    num_pegs = 3
+    num_discs = 5
 
     random_action_rate = 0
 
@@ -119,9 +117,9 @@ class HanoiAgent(reply.Agent):
     def get_action_space(self):
         return [ reply.Dimension("from_peg", 0, self.num_pegs-1),
                  reply.Dimension("to_peg", 0, self.num_pegs-1) ]
-    
+
     def get_state_space(self):
-        return [ reply.Dimension("disc_%d" % disc, 0, self.num_pegs-1) for disc in xrange(self.num_discs) ] 
+        return [ reply.Dimension("disc_%d" % disc, 0, self.num_pegs-1) for disc in xrange(self.num_discs) ]
 
 
 class HanoiLearningAgent(HanoiAgent, reply.LearningAgent):
@@ -154,28 +152,6 @@ class HanoiLearningAgent(HanoiAgent, reply.LearningAgent):
 
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) < 2:
-        print "Usage: %s [learn|eval]" % __file__
-        sys.exit(1)
-    else:
-        action = sys.argv[1]
-        try:
-            num_steps = int(sys.argv[2])
-        except:
-            num_steps = 1000
-        FILENAME = 'hanoi.exp'
-
-    if action == 'learn':
-        agent = HanoiLearningAgent()
-        agent.num_steps = num_steps
-    elif action == 'eval':
-        agent = HanoiAgent()
-        agent.num_steps = num_steps
-    else:
-        print "Usage: %s [learn|eval]" % __file__
-        sys.exit(1)
-        
-    max_steps = 10000
+    agent = HanoiLearningAgent()
     experiment = reply.Experiment(agent)
-    experiment.run(max_steps)
+    experiment.run()

@@ -159,18 +159,3 @@ if __name__ == '__main__':
     experiment = reply.Experiment(agent)
     experiment.run()
 
-#    wins = 0.0
-#    time_avg = 1.0/500
-#    for episode in xrange(100000):
-#        total_reward, steps = rl.run(player)
-#        if total_reward > 0:
-#            wins = time_avg + (1-time_avg) * wins
-#        else:
-#            wins = (1-time_avg) * wins
-#        print 'Episode: ', episode, '  Steps: ', steps, '  Player: ', player.total_points, '  Dealer: ', dealer.total_points, '  Reward: ', total_reward, 'avg:', wins, 'epsilon:', selector.epsilon
-#        continue
-#        s = rl.storage.state
-#        for i in range(0,21):
-#            print "%02d   "%(i+2), "%012f     %012f"%(s[i,0], s[i,1]), ["H","S"][( s[i, 0] < s[i, 1])]
-#
-#        raw_input("next")

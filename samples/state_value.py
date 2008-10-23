@@ -69,25 +69,6 @@ class StateValueAgent(reply.LearningAgent):
         return 0
 
 if __name__ == "__main__":
-    reply.Experiment(StateValueAgent()).run()
-    ps = [ p/10.0 for p in range(10) ]
-    g = StateValue(ps)
-    e = reply.encoder.DistanceEncoder(g.get_state_space(), g.get_action_space())
-    r = reply.RL(
-            reply.learner.QLearner(0.001, 0.01,1),
-            reply.storage.TableStorage(e),
-            e,
-            reply.selector.EGreedySelector(0.1, 1)
-        )
-
-    for episode in range(10000):
-        total_reward,steps  = r.run(g)
-        err = 0
-        for i, s in enumerate(g.get_state_space()[0]):
-            e = r.encoder.encode_state( [ s ] )
-            v = r.storage.get_max_value(
-                    r.encoder.encode_state( [ s ] )
-                )
-            err += abs(ps[i]-v)
-
-        print 'Espisode: ',episode,'  Steps:',steps,'  Reward:',total_reward,' error:', err
+    agent = StateValueAgent()
+    experiment = reply.Experiment(agent)
+    experiment.run()
