@@ -5,17 +5,13 @@
 Welcome to reply's documentation!
 =================================
 
+:Release: |version|
+:Date: |today|
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 
 Modules
 ========
@@ -25,3 +21,11 @@ Modules
    :glob:
 
    modules/*
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

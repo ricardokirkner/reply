@@ -7,7 +7,7 @@
    :show-inheritance:
    :members:
 
-.. autoclass:: ActionNotPossible
+.. autoexception:: ActionNotPossible
    :show-inheritance:
    :members:
 
