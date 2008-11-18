@@ -38,7 +38,7 @@ class ActionValue(reply.World):
                 state=0
             )
 
-class ActionValueAgent(reply.LearningAgent):
+class ActionValueAgent(reply.Agent):
     action_win_probability_array = [ p/10.0 for p in range(10) ]
 
     learning_rate = 1

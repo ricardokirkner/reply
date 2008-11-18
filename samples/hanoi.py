@@ -114,15 +114,6 @@ class HanoiAgent(reply.Agent):
     storage_class = reply.storage.TableStorage
     encoder_class = reply.encoder.DistanceEncoder
 
-    def get_action_space(self):
-        return [ reply.Dimension("from_peg", 0, self.num_pegs-1),
-                 reply.Dimension("to_peg", 0, self.num_pegs-1) ]
-
-    def get_state_space(self):
-        return [ reply.Dimension("disc_%d" % disc, 0, self.num_pegs-1) for disc in xrange(self.num_discs) ]
-
-
-class HanoiLearningAgent(HanoiAgent, reply.LearningAgent):
     learning_rate = 0.9
     learning_rate_decay = 0.999
     learning_rate_min = 0.0001
@@ -132,6 +123,13 @@ class HanoiLearningAgent(HanoiAgent, reply.LearningAgent):
     random_action_rate_decay = 0.995
 
     learner_class = reply.learner.QLearner
+
+    def get_action_space(self):
+        return [ reply.Dimension("from_peg", 0, self.num_pegs-1),
+                 reply.Dimension("to_peg", 0, self.num_pegs-1) ]
+
+    def get_state_space(self):
+        return [ reply.Dimension("disc_%d" % disc, 0, self.num_pegs-1) for disc in xrange(self.num_discs) ]
 
     def get_reward(self):
         reward = 0

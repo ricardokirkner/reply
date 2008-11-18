@@ -97,12 +97,27 @@ class BlackJack(reply.World):
     def end_episode(self):
         self.dealer.teardown()
 
+    def has_won(self):
+        if self.dealer.total_points == 21:
+            if DEBUG:
+                print 'DEALER BLACK JACK'
+            return False
+        elif self.total_points > 21:
+            if DEBUG:
+                print 'PLAYER BUSTED'
+            return False
+        elif self.dealer.total_points > 21:
+            if DEBUG:
+                print 'DEALER BUSTED'
+            return True
+        else:
+            return self.dealer.total_points < self.total_points
 
 def eval_hand(cards):
     return sum(cards)
 
 
-class BlackJackAgent(reply.LearningAgent):
+class BlackJackAgent(reply.Agent):
     learning_rate = 0.1
     learning_rate_decay = 1.0
     discount_value = 0.9
@@ -129,27 +144,13 @@ class BlackJackAgent(reply.LearningAgent):
                 reward = -1
             else:
                 self.world.dealer.play()
-                if self.has_won():
+                if self.world.has_won():
                     reward = +1
                 else:
                     reward = -1
         return reward
 
-    def has_won(self):
-        if self.world.dealer.total_points == 21:
-            if DEBUG:
-                print 'DEALER BLACK JACK'
-            return False
-        elif self.world.total_points > 21:
-            if DEBUG:
-                print 'PLAYER BUSTED'
-            return False
-        elif self.world.dealer.total_points > 21:
-            if DEBUG:
-                print 'DEALER BUSTED'
-            return True
-        else:
-            return self.world.dealer.total_points < self.world.total_points
+
 
 
 
@@ -158,4 +159,3 @@ if __name__ == '__main__':
 
     experiment = reply.Experiment(agent)
     experiment.run()
-

@@ -42,7 +42,7 @@ class StateValue(reply.World):
                 state=self.state
             )
 
-class StateValueAgent(reply.LearningAgent):
+class StateValueAgent(reply.Agent):
     state_probability_array = [ p/10.0 for p in range(10) ]
 
     learning_rate = 1

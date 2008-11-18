@@ -41,7 +41,7 @@ class Gambler(reply.World):
     def get_state(self):
         return dict(cash=self.cash)
 
-class GamblerAgent(reply.LearningAgent):
+class GamblerAgent(reply.Agent):
     win_probability = 0.4
     learning_rate = 1
     learning_rate_decay = 0.99

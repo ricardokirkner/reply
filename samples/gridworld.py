@@ -12,7 +12,7 @@ debug = 0
 
 class GridWorld(reply.World):
     ENTER, EXIT, MINE = range(3)
-    
+
     def __init__(self, rl):
         """
         size: tuple for the world size
@@ -25,13 +25,13 @@ class GridWorld(reply.World):
         self.enter = getattr(rl, 'enter')
         self.exits = getattr(rl, 'exits')
         self.mines = getattr(rl, 'mines')
-        
-        
+
+
     def is_final(self):
         if self.position in self.exits:
             return True
         return False
-    
+
     def move(self, position, dir):
         if dir == 0: # up
             p = position[0], (position[1]+1)%self.size[1]
@@ -42,7 +42,7 @@ class GridWorld(reply.World):
         elif dir == 3: # right
             p = (position[0]+1)%self.size[0], position[1]
         return p
-    
+
     def do_action(self, action):
         dir = action[0]
         if debug:
@@ -58,7 +58,7 @@ class GridWorld(reply.World):
                 print "and found a MINE"
             else:
                 print
-        
+
     def get_state(self):
         x, y = self.position
         return dict(
@@ -69,9 +69,9 @@ class GridWorld(reply.World):
     def new_episode(self):
         self.trace = [self.enter]
         self.position = self.enter
-        
 
-class GridWorldAgent(reply.LearningAgent):
+
+class GridWorldAgent(reply.Agent):
     learning_rate = 1
     learning_rate_decay = 0.99
     learning_rate_min = 0.05
@@ -98,11 +98,11 @@ class GridWorldAgent(reply.LearningAgent):
 
     def get_action_space(self):
         return [ reply.Dimension('action',0,3)  ]
-    
+
     def get_state_space(self):
         xz, yz = self.world.size
         return [ reply.Dimension('x',0,xz-1), reply.Dimension('y',0,yz-1), ]
-        
+
     def get_reward(self):
         if self.world.position in self.world.exits:
             return 10
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     mouse = Mouse()
     mouse.x = mouse.y = 0
 
-    window = pyglet.window.Window(width=max(200, sx*cellsize), 
+    window = pyglet.window.Window(width=max(200, sx*cellsize),
                                   height=sy*cellsize+100)
 
     up = pyglet.resource.image('up.png')
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     def on_mouse_motion(x, y, dx, dy):
         mouse.x = x
         mouse.y = y
-            
+
     def get_path():
         current = agent.world.enter
         visit = {}
@@ -154,19 +154,19 @@ if __name__ == "__main__":
                 path.append(current)
                 break
         return path
-                
+
     @window.event
     def on_draw():
         window.clear()
         #paint white BG
-        gl.glColor4f(1,1,1,1) 
+        gl.glColor4f(1,1,1,1)
         gl.glBegin(gl.GL_QUADS)
         gl.glVertex2f( 0, 0 )
         gl.glVertex2f( 0, window.height )
         gl.glVertex2f( window.width, window.height )
         gl.glVertex2f( window.width, 0 )
         gl.glEnd()
-    
+
         # draw cell values
         x = mouse.x // cellsize
         y = mouse.y // cellsize
@@ -177,7 +177,7 @@ if __name__ == "__main__":
                           x=0, y=window.height,multiline=True, width=window.width, anchor_y='top'
                           )
             label.draw()
-   
+
         # draw cell direction
         for x in range(sx):
             for y in range(sy):
@@ -190,7 +190,7 @@ if __name__ == "__main__":
                         numpy.argmax(agent.storage.get_state_values( agent.encoder.encode_state( dict(x=x, y=y) ) ))
                         ]
                 img.blit(x*(cellsize)+delta, y*cellsize+delta)
-                
+
         # draw best path
         path = get_path()
         gl.glLineWidth(2)
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         for x,y in path:
             gl.glVertex2f( x*cellsize+cellsize/2, y*cellsize+cellsize/2 )
         gl.glEnd()
-        gl.glColor4f(1,1,1,1) 
+        gl.glColor4f(1,1,1,1)
 
     def step(dt):
         episode = agent.run()
@@ -207,4 +207,3 @@ if __name__ == "__main__":
 
     pyglet.clock.schedule_interval(step, 0.01)
     pyglet.app.run()
-
