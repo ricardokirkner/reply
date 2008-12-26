@@ -4,7 +4,7 @@ import numpy
 from contrib import argparse
 
 __all__ = ["Dimension", "World", "ActionNotPossible", "Episode",
-           "Agent", "LearningAgent", "Experiment"]
+           "Agent", "Experiment"]
 
 class Dimension(object):
 
@@ -101,23 +101,22 @@ class Episode(object):
 
 
 class Agent(object):
-    """Agent base class.
+    """Agent class.
 
     An agent must declare the following attributes:
 
     world_class    -- the class representing the world the agent lives in
-
     selector_class -- the class used for selecting actions
-
     encoder_class  -- the class used for converting between rl- and world encodings
-
     storage_class  -- the class used for storing the agent's data
+    learner_class  -- the class used for the learning part of the agent
 
     """
     world_class = None
     selector_class = None
     encoder_class = None
     storage_class = None
+    learner_class = None
 
     max_steps = 10000
 
@@ -127,6 +126,7 @@ class Agent(object):
         self.selector = self.selector_class(self)
         self.encoder = self.encoder_class(self)
         self.storage = self.storage_class(self)
+        self.learner = self.learner_class(self)
         self.episodes = 0
 
     def new_episode(self):
@@ -140,6 +140,8 @@ class Agent(object):
         self.storage.new_episode()
         self.encoder.new_episode()
         self.world.new_episode()
+        self.learner.new_episode()
+        self.current_episode.total_reward = 0
 
         self.last_state = None
         self.current_state = self.encoder.encode_state(self.world.get_state())
@@ -158,8 +160,16 @@ class Agent(object):
             # get new state
             next_state = self.encoder.encode_state(world.get_state())
 
-            # hook into the step
-            self._step_hook(next_state)
+            reward = self.get_reward()
+            self.current_episode.total_reward += reward
+
+            # perform the learning
+            self.learner.update(
+                self.current_state,
+                self.current_action,
+                reward,
+                next_state,
+                )
 
             # update current state
             self.current_state = next_state
@@ -214,51 +224,12 @@ class Agent(object):
         """
         pass
 
-
-class LearningAgent(Agent):
-    """A learning enabled agent.
-
-    Besides the classes needed by an agent, a LearningAgent needs to have
-    the following classes declared:
-
-    learner_class -- the class used for the learning part of the agent
-
-    """
-
-    def __init__(self):
-        """Initialize the agent."""
-        super(LearningAgent, self).__init__()
-        self.learner = self.learner_class(self)
-
-    def new_episode(self):
-        """Start a new episode."""
-        super(LearningAgent, self).new_episode()
-        self.learner.new_episode()
-        self.current_episode.total_reward = 0
-
-    def _step_hook(self, next_state):
-        """Hook into the step.
-
-        Arguments:
-        next_state -- state achieved after performing the action
-
-        """
-        super(LearningAgent, self)._step_hook(next_state)
-        # observe the reward for this state
-        reward = self.get_reward()
-        self.current_episode.total_reward += reward
-
-        # perform the learning
-        self.learner.update(
-            self.current_state,
-            self.current_action,
-            reward,
-            next_state,
-            )
-
     def get_reward(self):
         """Return the reward obtainer after performing an action."""
         raise NotImplementedError()
+
+
+
 
 class Command(object):
     #: the command name
@@ -295,6 +266,7 @@ class Run(Command):
                     break
 
 register_command(Run)
+
 
 class Experiment(object):
     """Experiment base class."""
