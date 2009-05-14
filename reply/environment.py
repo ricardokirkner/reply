@@ -1,57 +1,72 @@
 import simplejson
 
 from reply.types import Space
+from reply.util import MessageHandler, TaskSpec
 
-class Environment(object):
+class Environment(MessageHandler):
     problem_type = "episodic"
     discount_factor = 1.0
-    rewards = 0,1
-    
+    rewards = (0, 1)
+
     def __init__(self):
+        super(Environment, self).__init__()
         self.initialized = False
         self.set_action_space(**self.action_space)
         self.set_observation_space(**self.observation_space)
-        
+
     def set_observation_space(self, **kwargs):
         if self.initialized:
             raise Exception("Can't change observation space after init")
         self._observation_space = Space(kwargs)
-        
+
     def set_action_space(self, **kwargs):
         if self.initialized:
             raise Exception("Can't change action space after init")
         self._action_space = Space(kwargs)
-        
-    def env_init(self):
-        self.init()
+
+    def get_task_spec(self):
+        task_spec = TaskSpec(problem_type='episodic',
+                             discount_factor=self.discount_factor,
+                             observations=self._observation_space,
+                             actions=self._action_space,
+                             rewards=self.rewards,
+                             extra=self.__doc__)
+        return task_spec
+
+    #
+    # Standard API
+    #
+
+    def init(self):
+        self._init()
         self.initialized = True
         return self.get_task_spec()
-    
-    
-    def get_task_spec(self):
-        return ("VERSION RL-Glue-3.0 " +
-                "PROBLEMTYPE %s " % self.problem_type + 
-                "DISCOUNTFACTOR %s " % self.discount_factor +
-                "OBSERVATIONS %s " % self._observation_space +
-                "ACTIONS %s " % self._action_space +
-                "REWARDS (%s %s) " % self.rewards +
-                "EXTRA %s" % self.__doc__)
-    
-    def env_start(self):
+
+    def start(self):
+        observation = self._start()
+        self.started = True
+        return observation
+
+    def step(self, action):
+        observation = self._step(action)
+        return observation
+
+    def cleanup(self):
+        self._cleanup()
+
+    #
+    # Overridable Methods
+    #
+
+    def _init(self):
         pass
-    
-    def env_step(self, action):
+
+    def _start(self):
         pass
-    
-    def env_cleanup(self):
+
+    def _step(self, action):
         pass
-    
-    def env_message(self, message):
-        message = simplejson.parse(message)
-        fname = message['function_name']
-        f = getattr(self, "on_"+fname, None)
-        if f is not None:
-            f(*message['args'], **f['kwargs'])
-    
-    def init(self):
+
+    def _cleanup(self):
         pass
+
