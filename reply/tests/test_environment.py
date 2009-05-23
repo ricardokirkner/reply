@@ -11,10 +11,12 @@ class TestEnviron(unittest.TestCase):
             problem_type = "episodic"
             discount_factor = 1.0
             rewards = -1, 1
-            
+
         e = MyEnv()
         self.assertEqual(e.get_task_spec(), "VERSION RL-Glue-3.0 PROBLEMTYPE"
             " episodic DISCOUNTFACTOR 1.0 OBSERVATIONS INTS (0 0) ACTIONS "
             "INTS (0 10) REWARDS (-1 1) EXTRA None")
-                         
-    
+
+
+if __name__ == '__main__':
+    unittest.main()
