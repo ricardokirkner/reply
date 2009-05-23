@@ -151,12 +151,41 @@ def adapt(source, space, target=None):
                 raise TypeError("%s is of an invalid type: %s" % (key, space.spec[key]))
     else:
         # adapt from type to dictionary
+        ints = []
+        doubles = []
+        chars = []
+
+        # get attribute names
+        parts = space.names.split(' ')
+        for i, part in enumerate(parts):
+            if part == 'INTS':
+                j = i + 1
+                while j < len(parts) and parts[j] not in ('DOUBLES', 'CHARS'):
+                    ints.append(parts[j])
+                    j += 1
+            elif part == 'DOUBLES':
+                j = i + 1
+                while j < len(parts) and parts[j] not in ('INTS', 'CHARS'):
+                    doubles.append(parts[j])
+                    j += 1
+            elif part == 'CHARS':
+                pass
+
+        # build result dictionary
         result = {}
-        names = space.names
-        for values in (source.intArray, source.doubleArray, source.charArray):
-            for i, value in enumerate(values):
-                key = keys[i]
+        if source.intArray:
+            for i, value in enumerate(source.intArray):
+                key = ints[i]
                 result[key] = value
+        if source.doubleArray:
+            for i, value in enumerate(source.doubleArray):
+                key = doubles[i]
+                result[key] = value
+        if source.charArray:
+            for i, value in enumerate(source.charArray):
+                key = chars[i]
+                result[key] = value
+
     return result
 
 def start_agent(agent):
