@@ -44,6 +44,22 @@ class Space(object):
     def __getitem__(self, item):
         return self._data[item]
 
+    def __str__(self):
+        items = []
+        for item in self._data:
+            if item == Integer:
+                items.append('INTS')
+                for name, value in sorted(self._data[item].iteritems()):
+                    items.append(str(value))
+            elif item == Double:
+                items.append('DOUBLES')
+                for name, value in sorted(self._data[item].iteritems()):
+                    items.append(str(value))
+            elif item == Char:
+                items.append('CHARCOUNT')
+                items.append(str(len(self._data[item])))
+        return ' '.join(items)
+
     def _build_data(self, spec):
         for name, value in spec.iteritems():
             _type = type(value)
