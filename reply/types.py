@@ -23,7 +23,9 @@ class Double(Number):
 
 
 class Char(Parameter):
-    pass
+
+    def __eq__(self, other):
+        return True
 
 
 class ListOf(Parameter):

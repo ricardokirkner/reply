@@ -17,13 +17,6 @@ class TaskSpec(object):
         self.extra = extra
 
     def __str__(self):
-#        observation_names = self.observations.names
-#        observation_values = self.observations.values
-#        action_names = self.actions.names
-#        action_values = self.actions.values
-#        extra = ("%s OBSERVATION_NAMES %s ACTION_NAMES %s" %
-#                 (self.extra, observation_names, action_names))
-
         # build observations string
         integers = self.observations[Integer]
         doubles = self.observations[Double]
@@ -31,11 +24,11 @@ class TaskSpec(object):
         observations_str = ""
         if integers:
             observations_str += "INTS"
-            for value in integers:
+            for value in integers.values():
                 observations_str += " (%s %s)" % (value.min, value.max)
         if doubles:
             observations_str += " DOUBLES"
-            for value in doubles:
+            for value in doubles.values():
                 observations_str += " (%s %s)" % (value.min, value.max)
         if charcount:
             observations_str += " CHARCOUNT %s" % charcount
@@ -48,11 +41,11 @@ class TaskSpec(object):
         actions_str = ""
         if integers:
             actions_str += "INTS"
-            for value in integers:
+            for value in integers.values():
                 actions_str += " (%s %s)" % (value.min, value.max)
         if doubles:
             actions_str += " DOUBLES"
-            for value in doubles:
+            for value in doubles.values():
                 actions_str += " (%s %s)" % (value.min, value.max)
         if charcount:
             actions_str += " CHARCOUNT %s" % charcount
@@ -74,32 +67,70 @@ class TaskSpec(object):
         task_spec.version = parser.getVersion()
         task_spec.problem_type = parser.getProblemType()
         task_spec.discount_factor = parser.getDiscountFactor()
-
-        # parse observations
-        int_observations = [Integer(*values) for values in
-                            parser.getIntObservations()]
-        double_observations = [Double(*values) for values in
-                               parser.getDoubleObservations()]
-        charcount_observations = [Char()] * parser.getCharCountObservations()
-        task_spec.observations = {Integer: int_observations,
-                                  Double: double_observations,
-                                  Char: charcount_observations}
-
-        # parse actions
-        int_actions = [Integer(*values) for values in parser.getIntActions()]
-        double_actions = [Double(*values) for values in
-                          parser.getDoubleActions()]
-        charcount_actions = [Char()] * parser.getCharCountActions()
-        task_spec.actions = {Integer: int_actions,
-                             Double: double_actions,
-                             Char: charcount_actions}
-
         # parse rewards
         rewards = map(float, parser.getReward()[1:-1].split())
         task_spec.rewards = Double(*rewards)
 
         task_spec.extra = parser.getExtra()
+
+        # parse observation and action names
+        observations, actions = _parse_spaces(task_spec.extra, parser)
+        task_spec.observations = observations
+        task_spec.actions = actions
         return task_spec
+
+
+def _parse_spaces(data, parser):
+    observations = {Integer: {}, Double: {}, Char: {}}
+    actions = {Integer: {}, Double: {}, Char: {}}
+    parts = data.split()
+    for i, part in enumerate(parts):
+        if part == 'OBSERVATIONS':
+            try:
+                actions_idx = parts.index('ACTIONS')
+            except ValueError:
+                actions_idx = -1
+            observation_names = parts[i+1:actions_idx]
+            observation_values = {"INTS": parser.getIntObservations(),
+                                  "DOUBLES": parser.getDoubleObservations(),
+                                  "CHARS": parser.getCharCountObservations()}
+            _parse_names(observation_names, observation_values, observations)
+        elif part == 'ACTIONS':
+            action_names = parts[i+1:]
+            action_values = {"INTS": parser.getIntActions(),
+                             "DOUBLES": parser.getDoubleActions(),
+                             "CHARS": parser.getCharCountActions()}
+            _parse_names(action_names, action_values, actions)
+    return (observations, actions)
+
+def _parse_names(names, values, result):
+    i = 0
+    while i < len(names):
+        name = names[i]
+        if name == 'INTS':
+            data = {}
+            i += 1
+            for value in values['INTS']:
+                name = names[i]
+                data[name] = Integer(*value)
+                i += 1
+            result[Integer] = data
+        elif name == 'DOUBLES':
+            data = {}
+            i += 1
+            for value in values['DOUBLES']:
+                name = names[i]
+                data[name] = Double(*value)
+                i += 1
+            result[Double] = data
+        elif name == 'CHARS':
+            data = {}
+            i += 1
+            for j in xrange(values['CHARS']):
+                name = names[i]
+                data[name] = Char()
+                i += 1
+            result[Char] = data
 
 
 class MessageHandler(object):
