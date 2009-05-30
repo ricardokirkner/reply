@@ -144,6 +144,47 @@ class TestSpace(unittest.TestCase):
             "DOUBLES (-0.050000 20.300000) (12.000000 13.000000) " \
             "(0.000000 0.125000) CHARCOUNT 3")
 
+    def test_space_equal_different_keys(self):
+        spec1 = {'a': Integer(0, 10)}
+        spec2 = {'b': Integer(0, 10)}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertNotEqual(space1, space2)
+
+    def test_space_equal_spec_same(self):
+        spec = {'a': Integer(0, 10)}
+        space1 = Space(spec)
+        space2 = Space(spec)
+        self.assertEqual(space1, space2)
+
+    def test_space_equal_spec_equal(self):
+        spec1 = {'a': Integer(0, 10)}
+        spec2 = {'a': Integer(0, 10)}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertEqual(space1, space2)
+
+    def test_space_equal_spec_equivalent(self):
+        spec1 = {'a': Integer(0, 10)}
+        spec2 = {'a': Integer(0.0, 10.0)}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertEqual(space1, space2)
+
+    def test_space_equal_spec_different(self):
+        spec1 = {'a': Integer(0, 10)}
+        spec2 = {'a': Integer(0, 1)}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertNotEqual(space1, space2)
+
+    def test_space_equal_spec_different_type(self):
+        spec1 = {'a': Integer(0, 10)}
+        spec2 = {'a': Double(0, 10)}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertNotEqual(space1, space2)
+
 
 if __name__ == '__main__':
     unittest.main()

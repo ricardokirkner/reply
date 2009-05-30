@@ -9,7 +9,8 @@ class Number(Parameter):
         self.max = max
 
     def __eq__(self, other):
-        return (self.min == other.min and self.max == other.max)
+        return type(self) == type(other) and \
+            (self.min == other.min and self.max == other.max)
 
 
 class Integer(Number):
@@ -26,12 +27,6 @@ class Char(Parameter):
 
     def __eq__(self, other):
         return True
-
-
-class ListOf(Parameter):
-    def __init__(self, num, type):
-        self.num = num
-        self.type = type
 
 
 class Space(object):
@@ -59,6 +54,9 @@ class Space(object):
                 items.append('CHARCOUNT')
                 items.append(str(len(self._data[item])))
         return ' '.join(items)
+
+    def __eq__(self, other):
+        return self.spec == other.spec
 
     def _build_data(self, spec):
         for name, value in spec.iteritems():
