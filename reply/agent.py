@@ -18,7 +18,8 @@ class Agent(MessageHandler):
 
     def init(self, task_spec):
         task_spec = TaskSpec.parse(task_spec)
-        self.set_action_space(**task_spec.actions.spec)
+        actions_spec = self._get_actions_spec(task_spec.actions.values())
+        self.set_action_space(**actions_spec)
         self._init(task_spec)
         self.initialized = True
 
@@ -54,4 +55,15 @@ class Agent(MessageHandler):
 
     def _cleanup(self):
         pass
+
+    #
+    # Helper Methods
+    #
+
+    def _get_actions_spec(self, actions):
+        def update(x, y):
+            x.update(y)
+            return x
+        actions_spec = reduce(update, actions)
+        return actions_spec
 
