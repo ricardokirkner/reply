@@ -1,6 +1,62 @@
+import simplejson
+
 from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 
 from reply.types import Char, Double, Integer, Space
+
+
+def parse_spaces(data, parser):
+    observations = {Integer: {}, Double: {}, Char: {}}
+    actions = {Integer: {}, Double: {}, Char: {}}
+    parts = data.split()
+    for i, part in enumerate(parts):
+        if part == 'OBSERVATIONS':
+            try:
+                actions_idx = parts.index('ACTIONS')
+            except ValueError:
+                actions_idx = -1
+            observation_names = parts[i+1:actions_idx]
+            observation_values = {"INTS": parser.getIntObservations(),
+                                  "DOUBLES": parser.getDoubleObservations(),
+                                  "CHARS": parser.getCharCountObservations()}
+            parse_names(observation_names, observation_values, observations)
+        elif part == 'ACTIONS':
+            action_names = parts[i+1:]
+            action_values = {"INTS": parser.getIntActions(),
+                             "DOUBLES": parser.getDoubleActions(),
+                             "CHARS": parser.getCharCountActions()}
+            parse_names(action_names, action_values, actions)
+    return (observations, actions)
+
+def parse_names(names, values, result):
+    i = 0
+    while i < len(names):
+        name = names[i]
+        if name == 'INTS':
+            data = {}
+            i += 1
+            for value in values['INTS']:
+                name = names[i]
+                data[name] = Integer(*value)
+                i += 1
+            result[Integer] = data
+        elif name == 'DOUBLES':
+            data = {}
+            i += 1
+            for value in values['DOUBLES']:
+                name = names[i]
+                data[name] = Double(*value)
+                i += 1
+            result[Double] = data
+        elif name == 'CHARS':
+            data = {}
+            i += 1
+            for j in xrange(values['CHARS']):
+                name = names[i]
+                data[name] = Char()
+                i += 1
+            result[Char] = data
+
 
 class TaskSpec(object):
 
@@ -74,63 +130,10 @@ class TaskSpec(object):
         task_spec.extra = parser.getExtra()
 
         # parse observation and action names
-        observations, actions = _parse_spaces(task_spec.extra, parser)
+        observations, actions = parse_spaces(task_spec.extra, parser)
         task_spec.observations = observations
         task_spec.actions = actions
         return task_spec
-
-
-def _parse_spaces(data, parser):
-    observations = {Integer: {}, Double: {}, Char: {}}
-    actions = {Integer: {}, Double: {}, Char: {}}
-    parts = data.split()
-    for i, part in enumerate(parts):
-        if part == 'OBSERVATIONS':
-            try:
-                actions_idx = parts.index('ACTIONS')
-            except ValueError:
-                actions_idx = -1
-            observation_names = parts[i+1:actions_idx]
-            observation_values = {"INTS": parser.getIntObservations(),
-                                  "DOUBLES": parser.getDoubleObservations(),
-                                  "CHARS": parser.getCharCountObservations()}
-            _parse_names(observation_names, observation_values, observations)
-        elif part == 'ACTIONS':
-            action_names = parts[i+1:]
-            action_values = {"INTS": parser.getIntActions(),
-                             "DOUBLES": parser.getDoubleActions(),
-                             "CHARS": parser.getCharCountActions()}
-            _parse_names(action_names, action_values, actions)
-    return (observations, actions)
-
-def _parse_names(names, values, result):
-    i = 0
-    while i < len(names):
-        name = names[i]
-        if name == 'INTS':
-            data = {}
-            i += 1
-            for value in values['INTS']:
-                name = names[i]
-                data[name] = Integer(*value)
-                i += 1
-            result[Integer] = data
-        elif name == 'DOUBLES':
-            data = {}
-            i += 1
-            for value in values['DOUBLES']:
-                name = names[i]
-                data[name] = Double(*value)
-                i += 1
-            result[Double] = data
-        elif name == 'CHARS':
-            data = {}
-            i += 1
-            for j in xrange(values['CHARS']):
-                name = names[i]
-                data[name] = Char()
-                i += 1
-            result[Char] = data
 
 
 class MessageHandler(object):
@@ -141,8 +144,8 @@ class MessageHandler(object):
             fname = message['function_name']
             f = getattr(self, "on_"+fname, None)
             if f is not None:
-                out_message = f(*message['args'], **f['kwargs'])
+                out_message = f(*message['args'], **message['kwargs'])
         except:
-            print "WARNING: received a malformed message in", self
+            raise ValueError("Received a malformed message in %s: %s" % (self, in_message))
         return simplejson.dumps(out_message)
 
