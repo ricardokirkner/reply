@@ -7,12 +7,14 @@ class Environment(MessageHandler):
     problem_type = "episodic"
     discount_factor = 1.0
     rewards = (0, 1)
+    actions_spec = {}
+    observations_spec = {}
 
     def __init__(self):
         super(Environment, self).__init__()
         self.initialized = False
-        self.set_action_space(**self.action_space)
-        self.set_observation_space(**self.observation_space)
+        self.set_action_space(**self.actions_spec)
+        self.set_observation_space(**self.observations_spec)
 
     def set_observation_space(self, **kwargs):
         if self.initialized:
