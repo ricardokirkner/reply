@@ -5,6 +5,7 @@ from reply.types import Char, Double, Integer
 from reply.util import TaskSpec, MessageHandler
 
 class TestTaskSpec(unittest.TestCase):
+
     def test_task_spec_parser_no_names(self):
         task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
             "DISCOUNTFACTOR 1 OBSERVATIONS INTS (3 0 1) " \
@@ -196,6 +197,16 @@ class TestTaskSpec(unittest.TestCase):
         self.assertEqual(task_spec.rewards, rewards)
         self.assertEqual(task_spec.extra, extra)
 
+    def test_task_spec_equal(self):
+        task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
+            "DISCOUNTFACTOR 1 OBSERVATIONS INTS (3 0 1) " \
+            "DOUBLES (2 -1.2 0.5) (-.07 .07) CHARCOUNT 0 " \
+            "ACTIONS INTS (0 4)  REWARDS (-5.0 5.0) " \
+            "EXTRA some other stuff goes here"
+        task_spec = TaskSpec.parse(task_spec_str)
+        other = TaskSpec.parse(task_spec_str)
+        self.assertEqual(task_spec, other)
+
 
 class TestMessageHandler(unittest.TestCase):
     def setUp(self):
@@ -216,7 +227,9 @@ class TestMessageHandler(unittest.TestCase):
         answer = self.handler.message(message)
         self.assertEqual(simplejson.loads(answer), "Hello, User!")
 
-
+    def test_message_malformed(self):
+        message = simplejson.dumps({'hola': 'mundo'})
+        self.assertRaises(ValueError, self.handler.message, message)
 
 
 if __name__ == '__main__':

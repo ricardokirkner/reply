@@ -115,6 +115,15 @@ class TaskSpec(object):
                 "REWARDS (%s %s) " % (self.rewards.min, self.rewards.max) +
                 "EXTRA %s" % self.extra)
 
+    def __eq__(self, other):
+        return (self.version == other.version and
+                self.problem_type == other.problem_type and
+                self.discount_factor == other.discount_factor and
+                self.observations == other.observations and
+                self.actions == other.actions and
+                self.rewards == other.rewards and
+                self.extra == other.extra)
+
     @classmethod
     def parse(cls, string):
         task_spec = TaskSpec()
