@@ -5,16 +5,6 @@ from reply.types import Char, Double, Integer, Space
 
 
 class TestAgent(unittest.TestCase):
-    """
-    agent = Agent()
-    agent.set_action_space()
-    agent.init(task_spec)
-    agent.start(initial_state)
-    agent.step(reward, next_state)
-    agent.end(reward)
-    agent.cleanup()
-    """
-    pass
 
     def setUp(self):
         self.agent = Agent()
