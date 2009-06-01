@@ -6,8 +6,8 @@ from reply.types import Char, Double, Integer, Space
 
 
 def parse_spaces(data, parser):
-    observations = {Integer: {}, Double: {}, Char: {}}
-    actions = {Integer: {}, Double: {}, Char: {}}
+    observations_spec = {}
+    actions_spec = {}
     parts = data.split()
     for i, part in enumerate(parts):
         if part == 'OBSERVATIONS':
@@ -19,14 +19,43 @@ def parse_spaces(data, parser):
             observation_values = {"INTS": parser.getIntObservations(),
                                   "DOUBLES": parser.getDoubleObservations(),
                                   "CHARS": parser.getCharCountObservations()}
-            parse_names(observation_names, observation_values, observations)
+            #parse_names(observation_names, observation_values, observations)
+            observations_spec = build_spec(observation_names, observation_values)
         elif part == 'ACTIONS':
             action_names = parts[i+1:]
             action_values = {"INTS": parser.getIntActions(),
                              "DOUBLES": parser.getDoubleActions(),
                              "CHARS": parser.getCharCountActions()}
-            parse_names(action_names, action_values, actions)
+            #parse_names(action_names, action_values, actions)
+            actions_spec = build_spec(action_names, action_values)
+    observations = Space(observations_spec)
+    actions = Space(actions_spec)
     return (observations, actions)
+
+def build_spec(names, values):
+    spec = {}
+    i = 0
+    while i < len(names):
+        name = names[i]
+        if name == 'INTS':
+            i += 1
+            for value in values['INTS']:
+                name = names[i]
+                spec[name] = Integer(*value)
+                i += 1
+        elif name == 'DOUBLES':
+            i += 1
+            for value in values['DOUBLES']:
+                name = names[i]
+                spec[name] = Double(*value)
+                i += 1
+        elif name == 'CHARS':
+            i += 1
+            for j in xrange(values['CHARS']):
+                name = names[i]
+                spec[name] = Char()
+                i += 1
+    return spec
 
 def parse_names(names, values, result):
     i = 0
@@ -74,37 +103,38 @@ class TaskSpec(object):
 
     def __str__(self):
         # build observations string
-        integers = self.observations[Integer]
-        doubles = self.observations[Double]
-        charcount = len(self.observations[Char])
-        observations_str = ""
-        if integers:
-            observations_str += "INTS"
-            for value in integers.values():
-                observations_str += " (%s %s)" % (value.min, value.max)
-        if doubles:
-            observations_str += " DOUBLES"
-            for value in doubles.values():
-                observations_str += " (%s %s)" % (value.min, value.max)
-        if charcount:
-            observations_str += " CHARCOUNT %s" % charcount
+        #integers = self.observations[Integer]
+        #doubles = self.observations[Double]
+        #charcount = len(self.observations[Char])
+        #observations_str = ""
+        #if integers:
+        #    observations_str += "INTS"
+        #    for value in integers.values():
+        #        observations_str += " (%s %s)" % (value.min, value.max)
+        #if doubles:
+        #    observations_str += " DOUBLES"
+        #    for value in doubles.values():
+        #        observations_str += " (%s %s)" % (value.min, value.max)
+        #if charcount:
+        #    observations_str += " CHARCOUNT %s" % charcount
+        observations_str = str(self.observations)
 
         # build actions string
-        actions_str = ""
-        integers = self.actions[Integer]
-        doubles = self.actions[Double]
-        charcount = len(self.actions[Char])
-        actions_str = ""
-        if integers:
-            actions_str += "INTS"
-            for value in integers.values():
-                actions_str += " (%s %s)" % (value.min, value.max)
-        if doubles:
-            actions_str += " DOUBLES"
-            for value in doubles.values():
-                actions_str += " (%s %s)" % (value.min, value.max)
-        if charcount:
-            actions_str += " CHARCOUNT %s" % charcount
+        #integers = self.actions[Integer]
+        #doubles = self.actions[Double]
+        #charcount = len(self.actions[Char])
+        #actions_str = ""
+        #if integers:
+        #    actions_str += "INTS"
+        #    for value in integers.values():
+        #        actions_str += " (%s %s)" % (value.min, value.max)
+        #if doubles:
+        #    actions_str += " DOUBLES"
+        #    for value in doubles.values():
+        #        actions_str += " (%s %s)" % (value.min, value.max)
+        #if charcount:
+        #    actions_str += " CHARCOUNT %s" % charcount
+        actions_str = str(self.actions)
 
         # build complete string
         return ("VERSION %s " % self.version +

@@ -1,7 +1,7 @@
 import unittest
 import simplejson
 
-from reply.types import Char, Double, Integer
+from reply.types import Char, Double, Integer, Space
 from reply.util import TaskSpec, MessageHandler
 
 class TestTaskSpec(unittest.TestCase):
@@ -17,8 +17,8 @@ class TestTaskSpec(unittest.TestCase):
         self.assertEqual(task_spec.problem_type, 'episodic')
         self.assertEqual(task_spec.discount_factor, 1)
 
-        observations = {Integer: {}, Double: {}, Char: {}}
-        actions = {Integer: {}, Double: {}, Char: {}}
+        observations = Space()
+        actions = Space()
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -38,14 +38,13 @@ class TestTaskSpec(unittest.TestCase):
         self.assertEqual(task_spec.problem_type, 'episodic')
         self.assertEqual(task_spec.discount_factor, 1)
 
-        observations = {Integer: {'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
-                                  'oi3': Integer(0, 1)},
-                        Double: {'od1': Double(-1.2, 0.5),
-                                 'od2': Double(-1.2, 0.5),
-                                 'od3': Double(-0.07, 0.07)},
-                        Char: {'oc1': Char(), 'oc2': Char()}}
-        actions = {Integer: {'ai1': Integer(0, 4)},
-                   Double: {}, Char: {}}
+        observations = Space({'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od2': Double(-1.2, 0.5),
+                              'od3': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space({'ai1': Integer(0, 4)})
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -58,6 +57,9 @@ class TestTaskSpec(unittest.TestCase):
         version = 'RL-Glue-3.0'
         problem_type = 'episodic'
         discount_factor = 1
+        # FIXME: the API has changed. need to update this test to make sense
+        #        need to generate unique names when no names have been defined
+        #        in the EXTRA section
         observations = {Integer: [Integer(0, 1)] * 3,
                         Double: [Double(-1.2, 0.5)] * 2 + [Double(-0.07, 0.07)],
                         Char: [Char()] * 0}
@@ -78,19 +80,19 @@ class TestTaskSpec(unittest.TestCase):
     def test_task_spec_string_no_names(self):
         task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
             "DISCOUNTFACTOR 1 OBSERVATIONS INTS (0 1) (0 1) (0 1) " \
-            "DOUBLES (-1.2 0.5) (-1.2 0.5) (-0.07 0.07) CHARCOUNT 2 " \
+            "DOUBLES (-1.200000 0.500000) (-1.200000 0.500000) (-0.070000 0.070000) CHARCOUNT 2 " \
             "ACTIONS INTS (0 4) REWARDS (-5.0 5.0) " \
             "EXTRA some other stuff goes here"
         version = 'RL-Glue-3.0'
         problem_type = 'episodic'
         discount_factor = 1
-        observations = {Integer: {'oi1': Integer(0, 1), 'oid2': Integer(0, 1),
-                                  'oi3': Integer(0, 1)},
-                        Double: {'od1': Double(-1.2, 0.5),
-                                 'od2': Double(-1.2, 0.5),
-                                 'od3': Double(-0.07, 0.07)},
-                        Char: {'oc1': Char(), 'oc2': Char()}}
-        actions = {Integer: {'ai1': Integer(0, 4)}, Double: {}, Char: {}}
+        observations = Space({'oi1': Integer(0, 1), 'oid2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od2': Double(-1.2, 0.5),
+                              'od3': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space({'ai1': Integer(0, 4)})
         rewards = Double(-5.0, 5.0)
         extra = "some other stuff goes here"
         task_spec = TaskSpec(version, problem_type, discount_factor,
@@ -101,21 +103,20 @@ class TestTaskSpec(unittest.TestCase):
     def test_task_spec_string_names(self):
         task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
             "DISCOUNTFACTOR 1 OBSERVATIONS INTS (0 1) (0 1) (0 1) " \
-            "DOUBLES (-1.2 0.5) (-1.2 0.5) (-0.07 0.07) CHARCOUNT 2 " \
+            "DOUBLES (-1.200000 0.500000) (-1.200000 0.500000) (-0.070000 0.070000) CHARCOUNT 2 " \
             "ACTIONS INTS (0 4) REWARDS (-5.0 5.0) " \
             "EXTRA OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1"
         version = 'RL-Glue-3.0'
         problem_type = 'episodic'
         discount_factor = 1
-        observations = {Integer: {'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
-                                  'oi3': Integer(0, 1)},
-                        Double: {'od1': Double(-1.2, 0.5),
-                                 'od2': Double(-1.2, 0.5),
-                                 'od3': Double(-0.07, 0.07)},
-                        Char: {'oc1': Char(), 'oc2': Char()}}
-        actions = {Integer: {'ai1': Integer(0, 4)},
-                   Double: {}, Char: {}}
+        observations = Space({'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od2': Double(-1.2, 0.5),
+                              'od3': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space({'ai1': Integer(0, 4)})
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1"
@@ -134,23 +135,22 @@ class TestTaskSpec(unittest.TestCase):
     def test_task_spec_string_actions(self):
         task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
             "DISCOUNTFACTOR 1 OBSERVATIONS INTS (0 1) (0 1) (0 1) " \
-            "DOUBLES (-1.2 0.5) (-1.2 0.5) (-0.07 0.07) CHARCOUNT 2 " \
-            "ACTIONS INTS (0 4) DOUBLES (0.0 1.0) CHARCOUNT 2 " \
+            "DOUBLES (-1.200000 0.500000) (-1.200000 0.500000) (-0.070000 0.070000) CHARCOUNT 2 " \
+            "ACTIONS INTS (0 4) DOUBLES (0.000000 1.000000) CHARCOUNT 2 " \
             "REWARDS (-5.0 5.0) " \
             "EXTRA OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1 DOUBLES ad1 CHARS ac1 ac2 "
         version = 'RL-Glue-3.0'
         problem_type = 'episodic'
         discount_factor = 1
-        observations = {Integer: {'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
-                                  'oi3': Integer(0, 1)},
-                        Double: {'od1': Double(-1.2, 0.5),
-                                 'od2': Double(-1.2, 0.5),
-                                 'od3': Double(-0.07, 0.07)},
-                        Char: {'oc1': Char(), 'oc2': Char()}}
-        actions = {Integer: {'ai1': Integer(0, 4)},
-                   Double: {'ad1': Double(0.0, 1.0)},
-                   Char: {'ac1': Char(), 'ac2': Char()}}
+        observations = Space({'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od2': Double(-1.2, 0.5),
+                              'od3': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space({'ai1': Integer(0, 4), 'ad1': Double(0.0, 1.0),
+                         'ac1': Char(), 'ac2': Char()})
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1 DOUBLES ad1 CHARS ac1 ac2 "
@@ -176,14 +176,13 @@ class TestTaskSpec(unittest.TestCase):
         version = 'RL-Glue-3.0'
         problem_type = 'episodic'
         discount_factor = 1
-        observations = {Integer: {'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
-                                  'oi3': Integer(0, 1)},
-                        Double: {'od1': Double(-1.2, 0.5),
-                                 'od3': Double(-1.2, 0.5),
-                                 'od2': Double(-0.07, 0.07)},
-                        Char: {'oc1': Char(), 'oc2': Char()}}
-        actions = {Integer: {'ai2': Integer(0, 4)},
-                   Double: {}, Char: {}}
+        observations = Space({'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od3': Double(-1.2, 0.5),
+                              'od2': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space({'ai2': Integer(0, 4)})
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi3 oi1 oi2 DOUBLES od3 od1 od2 " \
             "CHARS oc1 oc2 ACTIONS INTS ai2"

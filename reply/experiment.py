@@ -17,7 +17,7 @@ class Experiment(object):
         self.started = True
 
     def step(self):
-        pass
+        self._step()
 
     def run(self):
         pass

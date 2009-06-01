@@ -13,7 +13,7 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(self.environment.initialized, False)
         self.assertEqual(self.environment.problem_type, 'episodic')
         self.assertEqual(self.environment.discount_factor, 1.0)
-        self.assertEqual(self.environment.rewards, (0, 1))
+        self.assertEqual(self.environment.rewards, Integer(0, 1))
         self.assertEqual(self.environment.actions_spec, {})
         self.assertEqual(self.environment.observations_spec, {})
 
@@ -34,7 +34,7 @@ class TestEnviron(unittest.TestCase):
         action_space = self.environment._action_space
         observation_space = self.environment._observation_space
         rewards = self.environment.rewards
-        extra = self.environment.__doc__
+        extra = ''
         task_spec = TaskSpec(problem_type=problem_type,
                              discount_factor=discount_factor,
                              observations=observation_space,
@@ -49,7 +49,7 @@ class TestEnviron(unittest.TestCase):
         action_space = self.environment._action_space
         observation_space = self.environment._observation_space
         rewards = self.environment.rewards
-        extra = self.environment.__doc__
+        extra = ''
         default_task_spec = TaskSpec(problem_type=problem_type,
                                      discount_factor=discount_factor,
                                      observations=observation_space,

@@ -7,10 +7,21 @@ class Agent(MessageHandler):
         super(Agent, self).__init__()
         self.initialized = False
 
-    def set_action_space(self, **kwargs):
+    def set_action_space(self, space=None, **kwargs):
         if self.initialized:
             raise Exception("Can't change action space after init")
-        self._action_space = Space(kwargs)
+        if space is not None:
+            self._action_space = space
+        else:
+            self._action_space = Space(kwargs)
+
+    def set_observation_space(self, space=None, **kwargs):
+        if self.initialized:
+            raise Exception("Can't change observation space after init")
+        if space is not None:
+            self._observation_space = space
+        else:
+            self._observation_space = Space(kwargs)
 
     #
     # Standard API
@@ -18,8 +29,8 @@ class Agent(MessageHandler):
 
     def init(self, task_spec):
         task_spec = TaskSpec.parse(task_spec)
-        actions_spec = self._get_actions_spec(task_spec.actions.values())
-        self.set_action_space(**actions_spec)
+        self.set_action_space(task_spec.actions)
+        self.set_observation_space(task_spec.observations)
         self._init(task_spec)
         self.initialized = True
 
@@ -45,25 +56,14 @@ class Agent(MessageHandler):
         pass
 
     def _start(self, observation):
-        pass
+        return {}
 
     def _step(self, reward, observation):
-        pass
+        return {}
 
     def _end(self, reward):
         pass
 
     def _cleanup(self):
         pass
-
-    #
-    # Helper Methods
-    #
-
-    def _get_actions_spec(self, actions):
-        def update(x, y):
-            x.update(y)
-            return x
-        actions_spec = reduce(update, actions)
-        return actions_spec
 

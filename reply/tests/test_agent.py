@@ -29,7 +29,7 @@ class TestAgent(unittest.TestCase):
     def test_agent_start_abstract(self):
         obs = {'o1': 1}
         action = self.agent.start(obs)
-        self.assertEqual(action, None)
+        self.assertEqual(action, {})
 
     def test_agent_start_overriden(self):
         def start(observation):
@@ -43,7 +43,7 @@ class TestAgent(unittest.TestCase):
         reward = 0
         obs = {'o1': 1}
         action = self.agent.step(reward, obs)
-        self.assertEqual(action, None)
+        self.assertEqual(action, {})
 
     def test_agent_step_overriden(self):
         def step(reward, observation):

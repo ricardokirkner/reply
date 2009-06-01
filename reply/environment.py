@@ -1,12 +1,12 @@
 import simplejson
 
-from reply.types import Space
+from reply.types import Integer, Space
 from reply.util import MessageHandler, TaskSpec
 
 class Environment(MessageHandler):
-    problem_type = "episodic"
+    problem_type = 'episodic'
     discount_factor = 1.0
-    rewards = (0, 1)
+    rewards = Integer(0, 1)
     actions_spec = {}
     observations_spec = {}
 
@@ -15,24 +15,31 @@ class Environment(MessageHandler):
         self.initialized = False
         self.set_action_space(**self.actions_spec)
         self.set_observation_space(**self.observations_spec)
+        self.extra = self._get_names()
 
-    def set_observation_space(self, **kwargs):
+    def set_observation_space(self, space=None, **kwargs):
         if self.initialized:
             raise Exception("Can't change observation space after init")
-        self._observation_space = Space(kwargs)
+        if space is not None:
+            self._observation_space = space
+        else:
+            self._observation_space = Space(kwargs)
 
-    def set_action_space(self, **kwargs):
+    def set_action_space(self, space=None, **kwargs):
         if self.initialized:
             raise Exception("Can't change action space after init")
-        self._action_space = Space(kwargs)
+        if space is not None:
+            self._action_space = space
+        else:
+            self._action_space = Space(kwargs)
 
     def get_task_spec(self):
-        task_spec = TaskSpec(problem_type='episodic',
+        task_spec = TaskSpec(problem_type=self.problem_type,
                              discount_factor=self.discount_factor,
                              observations=self._observation_space,
                              actions=self._action_space,
                              rewards=self.rewards,
-                             extra=self.__doc__)
+                             extra=self.extra)
         return task_spec
 
     #
@@ -64,11 +71,28 @@ class Environment(MessageHandler):
         pass
 
     def _start(self):
-        pass
+        return {}
 
     def _step(self, action):
-        pass
+        return {}
 
     def _cleanup(self):
         pass
 
+    #
+    # Helper Methods
+    #
+
+    def _get_names(self):
+        observations = self._observation_space
+        actions = self._action_space
+        extra = ""
+        observation_names = observations.get_names()
+        action_names = actions.get_names()
+        if observation_names:
+            extra += "OBSERVATIONS %s" % observation_names
+            if action_names:
+                extra += " "
+        if action_names:
+            extra += "ACTIONS %s" % action_names
+        return extra

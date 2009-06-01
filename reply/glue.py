@@ -22,35 +22,31 @@ class RlGlueProxyAgent(Agent):
         self.agent = agent
 
     def agent_init(self, task_spec):
-        import pdb; pdb.set_trace()
-        return self.agent.init(task_spec)
+        self.agent.init(task_spec)
 
     def agent_start(self, observation):
-        import pdb; pdb.set_trace()
-        space = self.agent._action_space
-        reply_observation = adapt(observation, space)
+        observation_space = self.agent._observation_space
+        action_space = self.agent._action_space
+        reply_observation = adapt(observation, observation_space)
         reply_action = self.agent.start(observation)
-        action = adapt(reply_action, space, Action)
+        action = adapt(reply_action, action_space, Action)
         return action
 
     def agent_step(self, reward, observation):
-        import pdb; pdb.set_trace()
-        space = self.agent._action_space
-        reply_observation = adapt(observation, space)
+        observation_space = self.agent._observation_space
+        action_space = self.agent._action_space
+        reply_observation = adapt(observation, observation_space)
         reply_action = self.agent.step(reward, reply_observation)
-        action = adapt(reply_action, space, Action)
+        action = adapt(reply_action, action_space, Action)
         return action
 
     def agent_end(self, reward):
-        import pdb; pdb.set_trace()
         self.agent.end(reward)
 
     def agent_cleanup(self):
-        import pdb; pdb.set_trace()
         self.agent.cleanup()
 
     def agent_message(self, in_message):
-        import pdb; pdb.set_trace()
         out_message = self.agent.message(in_message)
         return out_message
 
@@ -67,19 +63,16 @@ class RlGlueProxyEnvironment(Environment):
         self.environment = environment
 
     def env_init(self):
-        import pdb; pdb.set_trace()
         task_spec = self.environment.init()
         return str(task_spec)
 
     def env_start(self):
-        import pdb; pdb.set_trace()
         space = self.environment._observation_space
         reply_observation = self.environment.start()
         observation = adapt(reply_observation, space, Observation)
         return observation
 
     def env_step(self, action):
-        import pdb; pdb.set_trace()
         space = self.environment._observation_space
         reply_action = adapt(action, space)
         result = self.environment.step(reply_action)
@@ -87,11 +80,9 @@ class RlGlueProxyEnvironment(Environment):
         return rot
 
     def env_cleanup(self):
-        import pdb; pdb.set_trace()
         self.environment.cleanup()
 
     def env_message(self, in_message):
-        import pdb; pdb.set_trace()
         out_message = self.environment.message(in_message)
         return out_message
 
@@ -133,7 +124,6 @@ class RlGlueProxyExperiment(object):
 
 
 def adapt(source, space, target=None):
-    import pdb; pdb.set_trace()
     if target is not None:
         # adapt from dictionary to type
         result = target()
@@ -151,25 +141,11 @@ def adapt(source, space, target=None):
                 raise TypeError("%s is of an invalid type: %s" % (key, space.spec[key]))
     else:
         # adapt from type to dictionary
-        ints = []
-        doubles = []
-        chars = []
 
         # get attribute names
-        parts = space.names.split(' ')
-        for i, part in enumerate(parts):
-            if part == 'INTS':
-                j = i + 1
-                while j < len(parts) and parts[j] not in ('DOUBLES', 'CHARS'):
-                    ints.append(parts[j])
-                    j += 1
-            elif part == 'DOUBLES':
-                j = i + 1
-                while j < len(parts) and parts[j] not in ('INTS', 'CHARS'):
-                    doubles.append(parts[j])
-                    j += 1
-            elif part == 'CHARS':
-                pass
+        ints = Integer in space and space[Integer].keys() or []
+        doubles = Double in space and space[Double].keys() or []
+        chars = Char in space and space[Char].keys() or []
 
         # build result dictionary
         result = {}

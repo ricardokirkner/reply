@@ -83,6 +83,16 @@ class TestSpace(unittest.TestCase):
                                    'h': Char(),
                                    'i': Char()})
 
+    def test_space_getitem_key(self):
+        spec = {'value': Integer(0, 1)}
+        s = Space(spec)
+        self.assertTrue(Integer in s)
+
+    def test_space_getitem_value(self):
+        spec = {'value': Integer(0, 1)}
+        s = Space(spec)
+        self.assertTrue('value' in s)
+
     def test_space_str_one_int(self):
         s = Space(dict(value=Integer(0, 10)))
         self.assertEqual(str(s), "INTS (0 10)")
