@@ -127,25 +127,31 @@ def adapt(source, space, target=None):
     if target is not None:
         # adapt from dictionary to type
         result = target()
-        for key, value in source.items():
-            if key not in space.spec.keys():
-                raise KeyError("The space does not include a definition for '%s'" % key)
-            _type = space.spec[key]
-            if isinstance(_type, Integer):
-                result.intArray.append(value)
-            elif isinstance(_type, Double):
-                result.doubleArray.append(value)
-            elif isinstance(_type, Char):
-                result.charArray.append(value)
-            else:
-                raise TypeError("%s is of an invalid type: %s" % (key, space.spec[key]))
+        if target in (Action, Observation):
+            for _type in (Integer, Double, Char):
+                names = space.get_names_list(_type)
+                if _type == Integer:
+                    _array = result.intArray
+                elif _type == Double:
+                    _array = result.doubleArray
+                elif _type == Char:
+                    _array = result.charArray
+                else:
+                    continue
+                for name in names:
+                    if name in source:
+                        _array.append(source[name])
+        elif target in (Reward_observation_terminal,):
+            result.o = adapt(source, space, Observation)
+            result.terminal = source.get('terminal', False)
+            result.reward = source.get('reward', 0)
     else:
         # adapt from type to dictionary
 
-        # get attribute names
-        ints = Integer in space and space[Integer].keys() or []
-        doubles = Double in space and space[Double].keys() or []
-        chars = Char in space and space[Char].keys() or []
+        # get attribute names (in order)
+        ints = space.get_names_list(Integer)
+        doubles = space.get_names_list(Double)
+        chars = space.get_names_list(Char)
 
         # build result dictionary
         result = {}

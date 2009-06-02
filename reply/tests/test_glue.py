@@ -1,8 +1,9 @@
 import simplejson
 import unittest
 
-from rlglue.types import Action, Observation, Reward_observation_terminal
+from rlglue.types import Action, Observation
 
+import reply.glue
 from reply.agent import Agent
 from reply.environment import Environment
 from reply.experiment import Experiment
@@ -32,6 +33,44 @@ class TestRLGlue(unittest.TestCase):
         expected_action = dict(choice=0)
 
         self.assertEquals(reply_action, expected_action)
+
+    def test_adapt_to_complex_action(self):
+        space = Space({'x': Double(-1.0, 1.0),
+                       'y': Double(-1.0, 1.0),
+                       'angle': Integer(0, 359),
+                       'spin': Char()},
+                       {Integer: ['angle'],
+                        Double: ['x', 'y'],
+                        Char: ['spin']})
+        reply_action = {'x': -0.23, 'y': 0.02,
+                        'angle': 23, 'spin': 'u'}
+        action = adapt(reply_action, space, Action)
+
+        expected_action = Action()
+        expected_action.intArray = [23]
+        expected_action.doubleArray = [-0.23, 0.02]
+        expected_action.charArray = ['u']
+
+        self.assertTrue(action.sameAs(expected_action))
+
+    def test_adapt_from_complex_action(self):
+        space = Space({'x': Double(-1.0, 1.0),
+                       'y': Double(-1.0, 1.0),
+                       'angle': Integer(0, 359),
+                       'spin': Char()},
+                       {Integer: ['angle'],
+                        Double: ['x', 'y'],
+                        Char: ['spin']})
+        action = Action()
+        action.intArray = [23]
+        action.doubleArray = [-0.23, 0.02]
+        action.charArray = ['u']
+        reply_action = adapt(action, space)
+
+        expected_action = {'x': -0.23, 'y': 0.02,
+                           'angle': 23, 'spin': 'u'}
+
+        self.assertEqual(reply_action, expected_action)
 
 
 class TestRLGlueAgent(unittest.TestCase):
@@ -133,23 +172,54 @@ class TestRLGlueEnvironment(unittest.TestCase):
 
 class TestRLGlueExperiment(unittest.TestCase):
 
-    def _test_builder(self):
+    def RL_init(self):
         pass
 
-    def _test_init(self):
+    def RL_start(self):
         pass
 
-    def _test_start(self):
+    def RL_step(self):
+        terminal = False
+        reward = 0
+        observation = Observation()
+        action = Action()
+        return terminal, reward, observation, action
+
+    def RL_cleanup(self):
         pass
 
-    def _test_step(self):
-        pass
+    def setUp(self):
+        self.experiment = Experiment()
+        self.proxy = RlGlueProxyExperiment(self.experiment)
+        # mock rlglue methods
+        reply.glue.RL_init = self.RL_init
+        reply.glue.RL_start = self.RL_start
+        reply.glue.RL_step = self.RL_step
+        reply.glue.RL_cleanup = self.RL_cleanup
 
-    def _test_cleanup(self):
-        pass
+    def test_builder(self):
+        self.assertEqual(self.proxy.experiment, self.experiment)
+        self.assertEqual(self.proxy._initialized, False)
+        self.assertEqual(self.proxy._started, False)
 
-    def _test_run(self):
-        pass
+    def test_init(self):
+        self.assertEqual(self.proxy.init(), None)
+
+    def test_start(self):
+        self.assertEqual(self.proxy.start(), None)
+
+    def test_step(self):
+        terminal, reward, observation, action = self.proxy.step()
+        self.assertEqual(terminal, False)
+        self.assertEqual(reward, 0)
+        self.assertTrue(observation.sameAs(Observation()))
+        self.assertTrue(action.sameAs(Action()))
+
+    def test_cleanup(self):
+        self.assertEqual(self.proxy.cleanup(), None)
+
+    def test_run(self):
+        self.assertEqual(self.proxy.run(), None)
 
 
 
