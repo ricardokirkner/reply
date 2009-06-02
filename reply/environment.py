@@ -87,8 +87,8 @@ class Environment(MessageHandler):
         observations = self._observation_space
         actions = self._action_space
         extra = ""
-        observation_names = observations.get_names()
-        action_names = actions.get_names()
+        observation_names = observations.get_names_spec()
+        action_names = actions.get_names_spec()
         if observation_names:
             extra += "OBSERVATIONS %s" % observation_names
             if action_names:

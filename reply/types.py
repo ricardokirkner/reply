@@ -74,7 +74,7 @@ class Space(object):
     def __iter__(self):
         return iter(self._data)
 
-    def get_names(self):
+    def get_names_spec(self):
         names = []
         for _type in (Integer, Double, Char):
             if self._data[_type]:
@@ -85,13 +85,18 @@ class Space(object):
                 names.append('CHARS')
             else:
                 continue
-            if self.order is not None:
-                for name in self.order.get(_type, []):
-                    names.append(str(self._data[item][name]))
-            else:
-                for name, value in sorted(self._data[_type].iteritems()):
-                    names.append(str(name))
+            names.extend(self.get_names_list(_type))
         return ' '.join(names)
+
+    def get_names_list(self, type):
+        names = []
+        if self.order is not None:
+            for name in self.order.get(type, []):
+                names.append(str(name))
+        else:
+            for name, value in sorted(self._data[type].iteritems()):
+                names.append(str(name))
+        return names
 
     def _build_data(self):
         spec = self.spec
