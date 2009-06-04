@@ -17,34 +17,42 @@ class ActionValueAgent(Agent):
         pass
 
     def _start(self, observation):
-        pass
+        choice = self._action_space['choice']
+        action = {'choice': random.choice(range(choice.min, choice.max))}
+        return action
 
-    def _step(self):
-        pass
+    def _step(self, reward, observation):
+        choice = self._action_space['choice']
+        action = {'choice': random.choice(range(choice.min, choice.max))}
+        return action
+
 
 class ActionValueEnvironment(Environment):
-    action_space = dict(choice=Integer(0, 10))
-    observation_space = dict(state=Integer(0, 0))
+    actions_spec = {'choice': Integer(0, 10)}
+    observations_spec = {'state': Integer(0, 0)}
     problem_type = "episodic"
     discount_factor = 1.0
-    rewards = (-1, 1)
+    rewards = Integer(-1, 1)
 
     def on_set_num_action(self, n):
         self.set_action_space(choice=Integer(0, n-1))
 
     def _init(self):
-        maxval = self.action_space["choice"].max
+        maxval = self._action_space["choice"].max
         self.ps = [ p/float(maxval) for p in range(maxval) ]
 
     def _start(self):
         return dict(state=0)
 
     def _step(self, action):
-        if random.random() > self.ps[action.choice]:
+        print str(action)
+        if random.random() > self.ps[action['choice']]:
             r = 1
         else:
             r = 0
-        return dict(state=0, reward=r, final=True)
+        rot = dict(state=0, reward=r, final=True)
+        print rot
+        return rot
 
 
 class ActionValueExperiment(Experiment):
