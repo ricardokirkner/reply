@@ -28,7 +28,7 @@ class RlGlueProxyAgent(Agent):
         observation_space = self.agent._observation_space
         action_space = self.agent._action_space
         reply_observation = adapt(observation, observation_space)
-        reply_action = self.agent.start(observation)
+        reply_action = self.agent.start(reply_observation)
         action = adapt(reply_action, action_space, Action)
         return action
 
@@ -67,16 +67,17 @@ class RlGlueProxyEnvironment(Environment):
         return str(task_spec)
 
     def env_start(self):
-        space = self.environment._observation_space
+        observation_space = self.environment._observation_space
         reply_observation = self.environment.start()
-        observation = adapt(reply_observation, space, Observation)
+        observation = adapt(reply_observation, observation_space, Observation)
         return observation
 
     def env_step(self, action):
-        space = self.environment._observation_space
-        reply_action = adapt(action, space)
+        action_space = self.environment._action_space
+        reply_action = adapt(action, action_space)
         result = self.environment.step(reply_action)
-        rot = adapt(result, space, Reward_observation_terminal)
+        observation_space = self.environment._observation_space
+        rot = adapt(result, observation_space, Reward_observation_terminal)
         return rot
 
     def env_cleanup(self):
@@ -108,8 +109,8 @@ class RlGlueProxyExperiment(object):
         self.experiment.start()
 
     def step(self):
-        terminal, reward, observation, action = RL_step()
-        return terminal, reward, observation, action
+        roat = RL_step()
+        return roat
 
     def cleanup(self):
         RL_cleanup()
@@ -118,8 +119,12 @@ class RlGlueProxyExperiment(object):
         steps = 0
         terminal = False
         while steps < 100 and not terminal:
-            terminal, reward, observation, action = self.step()
-            print 'terminal, reward, observation, action', terminal, reward, observation, action
+            roat = self.step()
+            terminal = roat.terminal
+            reward = roat.r
+            observation = roat.o
+            action = roat.a
+            print 'terminal, reward, observation, action', terminal, reward, str(observation), str(action)
             steps += 1
 
 

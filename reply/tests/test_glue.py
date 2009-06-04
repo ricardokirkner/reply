@@ -1,7 +1,7 @@
 import simplejson
 import unittest
 
-from rlglue.types import Action, Observation
+from rlglue.types import Action, Observation, Reward_observation_action_terminal
 
 import reply.glue
 from reply.agent import Agent
@@ -183,7 +183,13 @@ class TestRLGlueExperiment(unittest.TestCase):
         reward = 0
         observation = Observation()
         action = Action()
-        return terminal, reward, observation, action
+        roat = Reward_observation_action_terminal()
+        roat.r = reward
+        roat.o = observation
+        roat.a = action
+        roat.terminal = terminal
+
+        return roat
 
     def RL_cleanup(self):
         pass
@@ -209,11 +215,11 @@ class TestRLGlueExperiment(unittest.TestCase):
         self.assertEqual(self.proxy.start(), None)
 
     def test_step(self):
-        terminal, reward, observation, action = self.proxy.step()
-        self.assertEqual(terminal, False)
-        self.assertEqual(reward, 0)
-        self.assertTrue(observation.sameAs(Observation()))
-        self.assertTrue(action.sameAs(Action()))
+        roat = self.proxy.step()
+        self.assertEqual(roat.terminal, False)
+        self.assertEqual(roat.r, 0)
+        self.assertTrue(roat.o.sameAs(Observation()))
+        self.assertTrue(roat.a.sameAs(Action()))
 
     def test_cleanup(self):
         self.assertEqual(self.proxy.cleanup(), None)

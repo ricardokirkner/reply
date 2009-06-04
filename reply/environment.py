@@ -57,8 +57,8 @@ class Environment(MessageHandler):
         return observation
 
     def step(self, action):
-        observation = self._step(action)
-        return observation
+        rot = self._step(action)
+        return rot
 
     def cleanup(self):
         self._cleanup()
