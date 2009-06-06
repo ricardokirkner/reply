@@ -160,15 +160,15 @@ def adapt(source, space, target=None):
 
         # build result dictionary
         result = {}
-        if source.intArray:
+        if len(source.intArray):
             for i, value in enumerate(source.intArray):
                 key = ints[i]
                 result[key] = value
-        if source.doubleArray:
+        if len(source.doubleArray):
             for i, value in enumerate(source.doubleArray):
                 key = doubles[i]
                 result[key] = value
-        if source.charArray:
+        if len(source.charArray):
             for i, value in enumerate(source.charArray):
                 key = chars[i]
                 result[key] = value

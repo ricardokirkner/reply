@@ -1,3 +1,4 @@
+import numpy
 import simplejson
 import unittest
 
@@ -28,6 +29,17 @@ class TestRLGlue(unittest.TestCase):
         space = Space(dict(choice=Integer(0, 1)))
         action = Action()
         action.intArray = [0]
+        reply_action = adapt(action, space)
+
+        expected_action = dict(choice=0)
+
+        self.assertEquals(reply_action, expected_action)
+
+    def test_adapt_ndarray(self):
+        space = Space(dict(choice=Integer(0, 1)))
+        action = Action()
+        action.intArray = numpy.ndarray([1], dtype=numpy.int32)
+        action.intArray[0] = 0
         reply_action = adapt(action, space)
 
         expected_action = dict(choice=0)
