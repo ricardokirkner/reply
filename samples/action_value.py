@@ -72,7 +72,7 @@ class ActionValueExperiment(Experiment):
 if __name__=="__main__":
     import sys
     def usage():
-        print "%s [agent|environment|experiment]" % sys.argv[0]
+        print "%s [agent|environment|experiment|runner]" % sys.argv[0]
 
     if len(sys.argv) < 2:
         usage()
@@ -88,6 +88,31 @@ if __name__=="__main__":
     elif role == 'experiment':
         from reply.glue import start_experiment
         start_experiment(ActionValueExperiment())
+    elif role == 'runner':
+        from multiprocessing import Process
+        from reply.glue import start_agent
+        from reply.glue import start_environment
+        from reply.glue import start_experiment
+
+        class ActionValueRunner():
+            def run(self):
+                agent = Process(target=start_agent,
+                                args=(ActionValueAgent(),))
+                environment = Process(target=start_environment,
+                                      args=(ActionValueEnvironment(),))
+                experiment = Process(target=start_experiment,
+                                     args=(ActionValueExperiment(),))
+
+                agent.start()
+                environment.start()
+                experiment.start()
+
+                agent.join()
+                environment.join()
+                experiment.join()
+
+        runner = ActionValueRunner()
+        runner.run()
     else:
         usage()
         exit(0)
