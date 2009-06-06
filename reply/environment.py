@@ -1,6 +1,6 @@
 import simplejson
 
-from reply.types import Integer, Space
+from reply.datatypes import Integer, Space
 from reply.util import MessageHandler, TaskSpec
 
 class Environment(MessageHandler):

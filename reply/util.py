@@ -2,7 +2,7 @@ import simplejson
 
 from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 
-from reply.types import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Space
 
 
 def parse_spaces(data, parser):

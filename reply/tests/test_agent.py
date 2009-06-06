@@ -1,7 +1,7 @@
 import unittest
 
 from reply.agent import Agent
-from reply.types import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Space
 
 
 class TestAgent(unittest.TestCase):

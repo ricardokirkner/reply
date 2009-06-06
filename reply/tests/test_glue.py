@@ -9,7 +9,7 @@ from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.glue import adapt, RlGlueProxyAgent, RlGlueProxyEnvironment
 from reply.glue import RlGlueProxyExperiment
-from reply.types import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Space
 
 
 class TestRLGlue(unittest.TestCase):

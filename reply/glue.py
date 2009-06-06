@@ -6,7 +6,7 @@ from rlglue.environment.Environment import Environment
 from rlglue.environment import EnvironmentLoader
 from rlglue.types import Action, Observation, Reward_observation_terminal
 
-from reply.types import Integer, Double, Char
+from reply.datatypes import Integer, Double, Char
 
 __all__ = ["start_agent", "start_environment"]
 

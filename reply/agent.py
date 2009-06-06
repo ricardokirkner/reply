@@ -1,4 +1,4 @@
-from reply.types import Space
+from reply.datatypes import Space
 from reply.util import MessageHandler, TaskSpec
 
 class Agent(MessageHandler):
