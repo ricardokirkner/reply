@@ -9,7 +9,7 @@ import random
 from reply.agent import Agent
 from reply.environment import Environment
 from reply.experiment import Experiment
-from reply.types import Integer
+from reply.datatypes import Integer
 
 
 class ActionValueAgent(Agent):
