@@ -88,13 +88,25 @@ class Space(object):
             names.extend(self.get_names_list(_type))
         return ' '.join(names)
 
-    def get_names_list(self, type):
+    def get_names_list(self, type=None):
         names = []
         if self.order is not None:
-            for name in self.order.get(type, []):
+            if type is None:
+                type_names = self.order.get(Integer, []) + \
+                             self.order.get(Double, []) + \
+                             self.order.get(Char, [])
+            else:
+                type_names = self.order.get(type, [])
+            for name in type_names:
                 names.append(str(name))
         else:
-            for name, value in sorted(self._data[type].iteritems()):
+            if type is None:
+                type_names = sorted(self._data[Integer].iteritems()) + \
+                             sorted(self._data[Double].iteritems()) + \
+                             sorted(self._data[Char].iteritems())
+            else:
+                type_names = sorted(self._data[type].iteritems())
+            for name, value in type_names:
                 names.append(str(name))
         return names
 
