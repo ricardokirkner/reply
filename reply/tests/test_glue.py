@@ -240,6 +240,5 @@ class TestRLGlueExperiment(unittest.TestCase):
         self.assertEqual(self.proxy.run(), None)
 
 
-
 if __name__ == '__main__':
     unittest.main()

@@ -141,8 +141,6 @@ def adapt(source, space, target=None):
                     _array = result.doubleArray
                 elif _type == Char:
                     _array = result.charArray
-                else:
-                    continue
                 for name in names:
                     if name in source:
                         _array.append(source[name])

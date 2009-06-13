@@ -78,11 +78,12 @@ class Space(object):
         names = []
         for _type in (Integer, Double, Char):
             if self._data[_type]:
-                names.append('INTS')
-            elif self._data[_type]:
-                names.append('DOUBLES')
-            elif self._data[_type]:
-                names.append('CHARS')
+                if _type == Integer:
+                    names.append('INTS')
+                elif _type == Double:
+                    names.append('DOUBLES')
+                elif _type == Char:
+                    names.append('CHARS')
             else:
                 continue
             names.extend(self.get_names_list(_type))

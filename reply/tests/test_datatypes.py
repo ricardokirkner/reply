@@ -154,6 +154,19 @@ class TestSpace(unittest.TestCase):
             "DOUBLES (-0.050000 20.300000) (12.000000 13.000000) " \
             "(0.000000 0.125000) CHARCOUNT 3")
 
+    def test_space_str_order(self):
+        spec = {'a': Integer(0, 10),
+                'b': Integer(2, 4),
+                'c': Double(0.0, 1.0),
+                'd': Double(1.0, 2.0),
+                'e': Char(),
+                'f': Char()}
+        order = {Integer: ['b', 'a'],
+                 Double: ['c', 'd']}
+        s = Space(spec, order)
+        self.assertEqual(str(s), "INTS (2 4) (0 10) " \
+            "DOUBLES (0.000000 1.000000) (1.000000 2.000000) CHARCOUNT 2")
+
     def test_space_equal_different_keys(self):
         spec1 = {'a': Integer(0, 10)}
         spec2 = {'b': Integer(0, 10)}
@@ -194,6 +207,52 @@ class TestSpace(unittest.TestCase):
         space1 = Space(spec1)
         space2 = Space(spec2)
         self.assertNotEqual(space1, space2)
+
+    def test_space_get_names_spec(self):
+        spec = {'a': Integer(0, 1),
+                'b': Double(0.0, 1.0),
+                'c': Char()}
+        space = Space(spec)
+        self.assertEqual(space.get_names_spec(), "INTS a DOUBLES b CHARS c")
+
+    def test_space_get_names_list(self):
+        spec = {'a': Integer(0, 1),
+                'b': Integer(1, 2),
+                'c': Double(0.0, 1.0),
+                'd': Double(1.0, 2.0),
+                'e': Char(),
+                'f': Char()}
+        space = Space(spec)
+        ints = space.get_names_list(Integer)
+        doubles = space.get_names_list(Double)
+        chars = space.get_names_list(Char)
+        names = space.get_names_list()
+        self.assertEqual(ints, ['a', 'b'])
+        self.assertEqual(doubles, ['c', 'd'])
+        self.assertEqual(chars, ['e', 'f'])
+        self.assertEqual(names, ['a', 'b', 'c', 'd', 'e', 'f'])
+
+    def test_space_get_names_list_order(self):
+        spec = {'a': Integer(0, 1),
+                'b': Integer(1, 2),
+                'c': Double(0.0, 1.0),
+                'd': Double(1.0, 2.0),
+                'e': Char(),
+                'f': Char()}
+        order = {Integer: ['b', 'a'],
+                 Double: ['d', 'c'],
+                 Char: ['f', 'e']}
+        space = Space(spec, order)
+        ints = space.get_names_list(Integer)
+        doubles = space.get_names_list(Double)
+        chars = space.get_names_list(Char)
+        names = space.get_names_list()
+        self.assertEqual(ints, ['b', 'a'])
+        self.assertEqual(doubles, ['d', 'c'])
+        self.assertEqual(chars, ['f', 'e'])
+        self.assertEqual(names, ['b', 'a', 'd', 'c', 'f', 'e'])
+
+
 
 
 if __name__ == '__main__':

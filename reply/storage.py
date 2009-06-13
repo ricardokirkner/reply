@@ -39,7 +39,7 @@ class TableStorage(Storage):
         """
         super(TableStorage, self).__init__()
         if encoder is None:
-           self.encoder = DummyEncoder()
+            self.encoder = DummyEncoder()
         else:
             self.encoder = encoder
         self.data = numpy.zeros(size)
@@ -104,7 +104,3 @@ class TableStorage(Storage):
             decoded_values = self.encoder.decode(filtered_values)
         return decoded_values
 
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()

@@ -22,11 +22,45 @@ class TestEnviron(unittest.TestCase):
         spec = {'a1': Integer(0, 1)}
         self.assertRaises(Exception, self.environment.set_action_space, **spec)
 
+    def test_environment_set_action_space(self):
+        spec = {'a1': Integer(0, 1)}
+        space = Space(spec)
+        self.environment.set_action_space(space)
+        self.assertEqual(self.environment._action_space, space)
+
+    def test_environment_set_action_space_without_space(self):
+        space = Space()
+        self.environment.set_action_space()
+        self.assertEqual(self.environment._action_space, space)
+
+    def test_environment_set_action_space_with_kwargs(self):
+        spec = {'a1': Integer(0, 1)}
+        space = Space(spec)
+        self.environment.set_action_space(**spec)
+        self.assertEqual(self.environment._action_space, space)
+
     def test_environment_set_observation_space_already_initialized(self):
         self.environment.init()
         spec = {'o1': Integer(0, 1)}
         self.assertRaises(Exception, self.environment.set_observation_space,
                           **spec)
+
+    def test_environment_set_observation_space(self):
+        spec = {'o1': Integer(0, 1)}
+        space = Space(spec)
+        self.environment.set_observation_space(space)
+        self.assertEqual(self.environment._observation_space, space)
+
+    def test_environment_set_observation_space_without_space(self):
+        space = Space()
+        self.environment.set_observation_space()
+        self.assertEqual(self.environment._observation_space, space)
+
+    def test_environment_set_observation_space_with_kwargs(self):
+        spec = {'o1': Integer(0, 1)}
+        space = Space(spec)
+        self.environment.set_observation_space(**spec)
+        self.assertEqual(self.environment._observation_space, space)
 
     def test_environment_get_task_spec(self):
         problem_type = self.environment.problem_type

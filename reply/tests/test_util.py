@@ -1,8 +1,89 @@
 import unittest
 import simplejson
 
+from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
+
 from reply.datatypes import Char, Double, Integer, Space
+from reply.util import parse_spaces, build_spec, parse_names
 from reply.util import TaskSpec, MessageHandler
+
+
+class TestUtil(unittest.TestCase):
+    def test_parse_spaces(self):
+        task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
+            "DISCOUNTFACTOR 1 OBSERVATIONS INTS (3 0 1) " \
+            "DOUBLES (2 -1.2 0.5) (-.07 .07) CHARCOUNT 2 " \
+            "ACTIONS INTS (0 4)  REWARDS (-5.0 5.0) " \
+            "EXTRA some other stuff goes here " \
+            "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
+            "CHARS oc1 oc2 ACTIONS INTS ai1"
+        data = "some other stuff goes here OBSERVATIONS INTS oi1 oi2 oi3 " \
+            "DOUBLES od1 od2 od3 CHARS oc1 oc2 ACTIONS INTS ai1"
+        parser = TaskSpecParser(task_spec_str)
+        observations, actions = parse_spaces(data, parser)
+
+        expected_observations = Space({'oi1': Integer(0, 1),
+                                       'oi2': Integer(0, 1),
+                                       'oi3': Integer(0, 1),
+                                       'od1': Double(-1.2, 0.5),
+                                       'od2': Double(-1.2, 0.5),
+                                       'od3': Double(-0.07, 0.07),
+                                       'oc1': Char(),
+                                       'oc2': Char()})
+        expected_actions = Space({'ai1': Integer(0, 4)})
+
+        self.assertEqual(observations, expected_observations)
+        self.assertEqual(actions, expected_actions)
+
+    def test_parse_spaces_no_actions(self):
+        task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
+            "DISCOUNTFACTOR 1 OBSERVATIONS INTS (3 0 1) " \
+            "DOUBLES (2 -1.2 0.5) (-.07 .07) CHARCOUNT 2 " \
+            "ACTIONS INTS (0 4)  REWARDS (-5.0 5.0) " \
+            "EXTRA some other stuff goes here " \
+            "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
+            "CHARS oc1 oc2"
+        data = "some other stuff goes here OBSERVATIONS INTS oi1 oi2 oi3 " \
+            "DOUBLES od1 od2 od3 CHARS oc1 oc2"
+        parser = TaskSpecParser(task_spec_str)
+        observations, actions = parse_spaces(data, parser)
+
+        expected_observations = Space({'oi1': Integer(0, 1),
+                                       'oi2': Integer(0, 1),
+                                       'oi3': Integer(0, 1),
+                                       'od1': Double(-1.2, 0.5),
+                                       'od2': Double(-1.2, 0.5),
+                                       'od3': Double(-0.07, 0.07),
+                                       'oc1': Char(),
+                                       'oc2': Char()})
+        expected_actions = Space()
+
+        self.assertEqual(observations, expected_observations)
+        self.assertEqual(actions, expected_actions)
+
+    def test_build_spec(self):
+        names = ['INTS', 'a', 'DOUBLES', 'b', 'CHARS', 'c']
+        values = {'INTS': [[0, 1]], 'DOUBLES': [[0.0, 1.0]], 'CHARS': 1}
+        spec = build_spec(names, values)
+
+        expected_spec = {'a': Integer(0, 1),
+                         'b': Double(0.0, 1.0),
+                         'c': Char()}
+
+        self.assertEqual(spec, expected_spec)
+
+    def test_parse_names(self):
+        names = ['INTS', 'a', 'DOUBLES', 'b', 'CHARS', 'c']
+        values = {'INTS': [[0, 1]], 'DOUBLES': [[0.0, 1.0]], 'CHARS': 1}
+        result = {}
+        parse_names(names, values, result)
+
+        expected_result = {Integer: {'a': Integer(0, 1)},
+                           Double: {'b': Double(0.0, 1.0)},
+                           Char: {'c': Char()}}
+
+        self.assertEqual(result, expected_result)
+
 
 class TestTaskSpec(unittest.TestCase):
 
@@ -51,6 +132,34 @@ class TestTaskSpec(unittest.TestCase):
         self.assertEqual(task_spec.rewards, Double(-5.0, 5.0))
         extra = "some other stuff goes here OBSERVATIONS INTS oi1 oi2 oi3 " \
             "DOUBLES od1 od2 od3 CHARS oc1 oc2 ACTIONS INTS ai1"
+        self.assertEqual(task_spec.extra, extra)
+
+    def test_task_spec_parser_names_no_actions(self):
+        task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
+            "DISCOUNTFACTOR 1 OBSERVATIONS INTS (3 0 1) " \
+            "DOUBLES (2 -1.2 0.5) (-.07 .07) CHARCOUNT 2 " \
+            "ACTIONS INTS (0 4)  REWARDS (-5.0 5.0) " \
+            "EXTRA some other stuff goes here " \
+            "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
+            "CHARS oc1 oc2"
+        task_spec = TaskSpec.parse(task_spec_str)
+        self.assertEqual(task_spec.version, 'RL-Glue-3.0')
+        self.assertEqual(task_spec.problem_type, 'episodic')
+        self.assertEqual(task_spec.discount_factor, 1)
+
+        observations = Space({'oi1': Integer(0, 1), 'oi2': Integer(0, 1),
+                              'oi3': Integer(0, 1),
+                              'od1': Double(-1.2, 0.5),
+                              'od2': Double(-1.2, 0.5),
+                              'od3': Double(-0.07, 0.07),
+                              'oc1': Char(), 'oc2': Char()})
+        actions = Space()
+        self.assertEqual(task_spec.observations, observations)
+        self.assertEqual(task_spec.actions, actions)
+
+        self.assertEqual(task_spec.rewards, Double(-5.0, 5.0))
+        extra = "some other stuff goes here OBSERVATIONS INTS oi1 oi2 oi3 " \
+            "DOUBLES od1 od2 od3 CHARS oc1 oc2"
         self.assertEqual(task_spec.extra, extra)
 
     def test_task_spec_builder(self):

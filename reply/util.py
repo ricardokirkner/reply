@@ -13,20 +13,18 @@ def parse_spaces(data, parser):
         if part == 'OBSERVATIONS':
             try:
                 actions_idx = parts.index('ACTIONS')
+                observation_names = parts[i+1:actions_idx]
             except ValueError:
-                actions_idx = -1
-            observation_names = parts[i+1:actions_idx]
+                observation_names = parts[i+1:]
             observation_values = {"INTS": parser.getIntObservations(),
                                   "DOUBLES": parser.getDoubleObservations(),
                                   "CHARS": parser.getCharCountObservations()}
-            #parse_names(observation_names, observation_values, observations)
             observations_spec = build_spec(observation_names, observation_values)
         elif part == 'ACTIONS':
             action_names = parts[i+1:]
             action_values = {"INTS": parser.getIntActions(),
                              "DOUBLES": parser.getDoubleActions(),
                              "CHARS": parser.getCharCountActions()}
-            #parse_names(action_names, action_values, actions)
             actions_spec = build_spec(action_names, action_values)
     observations = Space(observations_spec)
     actions = Space(actions_spec)
@@ -103,37 +101,8 @@ class TaskSpec(object):
 
     def __str__(self):
         # build observations string
-        #integers = self.observations[Integer]
-        #doubles = self.observations[Double]
-        #charcount = len(self.observations[Char])
-        #observations_str = ""
-        #if integers:
-        #    observations_str += "INTS"
-        #    for value in integers.values():
-        #        observations_str += " (%s %s)" % (value.min, value.max)
-        #if doubles:
-        #    observations_str += " DOUBLES"
-        #    for value in doubles.values():
-        #        observations_str += " (%s %s)" % (value.min, value.max)
-        #if charcount:
-        #    observations_str += " CHARCOUNT %s" % charcount
         observations_str = str(self.observations)
-
         # build actions string
-        #integers = self.actions[Integer]
-        #doubles = self.actions[Double]
-        #charcount = len(self.actions[Char])
-        #actions_str = ""
-        #if integers:
-        #    actions_str += "INTS"
-        #    for value in integers.values():
-        #        actions_str += " (%s %s)" % (value.min, value.max)
-        #if doubles:
-        #    actions_str += " DOUBLES"
-        #    for value in doubles.values():
-        #        actions_str += " (%s %s)" % (value.min, value.max)
-        #if charcount:
-        #    actions_str += " CHARCOUNT %s" % charcount
         actions_str = str(self.actions)
 
         # build complete string
