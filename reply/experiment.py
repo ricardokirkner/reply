@@ -9,6 +9,8 @@ class Experiment(object):
     #
 
     def init(self):
+        self.episodes = 1
+        self.steps = 1
         self._init()
         self.initialized = True
 
@@ -17,10 +19,8 @@ class Experiment(object):
         self.started = True
 
     def step(self):
-        self._step()
-
-    def run(self):
-        pass
+        result = self._step()
+        return result
 
     def cleanup(self):
         self._cleanup()

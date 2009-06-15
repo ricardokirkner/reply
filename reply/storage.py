@@ -44,7 +44,7 @@ class TableStorage(Storage):
             self.encoder = encoder
         self.data = numpy.zeros(size)
 
-    def get(self, item, decode=True):
+    def get(self, item):
         """
         >>> storage = TableStorage((1, 1))
         >>> storage.get((0,0))
@@ -58,8 +58,6 @@ class TableStorage(Storage):
         """
         encoded_item = self.encoder.encode(item)
         value = self.data[encoded_item]
-        if decode:
-            value = self.encoder.decode(value)
         return value
 
     def set(self, item, value):
@@ -88,7 +86,7 @@ class TableStorage(Storage):
         """
         self.data = numpy.zeros(self.data.shape)
 
-    def filter(self, item, filter=None):
+    def filter(self, item, filter):
         """
         >>> storage = TableStorage((1, 10))
         >>> for item in range(10):
@@ -98,9 +96,5 @@ class TableStorage(Storage):
         """
         encoded_values = self.get(item)
         filtered_values = filter(encoded_values)
-        if isinstance(filtered_values, (list, tuple)):
-            decoded_values = map(self.encoder.decode, filtered_values)
-        else:
-            decoded_values = self.encoder.decode(filtered_values)
-        return decoded_values
+        return filtered_values
 
