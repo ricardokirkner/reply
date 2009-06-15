@@ -1,5 +1,5 @@
 
-from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup
+from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup, RL_episode
 from rlglue.agent.Agent import Agent
 from rlglue.agent import AgentLoader
 from rlglue.environment.Environment import Environment
@@ -116,16 +116,21 @@ class RlGlueProxyExperiment(object):
         RL_cleanup()
 
     def run(self):
-        steps = 0
-        terminal = False
-        while steps < 100 and not terminal:
-            roat = self.step()
-            terminal = roat.terminal
-            reward = roat.r
-            observation = roat.o
-            action = roat.a
-            print 'terminal, reward, observation, action', terminal, reward, str(observation), str(action)
-            steps += 1
+        self.init()
+        for episode in range(self.experiment.episodes):
+        #    RL_episode(self.experiment.steps)
+            self.start()
+            steps = 0
+            terminal = False
+            while steps < self.experiment.steps and not terminal:
+                roat = self.step()
+                #reward = roat.r
+                #observation = roat.o
+                #action = roat.a
+                #terminal = roat.terminal
+                #print 'terminal, reward, observation, action', terminal, reward, str(observation), str(action)
+                steps += 1
+        self.cleanup()
 
 
 def adapt(source, space, target=None):
@@ -145,9 +150,9 @@ def adapt(source, space, target=None):
                     if name in source:
                         _array.append(source[name])
         elif target in (Reward_observation_terminal,):
+            result.r = source.get('reward')
             result.o = adapt(source, space, Observation)
-            result.terminal = source.get('terminal', False)
-            result.reward = source.get('reward', 0)
+            result.terminal = source.get('terminal')
     else:
         # adapt from type to dictionary
 
@@ -183,9 +188,6 @@ def start_environment(env):
 
 def start_experiment(experiment):
     rlglue_experiment = RlGlueProxyExperiment(experiment)
-    rlglue_experiment.init()
-    rlglue_experiment.start()
     rlglue_experiment.run()
-    rlglue_experiment.cleanup()
 
 

@@ -19,13 +19,13 @@ class EGreedyPolicy(Policy):
         self.random_action_rate_min = random_action_rate_min
 
     def select_action(self, observation):
-        encoded_actions = self.storage.get(observation, decode=False)
+        encoded_actions = self.storage.get(observation)
         if random.random() < self.random_action_rate:
             encoded_action = random.randint(0, numpy.size(encoded_actions)-1)
         else:
             encoded_action = numpy.argmax(encoded_actions)
-        decoded_values = self.storage.encoder.decode((None, encoded_action))
-        action = decoded_values[1]
+        decoded_state_action = self.storage.encoder.decode((None, encoded_action))
+        action = decoded_state_action[1]
         return action
 
 
@@ -35,7 +35,7 @@ class SoftMaxPolicy(Policy):
         self.temperature = temperature
 
     def select_action(self, observation):
-        encoded_actions = self.storage.get(observation, decode=False)
+        encoded_actions = self.storage.get(observation)
         if self.temperature == 0:
             # this should be absolute greedy selection
             encoded_action = numpy.argmax(encoded_actions)
@@ -56,7 +56,7 @@ class SoftMaxPolicy(Policy):
                 current_pr += encoded_action_pr
                 if pr < current_pr:
                     break
-        decoded_values = self.storage.encoder.decode((None, encoded_action))
-        action = decoded_values[1]
+        decoded_state_action = self.storage.encoder.decode((None, encoded_action))
+        action = decoded_state_action[1]
         return action
 
