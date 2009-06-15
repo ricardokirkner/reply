@@ -11,6 +11,7 @@ from reply.datatypes import Integer
 from reply.encoder import SpaceEncoder, StateActionEncoder
 from reply.environment import Environment
 from reply.experiment import Experiment
+from reply.learner import QLearner
 from reply.policy import EGreedyPolicy
 from reply.storage import TableStorage
 
@@ -19,46 +20,43 @@ class ActionValueAgent(Agent):
     def _init(self, task_spec):
         learning_rate = 1
         learning_rate_decay = 0.99
-        learning_rate_min = 0.001
+        learning_rate_min = 0.00001
         random_action_rate = 1
 
-        #self.learner = reply.learner.QLearner(None)
         state_encoder = SpaceEncoder(self._observation_space)
         action_encoder = SpaceEncoder(self._action_space)
         encoder = StateActionEncoder(state_encoder, action_encoder)
         storage = TableStorage((1, 10), encoder)
-        self.policy = EGreedyPolicy(storage, random_action_rate)
-        pass
+        policy = EGreedyPolicy(storage, random_action_rate)
+        self.learner = QLearner(policy, learning_rate, learning_rate_decay,
+                                learning_rate_min)
+
+        self.last_observation = None
+        self.last_action = None
 
     def _start(self, observation):
-        #encoded_observation = observation['state']
-        import pdb; pdb.set_trace()
-        #encoded_observation = self.encoder['observation'].encode(observation)
-        #encoded_action = self.policy.select_action(encoded_observation)
-        ##action = {'choice': encoded_action}
-        #action = self.encoder['action'].decode(encoded_action)
-        action = self.policy.select_action(observation)
+        self.learner.new_episode()
+        action = self.learner.policy.select_action(observation)
+        self.last_observation = observation
+        self.last_action = action
         return action
-        #choice = self._action_space['choice']
-        #action = {'choice': random.choice(range(choice.min, choice.max))}
-        #return action
 
     def _step(self, reward, observation):
-        ##encoded_observation = observation['state']
-        #encoded_observation = self.encoder['observation'].encode(observation)
-        #encoded_action = self.policy.select_action(encoded_observation)
-        ##action = {'choice': encoded_action}
-        #action = self.encoder['action'].decode(encoded_action)
-        action = self.policy.select_action(observation)
+        self.learner.update(self.last_observation, self.last_action, reward,
+                            observation)
+        action = self.learner.policy.select_action(observation)
+        self.last_observation = observation
+        self.last_action = action
         return action
-        #choice = self._action_space['choice']
-        #action = {'choice': random.choice(range(choice.min, choice.max))}
-        #return action
+
+    def _end(self, reward):
+        self.learner.update(self.last_observation, self.last_action, reward,
+                            None)
 
 
 class ActionValueEnvironment(Environment):
     actions_spec = {'choice': Integer(0, 9)}
-    observations_spec = {'state': Integer(0, 0)}
+    observations_spec = {'state': Integer(1, 1)}
     problem_type = "episodic"
     discount_factor = 1.0
     rewards = Integer(-1, 1)
@@ -67,25 +65,28 @@ class ActionValueEnvironment(Environment):
         self.set_action_space(choice=Integer(0, n-1))
 
     def _init(self):
-        maxval = self._action_space["choice"].max
-        self.ps = [ p/float(maxval) for p in range(maxval+1) ]
+        maxval = self._action_space["choice"].max + 1
+        self.ps = [ p/float(maxval) for p in range(maxval) ]
 
     def _start(self):
         return dict(state=0)
 
     def _step(self, action):
-        print str(action)
-        if random.random() > self.ps[action['choice']]:
+        if random.random() < self.ps[action['choice']]:
             r = 1
         else:
             r = 0
-        rot = dict(state=0, reward=r, final=True)
-        print rot
+        rot = dict(state=0, reward=r, terminal=True)
         return rot
+
+    def _end(self, reward):
+        pass
 
 
 class ActionValueExperiment(Experiment):
     def _init(self):
+        self.episodes = 10000
+        self.steps = 100
         pass
 
     def _start(self):
