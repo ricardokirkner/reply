@@ -19,7 +19,7 @@ from reply.storage import TableStorage
 class ActionValueAgent(Agent):
     def _init(self, task_spec):
         learning_rate = 1
-        learning_rate_decay = 0.99
+        learning_rate_decay = 0.999
         learning_rate_min = 0.00001
         random_action_rate = 1
 
@@ -39,6 +39,7 @@ class ActionValueAgent(Agent):
         action = self.learner.policy.select_action(observation)
         self.last_observation = observation
         self.last_action = action
+        print "chosen action", action
         return action
 
     def _step(self, reward, observation):
@@ -52,7 +53,9 @@ class ActionValueAgent(Agent):
     def _end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
-
+        print "reward", reward
+        print self.learner.policy.storage.data[0]
+        print "learning rate", self.learner.learning_rate
 
 class ActionValueEnvironment(Environment):
     actions_spec = {'choice': Integer(0, 9)}
@@ -65,10 +68,12 @@ class ActionValueEnvironment(Environment):
         self.set_action_space(choice=Integer(0, n-1))
 
     def _init(self):
+        print "env init"
         maxval = self._action_space["choice"].max + 1
-        self.ps = [ p/float(maxval) for p in range(maxval) ]
+        self.ps = [ (p+1)/float(maxval) for p in range(maxval) ]
 
     def _start(self):
+        print "env_start"
         return dict(state=0)
 
     def _step(self, action):
@@ -84,20 +89,7 @@ class ActionValueEnvironment(Environment):
 
 
 class ActionValueExperiment(Experiment):
-    def _init(self):
-        self.episodes = 10000
-        self.steps = 100
-        pass
-
-    def _start(self):
-        pass
-
-    def _step(self):
-        pass
-
-    def _cleanup(self):
-        pass
-
+    pass
 
 if __name__=="__main__":
     import sys
@@ -143,7 +135,12 @@ if __name__=="__main__":
 
         runner = ActionValueRunner()
         runner.run()
+    elif role == 'reply_runner':
+        from reply.reply_glue import ReplyRunner
+
+        runner = ReplyRunner(ActionValueAgent(), ActionValueEnvironment(),
+                             ActionValueExperiment())
+        runner.run()
     else:
         usage()
         exit(0)
-
