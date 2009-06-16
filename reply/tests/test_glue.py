@@ -217,8 +217,6 @@ class TestRLGlueExperiment(unittest.TestCase):
 
     def test_builder(self):
         self.assertEqual(self.proxy.experiment, self.experiment)
-        self.assertEqual(self.proxy._initialized, False)
-        self.assertEqual(self.proxy._started, False)
 
     def test_init(self):
         self.assertEqual(self.proxy.init(), None)
@@ -227,17 +225,11 @@ class TestRLGlueExperiment(unittest.TestCase):
         self.assertEqual(self.proxy.start(), None)
 
     def test_step(self):
-        roat = self.proxy.step()
-        self.assertEqual(roat.terminal, False)
-        self.assertEqual(roat.r, 0)
-        self.assertTrue(roat.o.sameAs(Observation()))
-        self.assertTrue(roat.a.sameAs(Action()))
+        result = self.proxy.step()
+        self.assertEqual(result['terminal'], False)
 
     def test_cleanup(self):
         self.assertEqual(self.proxy.cleanup(), None)
-
-    def test_run(self):
-        self.assertEqual(self.proxy.run(), None)
 
 
 if __name__ == '__main__':

@@ -133,9 +133,9 @@ def adapt(source, space, target=None):
                     if name in source:
                         _array.append(source[name])
         elif target in (Reward_observation_terminal,):
-            result.r = source.get('reward')
+            result.r = source.get('reward', 0.0)
             result.o = adapt(source, space, Observation)
-            result.terminal = source.get('terminal')
+            result.terminal = source.get('terminal', False)
     else:
         # adapt from type to dictionary
 
