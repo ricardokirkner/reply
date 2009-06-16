@@ -1,44 +1,53 @@
 
 class Experiment(object):
+    steps = 100
+    episodes = 10000
 
     def __init__(self):
-        pass
+        self.glue_experiment = None
 
-    #
-    # Standard API
-    #
+    def set_glue_experiment(self, experiment):
+        self.glue_experiment = experiment
+
+    # RL Glue Experiment API
 
     def init(self):
-        self.episodes = 1
-        self.steps = 1
-        self._init()
-        self.initialized = True
+        return self.glue_experiment.init()
 
     def start(self):
-        self._start()
-        self.started = True
+        return self.glue_experiment.start()
 
     def step(self):
-        result = self._step()
-        return result
+        return self.glue_experiment.step()
+
+    def episode(self):
+        return self.glue_experiment.episode()
+
+    def return_reward(self):
+        return self.glue_experiment.return_reward()
+
+    def num_steps(self):
+        return self.glue_experiment.num_steps()
 
     def cleanup(self):
-        self._cleanup()
-        self.started = False
-        self.initialized = False
+        return self.glue_experiment.cleanup()
 
-    #
-    # Overridable Methods
-    #
+    def agent_message(self, message):
+        return self.glue_experiment.agent_message(message)
 
-    def _init(self):
-        pass
+    def env_message(self, message):
+        return self.glue_experiment.env_message(message)
 
-    def _start(self):
-        pass
+    # Method to override
 
-    def _step(self):
-        pass
-
-    def _cleanup(self):
-        pass
+    def run(self):
+        self.init()
+        for episode in range(self.episodes):
+            self.start()
+            steps = 0
+            terminal = False
+            while steps < self.steps and not terminal:
+                roat = self.step()
+                terminal = roat["terminal"]
+                steps += 1
+        self.cleanup()

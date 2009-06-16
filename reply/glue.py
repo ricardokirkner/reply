@@ -5,7 +5,7 @@ from rlglue.agent import AgentLoader
 from rlglue.environment.Environment import Environment
 from rlglue.environment import EnvironmentLoader
 from rlglue.types import Action, Observation, Reward_observation_terminal
-
+from reply.util import TaskSpec
 from reply.datatypes import Integer, Double, Char
 
 __all__ = ["start_agent", "start_environment"]
@@ -22,7 +22,8 @@ class RlGlueProxyAgent(Agent):
         self.agent = agent
 
     def agent_init(self, task_spec):
-        self.agent.init(task_spec)
+        ts = TaskSpec.parse(task_spec)
+        self.agent.init(ts)
 
     def agent_start(self, observation):
         observation_space = self.agent._observation_space
@@ -97,40 +98,22 @@ class RlGlueProxyExperiment(object):
     def __init__(self, experiment):
         # agent is the reply Experiment instance
         self.experiment = experiment
-        self._initialized = False
-        self._started = False
+        experiment.set_glue_experiment(self)
 
     def init(self):
         RL_init()
-        self.experiment.init()
 
     def start(self):
         RL_start()
-        self.experiment.start()
 
     def step(self):
         roat = RL_step()
-        return roat
+        # XXX do an adapt here when we have full taskspec support
+        reply_roat = dict(terminal=roat.terminal)
+        return reply_roat
 
     def cleanup(self):
         RL_cleanup()
-
-    def run(self):
-        self.init()
-        for episode in range(self.experiment.episodes):
-        #    RL_episode(self.experiment.steps)
-            self.start()
-            steps = 0
-            terminal = False
-            while steps < self.experiment.steps and not terminal:
-                roat = self.step()
-                #reward = roat.r
-                #observation = roat.o
-                #action = roat.a
-                #terminal = roat.terminal
-                #print 'terminal, reward, observation, action', terminal, reward, str(observation), str(action)
-                steps += 1
-        self.cleanup()
 
 
 def adapt(source, space, target=None):
@@ -188,6 +171,4 @@ def start_environment(env):
 
 def start_experiment(experiment):
     rlglue_experiment = RlGlueProxyExperiment(experiment)
-    rlglue_experiment.run()
-
-
+    experiment.run()

@@ -1,5 +1,5 @@
 from reply.datatypes import Space
-from reply.util import MessageHandler, TaskSpec
+from reply.util import MessageHandler
 
 class Agent(MessageHandler):
 
@@ -28,7 +28,6 @@ class Agent(MessageHandler):
     #
 
     def init(self, task_spec):
-        task_spec = TaskSpec.parse(task_spec)
         self.set_action_space(task_spec.actions)
         self.set_observation_space(task_spec.observations)
         self._init(task_spec)
@@ -66,4 +65,3 @@ class Agent(MessageHandler):
 
     def _cleanup(self):
         pass
-
