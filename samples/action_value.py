@@ -39,7 +39,6 @@ class ActionValueAgent(Agent):
         action = self.learner.policy.select_action(observation)
         self.last_observation = observation
         self.last_action = action
-        print "chosen action", action
         return action
 
     def _step(self, reward, observation):
@@ -53,9 +52,7 @@ class ActionValueAgent(Agent):
     def _end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
-        print "reward", reward
         print self.learner.policy.storage.data[0]
-        print "learning rate", self.learner.learning_rate
 
 class ActionValueEnvironment(Environment):
     actions_spec = {'choice': Integer(0, 9)}
@@ -68,12 +65,10 @@ class ActionValueEnvironment(Environment):
         self.set_action_space(choice=Integer(0, n-1))
 
     def _init(self):
-        print "env init"
         maxval = self._action_space["choice"].max + 1
         self.ps = [ (p+1)/float(maxval) for p in range(maxval) ]
 
     def _start(self):
-        print "env_start"
         return dict(state=0)
 
     def _step(self, action):
@@ -88,59 +83,7 @@ class ActionValueEnvironment(Environment):
         pass
 
 
-class ActionValueExperiment(Experiment):
-    pass
-
 if __name__=="__main__":
-    import sys
-    def usage():
-        print "%s [agent|environment|experiment|runner]" % sys.argv[0]
-
-    if len(sys.argv) < 2:
-        usage()
-        exit(0)
-
-    role = sys.argv[1]
-    if role == 'agent':
-        from reply.glue import start_agent
-        start_agent(ActionValueAgent())
-    elif role == 'environment':
-        from reply.glue import start_environment
-        start_environment(ActionValueEnvironment())
-    elif role == 'experiment':
-        from reply.glue import start_experiment
-        start_experiment(ActionValueExperiment())
-    elif role == 'runner':
-        from multiprocessing import Process
-        from reply.glue import start_agent
-        from reply.glue import start_environment
-        from reply.glue import start_experiment
-
-        class ActionValueRunner():
-            def run(self):
-                agent = Process(target=start_agent,
-                                args=(ActionValueAgent(),))
-                environment = Process(target=start_environment,
-                                      args=(ActionValueEnvironment(),))
-                experiment = Process(target=start_experiment,
-                                     args=(ActionValueExperiment(),))
-
-                agent.start()
-                environment.start()
-                experiment.start()
-
-                agent.join()
-                environment.join()
-                experiment.join()
-
-        runner = ActionValueRunner()
-        runner.run()
-    elif role == 'reply_runner':
-        from reply.reply_glue import ReplyRunner
-
-        runner = ReplyRunner(ActionValueAgent(), ActionValueEnvironment(),
-                             ActionValueExperiment())
-        runner.run()
-    else:
-        usage()
-        exit(0)
+    from reply.runner import Runner
+    r = Runner(ActionValueAgent(), ActionValueEnvironment(), Experiment())
+    r.run()

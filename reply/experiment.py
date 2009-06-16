@@ -1,7 +1,7 @@
 
 class Experiment(object):
-    steps = 100
-    episodes = 10000
+    max_steps = 100
+    max_episodes = 10000
 
     def __init__(self):
         self.glue_experiment = None
@@ -42,11 +42,11 @@ class Experiment(object):
 
     def run(self):
         self.init()
-        for episode in range(self.episodes):
+        for episode in range(self.max_episodes):
             self.start()
             steps = 0
             terminal = False
-            while steps < self.steps and not terminal:
+            while steps < self.max_steps and not terminal:
                 roat = self.step()
                 terminal = roat["terminal"]
                 steps += 1
