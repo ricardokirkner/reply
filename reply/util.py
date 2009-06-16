@@ -60,7 +60,7 @@ def build_spec(names, values):
             if 'INTS' in names:
                 int_names = names['INTS']
                 # build ints by name
-                while i < len(int_values):
+                while i < min(len(int_values), len(int_names)):
                     name = int_names[i]
                     value = int_values[i]
                     spec[name] = Integer(*value)
@@ -77,7 +77,7 @@ def build_spec(names, values):
             if 'DOUBLES' in names:
                 double_names = names['DOUBLES']
                 # build doubles by name
-                while i < len(double_values):
+                while i < min(len(double_values), len(double_names)):
                     name = double_names[i]
                     value = double_values[i]
                     spec[name] = Double(*value)
@@ -94,7 +94,7 @@ def build_spec(names, values):
             if 'CHARS' in names:
                 char_names = names['CHARS']
                 # build chars by name
-                while i < len(char_values):
+                while i < min(len(char_values), len(char_names)):
                     name = char_names[i]
                     spec[name] = Char()
                     i += 1

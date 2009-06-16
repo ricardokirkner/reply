@@ -72,6 +72,18 @@ class TestUtil(unittest.TestCase):
 
         self.assertEqual(spec, expected_spec)
 
+    def test_build_spec_unnamed(self):
+        names = {'INTS': ['a'], 'DOUBLES': ['b'], 'CHARS': ['c']}
+        values = {'INTS': [[0, 1], [1,2]], 'DOUBLES': [[0.0, 1.0], [1.0, 2.0]],
+                  'CHARS': 2}
+        spec = build_spec(names, values)
+        expected_spec = {'a': Integer(0, 1),
+                         'b': Double(0.0, 1.0),
+                         'c': Char(),
+                         '': [Integer(1, 2), Double(1.0, 2.0), Char()]}
+
+        self.assertEqual(spec, expected_spec)
+
     def test_parse_names(self):
         names = ['INTS', 'a', 'DOUBLES', 'b', 'CHARS', 'c']
         values = {'INTS': [[0, 1]], 'DOUBLES': [[0.0, 1.0]], 'CHARS': 1}

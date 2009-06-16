@@ -12,30 +12,57 @@ class Experiment(object):
     # RL Glue Experiment API
 
     def init(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.init()
 
     def start(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.start()
 
     def step(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.step()
 
     def episode(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.episode()
 
     def return_reward(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.return_reward()
 
     def num_steps(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.num_steps()
 
     def cleanup(self):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.cleanup()
 
     def agent_message(self, message):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.agent_message(message)
 
     def env_message(self, message):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.env_message(message)
 
     # Method to override
