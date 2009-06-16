@@ -5,54 +5,106 @@ from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
 from reply.datatypes import Char, Double, Integer, Space
 
 
-def parse_spaces(data, parser):
+def parse_spaces(extra, parser):
     observations_spec = {}
     actions_spec = {}
-    parts = data.split()
-    for i, part in enumerate(parts):
-        if part == 'OBSERVATIONS':
-            try:
-                actions_idx = parts.index('ACTIONS')
-                observation_names = parts[i+1:actions_idx]
-            except ValueError:
-                observation_names = parts[i+1:]
-            observation_values = {"INTS": parser.getIntObservations(),
-                                  "DOUBLES": parser.getDoubleObservations(),
-                                  "CHARS": parser.getCharCountObservations()}
-            observations_spec = build_spec(observation_names, observation_values)
-        elif part == 'ACTIONS':
-            action_names = parts[i+1:]
-            action_values = {"INTS": parser.getIntActions(),
-                             "DOUBLES": parser.getDoubleActions(),
-                             "CHARS": parser.getCharCountActions()}
-            actions_spec = build_spec(action_names, action_values)
+    parts = extra.split()
+    observation_names = []
+    action_names = []
+    i = 0
+    while i < len(parts):
+        if parts[i] == 'OBSERVATIONS':
+            names = {'INTS': [], 'DOUBLES': [], 'CHARS': []}
+            _type = ''
+            while i < len(parts)-1 and parts[i] != 'ACTIONS':
+                i += 1
+                if parts[i] in ('INTS', 'DOUBLES', 'CHARS'):
+                    _type = parts[i]
+                elif _type:
+                    names[_type].append(parts[i])
+            observation_names = names
+        elif parts[i] == 'ACTIONS':
+            names = {'INTS': [], 'DOUBLES': [], 'CHARS': []}
+            _type = ''
+            while i < len(parts)-1:
+                i += 1
+                if parts[i] in ('INTS', 'DOUBLES', 'CHARS'):
+                    _type = parts[i]
+                elif _type:
+                    names[_type].append(parts[i])
+            action_names = names
+        else:
+            # skip part
+            i += 1
+
+    # observations
+    observation_values = {"INTS": parser.getIntObservations(),
+                          "DOUBLES": parser.getDoubleObservations(),
+                          "CHARS": parser.getCharCountObservations()}
+    observations_spec = build_spec(observation_names, observation_values)
     observations = Space(observations_spec)
+    # actions
+    action_values = {"INTS": parser.getIntActions(),
+                     "DOUBLES": parser.getDoubleActions(),
+                     "CHARS": parser.getCharCountActions()}
+    actions_spec = build_spec(action_names, action_values)
     actions = Space(actions_spec)
     return (observations, actions)
 
 def build_spec(names, values):
-    spec = {}
-    i = 0
-    while i < len(names):
-        name = names[i]
-        if name == 'INTS':
-            i += 1
-            for value in values['INTS']:
-                name = names[i]
-                spec[name] = Integer(*value)
+    spec = {'': []}
+    for _type in ('INTS', 'DOUBLES', 'CHARS'):
+        i = 0
+        if _type == 'INTS':
+            int_values = values['INTS']
+            if 'INTS' in names:
+                int_names = names['INTS']
+                # build ints by name
+                while i < len(int_values):
+                    name = int_names[i]
+                    value = int_values[i]
+                    spec[name] = Integer(*value)
+                    i += 1
+            # build ints by value
+            unnamed = []
+            while i < len(int_values):
+                value = int_values[i]
+                unnamed.append(Integer(*value))
                 i += 1
-        elif name == 'DOUBLES':
-            i += 1
-            for value in values['DOUBLES']:
-                name = names[i]
-                spec[name] = Double(*value)
+            spec[''].extend(unnamed)
+        elif _type == 'DOUBLES':
+            double_values = values['DOUBLES']
+            if 'DOUBLES' in names:
+                double_names = names['DOUBLES']
+                # build doubles by name
+                while i < len(double_values):
+                    name = double_names[i]
+                    value = double_values[i]
+                    spec[name] = Double(*value)
+                    i += 1
+            # build doubles by value
+            unnamed = []
+            while i < len(double_values):
+                value = double_values[i]
+                unnamed.append(Double(*value))
                 i += 1
-        elif name == 'CHARS':
-            i += 1
-            for j in xrange(values['CHARS']):
-                name = names[i]
-                spec[name] = Char()
+            spec[''].extend(unnamed)
+        elif _type == 'CHARS':
+            char_values = range(values['CHARS'])
+            if 'CHARS' in names:
+                char_names = names['CHARS']
+                # build chars by name
+                while i < len(char_values):
+                    name = char_names[i]
+                    spec[name] = Char()
+                    i += 1
+            # build chars by value
+            unnamed = []
+            while i < len(char_values):
+                value = char_values[i]
+                unnamed.append(Char())
                 i += 1
+            spec[''].extend(unnamed)
     return spec
 
 def parse_names(names, values, result):
