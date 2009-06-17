@@ -1,4 +1,3 @@
-import simplejson
 
 from reply.datatypes import Integer, Space
 from reply.util import MessageHandler, TaskSpec
@@ -12,7 +11,11 @@ class Environment(MessageHandler):
 
     def __init__(self):
         super(Environment, self).__init__()
+        self._observation_space = None
+        self._action_space = None
         self.initialized = False
+        self.started = False
+
         self.set_action_space(**self.actions_spec)
         self.set_observation_space(**self.observations_spec)
         self.extra = self._get_names()

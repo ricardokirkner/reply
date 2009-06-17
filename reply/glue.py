@@ -1,5 +1,5 @@
 
-from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup, RL_episode
+from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup
 from rlglue.agent.Agent import Agent
 from rlglue.agent import AgentLoader
 from rlglue.environment.Environment import Environment
@@ -21,9 +21,9 @@ class RlGlueProxyAgent(Agent):
         # agent is the reply Agent instance
         self.agent = agent
 
-    def agent_init(self, task_spec):
-        ts = TaskSpec.parse(task_spec)
-        self.agent.init(ts)
+    def agent_init(self, task_spec_str):
+        task_spec = TaskSpec.parse(task_spec_str)
+        self.agent.init(task_spec)
 
     def agent_start(self, observation):
         observation_space = self.agent._observation_space

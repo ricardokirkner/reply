@@ -7,7 +7,7 @@ class Policy(object):
         self.storage = storage
 
     def select_action(self, observation):
-        raise NotImplementedErrror()
+        raise NotImplementedError()
 
 
 class EGreedyPolicy(Policy):
@@ -24,7 +24,8 @@ class EGreedyPolicy(Policy):
             encoded_action = random.randint(0, numpy.size(encoded_actions)-1)
         else:
             encoded_action = numpy.argmax(encoded_actions)
-        decoded_state_action = self.storage.encoder.decode((None, encoded_action))
+        decoded_state_action = self.storage.encoder.decode((None,
+                                                            encoded_action))
         action = decoded_state_action[1]
         return action
 
@@ -56,7 +57,8 @@ class SoftMaxPolicy(Policy):
                 current_pr += encoded_action_pr
                 if pr < current_pr:
                     break
-        decoded_state_action = self.storage.encoder.decode((None, encoded_action))
+        decoded_state_action = self.storage.encoder.decode((None,
+                                                            encoded_action))
         action = decoded_state_action[1]
         return action
 

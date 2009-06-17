@@ -1,4 +1,3 @@
-import numpy
 
 class Encoder(object):
     def encode(self, item):
