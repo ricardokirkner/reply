@@ -66,7 +66,7 @@ class ActionValueEnvironment(Environment):
 
     def _init(self):
         maxval = self._action_space["choice"].max + 1
-        self.ps = [ (p+1)/float(maxval) for p in range(maxval) ]
+        self.ps = [ p/float(maxval) for p in range(1, maxval+1) ]
 
     def _start(self):
         return dict(state=0)
