@@ -66,8 +66,8 @@ class Run(Command):
         del observation["terminal"]
 
         if terminal:
-           self.agent.end(reward)
-           return rot
+            self.agent.end(reward)
+            return rot
         else:
             action = self.agent.step(reward, observation)
             self.last_action = action

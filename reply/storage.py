@@ -23,7 +23,7 @@ class Storage(object):
     def clear(self):
         raise NotImplementedError()
 
-    def filter(self, item, filter=None):
+    def filter(self, item, filter):
         raise NotImplementedError()
 
 

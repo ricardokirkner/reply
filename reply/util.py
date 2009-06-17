@@ -206,6 +206,7 @@ class MessageHandler(object):
             if f is not None:
                 out_message = f(*message['args'], **message['kwargs'])
         except:
-            raise ValueError("Received a malformed message in %s: %s" % (self, in_message))
+            raise ValueError("Received a malformed message in %s: %s" % (
+                self, in_message))
         return simplejson.dumps(out_message)
 

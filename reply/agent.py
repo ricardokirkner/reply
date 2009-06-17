@@ -5,6 +5,8 @@ class Agent(MessageHandler):
 
     def __init__(self):
         super(Agent, self).__init__()
+        self._observation_space = None
+        self._action_space = None
         self.initialized = False
 
     def set_action_space(self, space=None, **kwargs):
