@@ -34,25 +34,6 @@ class StateValueAgent(Agent):
         self.last_observation = None
         self.last_action = None
 
-    def _start(self, observation):
-        self.learner.new_episode()
-        action = self.learner.policy.select_action(observation)
-        self.last_observation = observation
-        self.last_action = action
-        return action
-
-    def _step(self, reward, observation):
-        self.learner.update(self.last_observation, self.last_action, reward,
-                            observation)
-        action = self.learner.policy.select_action(observation)
-        self.last_observation = observation
-        self.last_action = action
-        return action
-
-    def _end(self, reward):
-        self.learner.update(self.last_observation, self.last_action, reward,
-                            None)
-
 
 class StateValueEnvironment(Environment):
     actions_spec = {'pass': Integer(1, 1)}
@@ -77,9 +58,6 @@ class StateValueEnvironment(Environment):
             r = 0
         rot = dict(state=self.state, reward=r, terminal=True)
         return rot
-
-    def _end(self, reward):
-        pass
 
 
 if __name__ == "__main__":

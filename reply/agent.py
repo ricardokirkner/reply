@@ -57,13 +57,23 @@ class Agent(MessageHandler):
         pass
 
     def _start(self, observation):
-        return {}
+        self.learner.new_episode()
+        action = self.learner.policy.select_action(observation)
+        self.last_observation = observation
+        self.last_action = action
+        return action
 
     def _step(self, reward, observation):
-        return {}
+        self.learner.update(self.last_observation, self.last_action, reward,
+                            observation)
+        action = self.learner.policy.select_action(observation)
+        self.last_observation = observation
+        self.last_action = action
+        return action
 
     def _end(self, reward):
-        pass
+        self.learner.update(self.last_observation, self.last_action, reward,
+                            None)
 
     def _cleanup(self):
         pass
