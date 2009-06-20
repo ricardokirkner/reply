@@ -35,6 +35,20 @@ class Agent(MessageHandler):
         self.initialized = True
 
     def start(self, observation):
+        return {}
+
+    def step(self, reward, observation):
+        return {}
+
+    def end(self, reward):
+        pass
+
+    def cleanup(self):
+        pass
+
+class LearningAgent(Agent):
+
+    def start(self, observation):
         self.learner.new_episode()
         action = self.learner.policy.select_action(observation)
         self.last_observation = observation
@@ -52,6 +66,3 @@ class Agent(MessageHandler):
     def end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
-
-    def cleanup(self):
-        pass

@@ -73,28 +73,11 @@ class TestAgent(unittest.TestCase):
         action = self.agent.start(obs)
         self.assertEqual(action, {})
 
-    def test_agent_start_overriden(self):
-        def start(observation):
-            return {'a1': 1}
-        self.agent._start = start
-        obs = {'o1': 1}
-        action = self.agent.start(obs)
-        self.assertEqual(action, {'a1': 1})
-
     def test_agent_step_abstract(self):
         reward = 0
         obs = {'o1': 1}
         action = self.agent.step(reward, obs)
         self.assertEqual(action, {})
-
-    def test_agent_step_overriden(self):
-        def step(reward, observation):
-            return {'a1': 1}
-        reward = 0
-        obs = {'o1': 1}
-        self.agent._step = step
-        action = self.agent.step(reward, obs)
-        self.assertEqual(action, {'a1': 1})
 
     def test_agent_end(self):
         self.assertEqual(self.agent.end(0), None)
