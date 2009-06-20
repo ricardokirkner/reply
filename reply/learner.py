@@ -17,6 +17,9 @@ class Learner(object):
         """
         raise NotImplementedError()
 
+    def __eq__(self, other):
+        return self.policy == other.policy
+
 
 class QLearner(Learner):
 
@@ -51,6 +54,13 @@ class QLearner(Learner):
             )
 
         self.policy.storage.set((state, action), new_value)
+
+    def __eq__(self, other):
+        return (super(QLearner, self).__eq__(other) and
+                self.learning_rate == other.learning_rate and
+                self.learning_rate_decay == other.learning_rate_decay and
+                self.learning_rate_min == other.learning_rate_min and
+                self.value_discount == other.value_discount)
 
 
 class SarsaLearner(QLearner):

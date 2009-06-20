@@ -18,6 +18,9 @@ class SpaceEncoder(Encoder):
     def __init__(self, space):
         self.space = space
 
+    def __eq__(self, other):
+        return self.space == other.space
+
     def encode(self, item):
         """
         >>> from reply.datatypes import Integer, Space
@@ -46,6 +49,9 @@ class SpaceEncoder(Encoder):
 class StateActionEncoder(SpaceEncoder):
     def __init__(self, state_encoder, action_encoder):
         self.encoder = {'state': state_encoder, 'action': action_encoder}
+
+    def __eq__(self, other):
+        return self.encoder == other.encoder
 
     def encode(self, item):
         """

@@ -90,23 +90,11 @@ class Space(object):
         return ' '.join(items)
 
     def __eq__(self, other):
-        return self.spec == other.spec
+        return (self.spec == other.spec and
+                self.order == other.order)
 
     def __iter__(self):
         return iter(self._data)
-
-    @property
-    def size(self):
-        size = 0
-        for _type in (Integer, Double, Char):
-            for parameter in self._data[_type].values():
-                values = parameter.max - parameter.min + 1
-                size += values
-        unnamed = self._data.get('', [])
-        for parameter in unnamed:
-            values = parameter.max - parameter.min + 1
-            size += values
-        return size
 
     @property
     def size(self):

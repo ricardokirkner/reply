@@ -38,10 +38,16 @@ class LearningAgent(Agent):
         encoder = StateActionEncoder(state_encoder, action_encoder)
         size = (self.model.observations.size, self.model.actions.size)
         storage = self.storage_class(size, encoder)
-        policy = self.policy_class(storage, self.random_action_rate)
-        self.learner = self.learner_class(policy, self.learning_rate,
-                                          self.learning_rate_decay,
-                                          self.learning_rate_min)
+        kwargs = {}
+        if hasattr(self, 'random_action_rate'):
+            kwargs['random_action_rate'] = self.random_action_rate
+        policy = self.policy_class(storage, **kwargs)
+        kwargs = {}
+        if hasattr(self, 'learning_rate_decay'):
+            kwargs['learning_rate_decay'] = self.learning_rate_decay
+        if hasattr(self, 'learning_rate_min'):
+            kwargs['learning_rate_min'] = self.learning_rate_min
+        self.learner = self.learner_class(policy, self.learning_rate, **kwargs)
 
         self.last_observation = None
         self.last_action = None

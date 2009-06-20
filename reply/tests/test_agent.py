@@ -1,7 +1,11 @@
 import unittest
 
-from reply.agent import Agent
-from reply.datatypes import Char, Double, Integer, Model, Space
+from reply.agent import Agent, LearningAgent
+from reply.encoder import SpaceEncoder, StateActionEncoder
+from reply.storage import TableStorage
+from reply.policy import EGreedyPolicy
+from reply.learner import QLearner
+from reply.datatypes import Integer, Model, Space
 from reply.util import TaskSpec
 
 
@@ -53,6 +57,62 @@ class TestAgent(unittest.TestCase):
     def test_agent_cleanup(self):
         self.assertEqual(self.agent.cleanup(), None)
 
+
+class TestLearningAgent(unittest.TestCase):
+    def setUp(self):
+        class DummyLearningAgent(LearningAgent):
+            state_encoder_class = SpaceEncoder
+            action_encoder_class = SpaceEncoder
+            storage_class = TableStorage
+            policy_class = EGreedyPolicy
+            learner_class = QLearner
+            model = Model({'spec': {'o1': Integer(0, 1)}},
+                          {'spec': {'a1': Integer(0, 1)}})
+            learning_rate = 0
+
+        self.agent = DummyLearningAgent()
+        self.task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
+            "DISCOUNTFACTOR 1.0" \
+            "OBSERVATIONS INTS (0 1) ACTIONS INTS (0 1) REWARDS (0 1) " \
+            "EXTRA OBSERVATIONS INTS o1 ACTIONS INTS a1"
+        self.task_spec = TaskSpec.parse(self.task_spec_str)
+
+    def test_init(self):
+        self.agent.init(self.task_spec)
+        observation_spec = {'o1': Integer(0, 1)}
+        action_spec = {'a1': Integer(0, 1)}
+        encoder = StateActionEncoder(SpaceEncoder(Space(observation_spec)),
+                                     SpaceEncoder(Space(action_spec)))
+        size = (Space(observation_spec).size, Space(action_spec).size)
+        storage = TableStorage(size, encoder)
+        policy = EGreedyPolicy(storage)
+        learner = QLearner(policy, 0)
+        self.assertEqual(self.agent.learner, learner)
+        self.assertEqual(self.agent.last_observation, None)
+        self.assertEqual(self.agent.last_action, None)
+
+    def test_start(self):
+        observation = {'o1': 0}
+        expected_action = {'a1': 0}
+        self.agent.init(self.task_spec)
+        action = self.agent.start(observation)
+        self.assertEqual(action, expected_action)
+
+    def test_step(self):
+        reward = 0
+        observation = {'o1': 0}
+        expected_action = {'a1': 0}
+        self.agent.init(self.task_spec)
+        self.agent.start(observation)
+        action = self.agent.step(reward, observation)
+        self.assertEqual(action, expected_action)
+
+    def test_end(self):
+        reward = 0
+        observation = {'o1': 0}
+        self.agent.init(self.task_spec)
+        self.agent.start(observation)
+        self.assertEqual(self.agent.end(reward), None)
 
 
 if __name__ == '__main__':

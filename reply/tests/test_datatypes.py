@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from reply.datatypes import Char, Double, Integer, Number, Space
+from reply.datatypes import Char, Double, Integer, Model, Number, Space
 
 
 class TestNumber(unittest.TestCase):
@@ -49,6 +49,35 @@ class TestChar(unittest.TestCase):
         c1 = Char()
         c2 = Char()
         self.assertEqual(c1, c2)
+
+
+class TestModel(unittest.TestCase):
+    def test_model_builder(self):
+        observations_spec = {'a': Integer(0, 1)}
+        actions_spec = {'b': Integer(0, 1)}
+        model = Model({'spec': observations_spec}, {'spec': actions_spec})
+        self.assertEqual(model.observations, Space(observations_spec))
+        self.assertEqual(model.actions, Space(actions_spec))
+
+    def test_model_build_space(self):
+        spec = {'a': Integer(0, 1)}
+        space = Space(spec)
+        model = Model()
+        result = model._build_space({'spec': spec})
+        self.assertEqual(result, Space(spec))
+        result = model._build_space(space)
+        self.assertEqual(result, space)
+
+    def test_model_equal(self):
+        spec = {'a': Integer(0, 1)}
+        model1 = Model({'spec': spec})
+        model2 = Model({'spec': spec})
+        model3 = Model(None, {'spec': spec})
+        model4 = Model()
+        self.assertEqual(model1, model2)
+        self.assertNotEqual(model1, model3)
+        self.assertNotEqual(model1, model4)
+        self.assertNotEqual(model3, model4)
 
 
 class TestSpace(unittest.TestCase):
@@ -207,6 +236,14 @@ class TestSpace(unittest.TestCase):
         space1 = Space(spec1)
         space2 = Space(spec2)
         self.assertNotEqual(space1, space2)
+
+    def test_space_size(self):
+        spec1 = {'a': Integer(0, 1)}
+        spec2 = {'a': Integer(0, 1), '': [Integer(1,2)]}
+        space1 = Space(spec1)
+        space2 = Space(spec2)
+        self.assertEqual(space1.size, 2)
+        self.assertEqual(space2.size, 4)
 
     def test_space_get_names_spec(self):
         spec = {'a': Integer(0, 1),

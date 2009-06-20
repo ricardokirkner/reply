@@ -9,6 +9,9 @@ class Policy(object):
     def select_action(self, observation):
         raise NotImplementedError()
 
+    def __eq__(self, other):
+        return self.storage == other.storage
+
 
 class EGreedyPolicy(Policy):
     def __init__(self, storage, random_action_rate=0.0,
@@ -28,7 +31,13 @@ class EGreedyPolicy(Policy):
                                                             encoded_action))
         action = decoded_state_action[1]
         return action
-    
+
+    def __eq__(self, other):
+        return (super(EGreedyPolicy, self).__eq__(other) and
+                self.random_action_rate == other.random_action_rate and
+                self.random_action_rate_decay == \
+                    other.random_action_rate_decay and
+                self.random_action_rate_min == other.random_action_rate_min)
 
 
 class SoftMaxPolicy(Policy):
@@ -62,3 +71,7 @@ class SoftMaxPolicy(Policy):
                                                             encoded_action))
         action = decoded_state_action[1]
         return action
+
+    def __eq__(self, other):
+        return (super(SoftMaxPolicy, self).__eq__(other) and
+                self.temperature == other.temperature)

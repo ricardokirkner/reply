@@ -44,6 +44,10 @@ class TableStorage(Storage):
             self.encoder = encoder
         self.data = numpy.zeros(size)
 
+    def __eq__(self, other):
+        return (self.encoder == other.encoder and
+                (self.data == other.data).all())
+
     def get(self, item):
         """
         >>> storage = TableStorage((1, 1))
