@@ -20,7 +20,7 @@ class ActionValueAgent(Agent):
     def _init(self, task_spec):
         learning_rate = 1
         learning_rate_decay = 0.999
-        learning_rate_min = 0.00001
+        learning_rate_min = 0.001
         random_action_rate = 1
 
         state_encoder = SpaceEncoder(self._observation_space)
@@ -52,7 +52,6 @@ class ActionValueAgent(Agent):
     def _end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
-        print self.learner.policy.storage.data[0]
 
 class ActionValueEnvironment(Environment):
     actions_spec = {'choice': Integer(0, 9)}
@@ -60,6 +59,7 @@ class ActionValueEnvironment(Environment):
     problem_type = "episodic"
     discount_factor = 1.0
     rewards = Integer(-1, 1)
+
 
     def on_set_num_action(self, n):
         self.set_action_space(choice=Integer(0, n-1))
