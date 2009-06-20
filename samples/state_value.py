@@ -52,7 +52,6 @@ class StateValueAgent(Agent):
     def _end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
-        print self.learner.policy.storage.data
 
 
 class StateValueEnvironment(Environment):
