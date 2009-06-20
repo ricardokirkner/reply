@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import random
 
-from reply.agent import Agent
+from reply.agent import LearningAgent
 from reply.datatypes import Integer
 from reply.encoder import SpaceEncoder, StateActionEncoder
 from reply.environment import Environment
@@ -16,7 +16,7 @@ from reply.policy import EGreedyPolicy
 from reply.storage import TableStorage
 
 
-class StateValueAgent(Agent):
+class StateValueAgent(LearningAgent):
     def init(self, task_spec):
         super(StateValueAgent, self).init(task_spec)
         learning_rate = 1

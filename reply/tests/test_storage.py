@@ -4,6 +4,7 @@ import unittest
 from reply.encoder import DummyEncoder
 from reply.storage import Storage, TableStorage
 
+identity = lambda x: True
 
 class TestStorage(unittest.TestCase):
     def setUp(self):
@@ -25,7 +26,7 @@ class TestStorage(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.storage.clear)
 
     def test_storage_filter(self):
-        self.assertRaises(NotImplementedError, self.storage.filter, 1)
+        self.assertRaises(NotImplementedError, self.storage.filter, 1, identity)
 
 
 class TestTableStorage(unittest.TestCase):
