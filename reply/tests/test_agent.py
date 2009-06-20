@@ -1,7 +1,7 @@
 import unittest
 
 from reply.agent import Agent
-from reply.datatypes import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Model, Space
 from reply.util import TaskSpec
 
 
@@ -18,54 +18,22 @@ class TestAgent(unittest.TestCase):
     def test_agent_builder(self):
         self.assertEqual(self.agent.initialized, False)
 
-    def test_agent_set_action_space_already_initialized(self):
-        self.agent.init(self.task_spec)
-        spec = {'a1': Integer(0, 1)}
-        self.assertRaises(Exception, self.agent.set_action_space, **spec)
-
-    def test_agent_set_action_space_with_space(self):
-        space = Space({'a1': Integer(0, 3)})
-        self.agent.set_action_space(space)
-        self.assertEqual(self.agent._action_space, space)
-
-    def test_agent_set_action_space_without_space(self):
-        space = Space()
-        self.agent.set_action_space()
-        self.assertEqual(self.agent._action_space, space)
-
-    def test_agent_set_action_space_with_kwargs(self):
-        spec = {'a1': Integer(0, 3)}
-        space = Space(spec)
-        self.agent.set_action_space(**spec)
-        self.assertEqual(self.agent._action_space, space)
-
-    def test_agent_set_observation_space_already_initialized(self):
-        self.agent.init(self.task_spec)
-        spec = {'o1': Integer(0, 1)}
-        self.assertRaises(Exception, self.agent.set_observation_space, **spec)
-
-    def test_agent_set_observation_space_with_space(self):
-        space = Space({'o1': Integer(0, 3)})
-        self.agent.set_observation_space(space)
-        self.assertEqual(self.agent._observation_space, space)
-
-    def test_agent_set_observation_space_without_space(self):
-        space = Space()
-        self.agent.set_observation_space()
-        self.assertEqual(self.agent._observation_space, space)
-
-    def test_agent_set_observation_space_with_kwargs(self):
-        spec = {'o1': Integer(0, 3)}
-        space = Space(spec)
-        self.agent.set_observation_space(**spec)
-        self.assertEqual(self.agent._observation_space, space)
-
     def test_agent_init(self):
         action_spec = {'a1': Integer(0, 1), '': []}
         observation_spec = {'o1': Integer(0, 1), '': []}
         self.agent.init(self.task_spec)
-        self.assertEqual(self.agent._action_space, Space(action_spec))
-        self.assertEqual(self.agent._observation_space, Space(observation_spec))
+        self.assertEqual(self.agent.model.actions, Space(action_spec))
+        self.assertEqual(self.agent.model.observations, Space(observation_spec))
+        self.assertEqual(self.agent.initialized, True)
+
+    def test_agent_init_model(self):
+        actions = Space({'a1': Integer(0, 1), '': []})
+        observations = Space({'o1': Integer(0, 1), '': []})
+        model = Model(observations, actions)
+        self.agent.model = model
+        self.agent.init('')
+        self.assertEqual(self.agent.model.actions, actions)
+        self.assertEqual(self.agent.model.observations, observations)
         self.assertEqual(self.agent.initialized, True)
 
     def test_agent_start_abstract(self):

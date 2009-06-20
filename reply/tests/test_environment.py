@@ -1,7 +1,7 @@
 import unittest
 
 from reply.environment import Environment
-from reply.datatypes import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Model, Space
 from reply.util import TaskSpec
 
 class TestEnviron(unittest.TestCase):
@@ -14,59 +14,13 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(self.environment.problem_type, 'episodic')
         self.assertEqual(self.environment.discount_factor, 1.0)
         self.assertEqual(self.environment.rewards, Integer(0, 1))
-        self.assertEqual(self.environment.actions_spec, {})
-        self.assertEqual(self.environment.observations_spec, {})
-
-    def test_environment_set_action_space_already_initialized(self):
-        self.environment.init()
-        spec = {'a1': Integer(0, 1)}
-        self.assertRaises(Exception, self.environment.set_action_space, **spec)
-
-    def test_environment_set_action_space(self):
-        spec = {'a1': Integer(0, 1)}
-        space = Space(spec)
-        self.environment.set_action_space(space)
-        self.assertEqual(self.environment._action_space, space)
-
-    def test_environment_set_action_space_without_space(self):
-        space = Space()
-        self.environment.set_action_space()
-        self.assertEqual(self.environment._action_space, space)
-
-    def test_environment_set_action_space_with_kwargs(self):
-        spec = {'a1': Integer(0, 1)}
-        space = Space(spec)
-        self.environment.set_action_space(**spec)
-        self.assertEqual(self.environment._action_space, space)
-
-    def test_environment_set_observation_space_already_initialized(self):
-        self.environment.init()
-        spec = {'o1': Integer(0, 1)}
-        self.assertRaises(Exception, self.environment.set_observation_space,
-                          **spec)
-
-    def test_environment_set_observation_space(self):
-        spec = {'o1': Integer(0, 1)}
-        space = Space(spec)
-        self.environment.set_observation_space(space)
-        self.assertEqual(self.environment._observation_space, space)
-
-    def test_environment_set_observation_space_without_space(self):
-        space = Space()
-        self.environment.set_observation_space()
-        self.assertEqual(self.environment._observation_space, space)
-
-    def test_environment_set_observation_space_with_kwargs(self):
-        spec = {'o1': Integer(0, 1)}
-        space = Space(spec)
-        self.environment.set_observation_space(**spec)
-        self.assertEqual(self.environment._observation_space, space)
+        self.assertEqual(self.environment.model, Model())
 
     def test_environment_get_task_spec(self):
         problem_type = self.environment.problem_type
         discount_factor = self.environment.discount_factor
-        action_space = self.environment._action_space
-        observation_space = self.environment._observation_space
+        action_space = self.environment.model.actions
+        observation_space = self.environment.model.observations
         rewards = self.environment.rewards
         extra = ''
         task_spec = TaskSpec(problem_type=problem_type,
@@ -80,8 +34,8 @@ class TestEnviron(unittest.TestCase):
     def test_environment_init(self):
         problem_type = self.environment.problem_type
         discount_factor = self.environment.discount_factor
-        action_space = self.environment._action_space
-        observation_space = self.environment._observation_space
+        action_space = self.environment.model.actions
+        observation_space = self.environment.model.observations
         rewards = self.environment.rewards
         extra = ''
         default_task_spec = TaskSpec(problem_type=problem_type,

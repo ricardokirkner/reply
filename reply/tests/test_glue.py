@@ -10,7 +10,7 @@ from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.glue import adapt, RlGlueProxyAgent, RlGlueProxyEnvironment
 from reply.glue import RlGlueProxyExperiment
-from reply.datatypes import Char, Double, Integer, Space
+from reply.datatypes import Char, Double, Integer, Model, Space
 
 
 class TestRLGlue(unittest.TestCase):
@@ -141,9 +141,10 @@ class TestRLGlueEnvironment(unittest.TestCase):
         class TestEnvironment(Environment):
             problem_type = 'episodic'
             discount_factor = 1.0
-            observations_spec = {'x': Integer(-10, 10), 'y': Integer(-10, 10)}
-            actions_spec = {'dir': Integer(0, 3)}
+            observations = Space({'x': Integer(-10, 10), 'y': Integer(-10, 10)})
+            actions = Space({'dir': Integer(0, 3)})
             rewards = Integer(-1, 0)
+            model = Model(observations, actions)
 
         self.environment = TestEnvironment()
         self.proxy = RlGlueProxyEnvironment(self.environment)

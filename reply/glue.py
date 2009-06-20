@@ -26,16 +26,16 @@ class RlGlueProxyAgent(Agent):
         self.agent.init(task_spec)
 
     def agent_start(self, observation):
-        observation_space = self.agent._observation_space
-        action_space = self.agent._action_space
+        observation_space = self.agent.model.observations
+        action_space = self.agent.model.actions
         reply_observation = adapt(observation, observation_space)
         reply_action = self.agent.start(reply_observation)
         action = adapt(reply_action, action_space, Action)
         return action
 
     def agent_step(self, reward, observation):
-        observation_space = self.agent._observation_space
-        action_space = self.agent._action_space
+        observation_space = self.agent.model.observations
+        action_space = self.agent.model.actions
         reply_observation = adapt(observation, observation_space)
         reply_action = self.agent.step(reward, reply_observation)
         action = adapt(reply_action, action_space, Action)
@@ -68,16 +68,16 @@ class RlGlueProxyEnvironment(Environment):
         return str(task_spec)
 
     def env_start(self):
-        observation_space = self.environment._observation_space
+        observation_space = self.environment.model.observations
         reply_observation = self.environment.start()
         observation = adapt(reply_observation, observation_space, Observation)
         return observation
 
     def env_step(self, action):
-        action_space = self.environment._action_space
+        action_space = self.environment.model.actions
         reply_action = adapt(action, action_space)
         result = self.environment.step(reply_action)
-        observation_space = self.environment._observation_space
+        observation_space = self.environment.model.observations
         rot = adapt(result, observation_space, Reward_observation_terminal)
         return rot
 

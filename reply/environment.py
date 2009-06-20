@@ -1,46 +1,24 @@
-
-from reply.datatypes import Integer, Space
+from reply.datatypes import Integer, Model
 from reply.util import MessageHandler, TaskSpec
 
 class Environment(MessageHandler):
     problem_type = 'episodic'
     discount_factor = 1.0
     rewards = Integer(0, 1)
-    actions_spec = {}
-    observations_spec = {}
+    model = Model()
 
     def __init__(self):
         super(Environment, self).__init__()
-        self._observation_space = None
-        self._action_space = None
         self.initialized = False
         self.started = False
 
-        self.set_action_space(**self.actions_spec)
-        self.set_observation_space(**self.observations_spec)
         self.extra = self._get_names()
-
-    def set_observation_space(self, space=None, **kwargs):
-        if self.initialized:
-            raise Exception("Can't change observation space after init")
-        if space is not None:
-            self._observation_space = space
-        else:
-            self._observation_space = Space(kwargs)
-
-    def set_action_space(self, space=None, **kwargs):
-        if self.initialized:
-            raise Exception("Can't change action space after init")
-        if space is not None:
-            self._action_space = space
-        else:
-            self._action_space = Space(kwargs)
 
     def get_task_spec(self):
         task_spec = TaskSpec(problem_type=self.problem_type,
                              discount_factor=self.discount_factor,
-                             observations=self._observation_space,
-                             actions=self._action_space,
+                             observations=self.model.observations,
+                             actions=self.model.actions,
                              rewards=self.rewards,
                              extra=self.extra)
         return task_spec
@@ -87,8 +65,8 @@ class Environment(MessageHandler):
     #
 
     def _get_names(self):
-        observations = self._observation_space
-        actions = self._action_space
+        observations = self.model.observations
+        actions = self.model.actions
         extra = ""
         observation_names = observations.get_names_spec()
         action_names = actions.get_names_spec()

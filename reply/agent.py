@@ -1,37 +1,21 @@
-from reply.datatypes import Space
+from reply.datatypes import Model
+from reply.encoder import StateActionEncoder
 from reply.util import MessageHandler
 
 class Agent(MessageHandler):
+    model = None
 
     def __init__(self):
         super(Agent, self).__init__()
-        self._observation_space = None
-        self._action_space = None
         self.initialized = False
-
-    def set_action_space(self, space=None, **kwargs):
-        if self.initialized:
-            raise Exception("Can't change action space after init")
-        if space is not None:
-            self._action_space = space
-        else:
-            self._action_space = Space(kwargs)
-
-    def set_observation_space(self, space=None, **kwargs):
-        if self.initialized:
-            raise Exception("Can't change observation space after init")
-        if space is not None:
-            self._observation_space = space
-        else:
-            self._observation_space = Space(kwargs)
 
     #
     # Standard API
     #
 
     def init(self, task_spec):
-        self.set_action_space(task_spec.actions)
-        self.set_observation_space(task_spec.observations)
+        if self.model is None:
+            self.model = Model(task_spec.observations, task_spec.actions)
         self.initialized = True
 
     def start(self, observation):
@@ -46,7 +30,21 @@ class Agent(MessageHandler):
     def cleanup(self):
         pass
 
+
 class LearningAgent(Agent):
+    def init(self, task_spec):
+        state_encoder = self.state_encoder_class(self.model.observations)
+        action_encoder = self.action_encoder_class(self.model.actions)
+        encoder = StateActionEncoder(state_encoder, action_encoder)
+        size = (self.model.observations.size, self.model.actions.size)
+        storage = self.storage_class(size, encoder)
+        policy = self.policy_class(storage, self.random_action_rate)
+        self.learner = self.learner_class(policy, self.learning_rate,
+                                          self.learning_rate_decay,
+                                          self.learning_rate_min)
+
+        self.last_observation = None
+        self.last_action = None
 
     def start(self, observation):
         self.learner.new_episode()

@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import random
 
 from reply.agent import LearningAgent
-from reply.datatypes import Integer
-from reply.encoder import SpaceEncoder, StateActionEncoder
+from reply.datatypes import Integer, Model, Space
+from reply.encoder import SpaceEncoder
 from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.learner import QLearner
@@ -16,43 +16,42 @@ from reply.policy import EGreedyPolicy
 from reply.storage import TableStorage
 
 
+# Common model
+observations = Space({'state': Integer(0, 9)})
+actions = Space({'pass': Integer(1, 1)})
+stateValueModel = Model(observations, actions)
+
+
 class StateValueAgent(LearningAgent):
-    def init(self, task_spec):
-        super(StateValueAgent, self).init(task_spec)
-        learning_rate = 1
-        learning_rate_decay = 0.99
-        learning_rate_min = 0.001
-        random_action_rate = 1
+    model = stateValueModel
+    state_encoder_class = SpaceEncoder
+    action_encoder_class = SpaceEncoder
+    storage_class = TableStorage
+    policy_class = EGreedyPolicy
+    learner_class = QLearner
 
-        state_encoder = SpaceEncoder(self._observation_space)
-        action_encoder = SpaceEncoder(self._action_space)
-        encoder = StateActionEncoder(state_encoder, action_encoder)
-        storage = TableStorage((10, 1), encoder)
-        policy = EGreedyPolicy(storage, random_action_rate)
-        self.learner = QLearner(policy, learning_rate, learning_rate_decay,
-                                learning_rate_min)
-
-        self.last_observation = None
-        self.last_action = None
+    learning_rate = 1
+    learning_rate_decay = 0.99
+    learning_rate_min = 0.001
+    random_action_rate = 1
 
 
 class StateValueEnvironment(Environment):
-    actions_spec = {'pass': Integer(1, 1)}
-    observations_spec = {'state': Integer(0, 9)}
     problem_type = 'episodic'
     discount_factor = 1.0
-    rewars = Integer(0, 1)
-    state = None
+    rewards = Integer(0, 1)
+    model = stateValueModel
 
-    def _init(self):
-        maxval = self._observation_space['state'].max + 1
+    def init(self):
+        maxval = self.model.observations['state'].max + 1
         self.ps = [ p/float(maxval) for p in range(1, maxval+1) ]
+        self.state = None
 
-    def _start(self):
+    def start(self):
         self.state = random.randint(0, len(self.ps)-1)
         return dict(state=self.state)
 
-    def _step(self, action):
+    def step(self, action):
         if random.random() < self.ps[self.state]:
             r = 1
         else:
