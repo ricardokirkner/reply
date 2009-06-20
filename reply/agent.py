@@ -32,38 +32,16 @@ class Agent(MessageHandler):
     def init(self, task_spec):
         self.set_action_space(task_spec.actions)
         self.set_observation_space(task_spec.observations)
-        self._init(task_spec)
         self.initialized = True
 
     def start(self, observation):
-        action = self._start(observation)
-        return action
-
-    def step(self, reward, observation):
-        action = self._step(reward, observation)
-        return action
-
-    def end(self, reward):
-        self._end(reward)
-
-    def cleanup(self):
-        self._cleanup()
-
-    #
-    # Overridable Methods
-    #
-
-    def _init(self, task_spec):
-        pass
-
-    def _start(self, observation):
         self.learner.new_episode()
         action = self.learner.policy.select_action(observation)
         self.last_observation = observation
         self.last_action = action
         return action
 
-    def _step(self, reward, observation):
+    def step(self, reward, observation):
         self.learner.update(self.last_observation, self.last_action, reward,
                             observation)
         action = self.learner.policy.select_action(observation)
@@ -71,9 +49,9 @@ class Agent(MessageHandler):
         self.last_action = action
         return action
 
-    def _end(self, reward):
+    def end(self, reward):
         self.learner.update(self.last_observation, self.last_action, reward,
                             None)
 
-    def _cleanup(self):
+    def cleanup(self):
         pass

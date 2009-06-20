@@ -17,7 +17,8 @@ from reply.storage import TableStorage
 
 
 class ActionValueAgent(Agent):
-    def _init(self, task_spec):
+    def init(self, task_spec):
+        super(ActionValueAgent, self).init(task_spec)
         learning_rate = 1
         learning_rate_decay = 0.999
         learning_rate_min = 0.001
