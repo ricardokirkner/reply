@@ -28,6 +28,7 @@ class EGreedyPolicy(Policy):
                                                             encoded_action))
         action = decoded_state_action[1]
         return action
+    
 
 
 class SoftMaxPolicy(Policy):
@@ -61,4 +62,3 @@ class SoftMaxPolicy(Policy):
                                                             encoded_action))
         action = decoded_state_action[1]
         return action
-

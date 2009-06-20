@@ -53,24 +53,25 @@ class QLearner(Learner):
         self.policy.storage.set((state, action), new_value)
 
 
-#class SarsaLearner(QLearner):
-#
-#    """Learner implementing the Sarsa algorithm."""
-#
-#    def update(self, state, action, reward, next_state):
-#        """Update the (state, action, next_state) -> reward relationship."""
-#        policy = self.policy
-#        prev_value = policy.get_value(state, action)
-#        next_action = policy.get_action(next_state)
-#        max_value_next = policy.get_value(next_state, next_action)
-#
-#        new_value = (
-#            prev_value + self.learning_rate *
-#            ( reward + self.value_discount*max_value_next - prev_value )
-#            )
-#
-#
-#        #print "state:", state, prev_value, "->", new_value,
-#        #print "(r=%i, a=%i)"%(reward, action)
-#        #print "max_next", max_value_next
-#        policy.update(state, action, new_value)
+class SarsaLearner(QLearner):
+
+    """Learner implementing the Sarsa algorithm."""
+
+    def update(self, state, action, reward, next_state):
+        """Update the (state, action, next_state) -> reward relationship."""
+        prev_value = self.policy.storage.get((state, action))
+        if next_state is None:
+            max_value_next = 0
+        else:
+            next_action = self.policy.select_action(next_state)
+            max_value_next = self.policy.storage.get((next_state, next_action))
+
+        new_value = (
+            prev_value + self.learning_rate *
+            ( reward + self.value_discount*max_value_next - prev_value )
+            )
+        
+        #print "state:", state, prev_value, "->", new_value,
+        #print "(r=%i, a=%i)"%(reward, action)
+        #print "max_next", max_value_next
+        self.policy.storage.set((state, action), new_value)
