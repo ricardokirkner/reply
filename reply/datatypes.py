@@ -29,6 +29,27 @@ class Char(Parameter):
         return True
 
 
+class Model(object):
+    def __init__(self, observations=None, actions=None):
+        self.observations = self._build_space(observations)
+        self.actions = self._build_space(actions)
+
+    def _build_space(self, value):
+        if isinstance(value, Space):
+            space = value
+        elif isinstance(value, dict):
+            spec = value.get('spec', None)
+            order = value.get('order', None)
+            space = Space(spec, order)
+        else:
+            space = Space()
+        return space
+
+    def __eq__(self, other):
+        return (self.observations == other.observations and
+                self.actions == other.actions)
+
+
 class Space(object):
     def __init__(self, spec=None, order=None):
         if spec is None:
@@ -74,6 +95,32 @@ class Space(object):
     def __iter__(self):
         return iter(self._data)
 
+    @property
+    def size(self):
+        size = 0
+        for _type in (Integer, Double, Char):
+            for parameter in self._data[_type].values():
+                values = parameter.max - parameter.min + 1
+                size += values
+        unnamed = self._data.get('', [])
+        for parameter in unnamed:
+            values = parameter.max - parameter.min + 1
+            size += values
+        return size
+
+    @property
+    def size(self):
+        size = 0
+        for _type in (Integer, Double, Char):
+            for parameter in self._data[_type].values():
+                values = parameter.max - parameter.min + 1
+                size += values
+        unnamed = self._data.get('', [])
+        for parameter in unnamed:
+            values = parameter.max - parameter.min + 1
+            size += values
+        return size
+
     def get_names_spec(self):
         names = []
         for _type in (Integer, Double, Char):
@@ -118,4 +165,3 @@ class Space(object):
             _type = type(value)
             values = self._data.setdefault(_type, {})
             values[name] = value
-
