@@ -33,15 +33,16 @@ class Run(Command):
                             "episodes to execute")
 
 
-    def run(self, agent, env, experiment, args):
+    def run(self, agent, env, experiment, args=None):
         self.agent = agent
         self.env = env
         self.experiment = experiment
 
-        if args.max_episodes is not None:
-            experiment.max_episodes = args.max_episodes
-        if args.max_steps is not None:
-            experiment.max_steps = args.max_steps
+        if args is not None:
+            if args.max_episodes is not None:
+                experiment.max_episodes = args.max_episodes
+            if args.max_steps is not None:
+                experiment.max_steps = args.max_steps
 
         self.experiment.set_glue_experiment(self)
 
@@ -74,6 +75,16 @@ class Run(Command):
         roat = rot.copy()
         roat["action"] = action
         return reward, observation, terminal, action
+
+    def episode(self):
+        self.start()
+        steps = 0
+        terminal = False
+        while not terminal:
+            roat = self.step()
+            terminal = roat["terminal"]
+            steps += 1
+
 
     def cleanup(self):
         self.env.cleanup()
