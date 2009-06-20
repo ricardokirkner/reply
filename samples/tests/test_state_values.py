@@ -3,14 +3,17 @@ import random
 
 from reply.runner import Run
 from reply.experiment import Experiment
+from reply.learner import SarsaLearner
+
 from .samples.state_value import StateValueAgent, StateValueEnvironment
 
-class TestActionValue(unittest.TestCase):
+class TestStateValue(unittest.TestCase):
+    agent_class = StateValueAgent
     def test_run(self):
         # use fixed sequence for random
         random.seed(1)
 
-        agent = StateValueAgent()
+        agent = self.agent_class()
         env = StateValueEnvironment()
         outterself = self
 
@@ -30,6 +33,12 @@ class TestActionValue(unittest.TestCase):
 
         #return random to random
         random.seed()
+
+class SarsaStateValueAgent(StateValueAgent):
+    learner_class = SarsaLearner
+
+class SarsaStateValue(TestStateValue):
+    agent_class = SarsaStateValueAgent
 
 
 if __name__ == '__main__':
