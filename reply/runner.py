@@ -74,7 +74,7 @@ class Run(Command):
             self.last_action = action
         roat = rot.copy()
         roat["action"] = action
-        return reward, observation, terminal, action
+        return roat
 
     def episode(self):
         self.start()
