@@ -209,4 +209,3 @@ class MessageHandler(object):
             raise ValueError("Received a malformed message in %s: %s" % (
                 self, in_message))
         return simplejson.dumps(out_message)
-
