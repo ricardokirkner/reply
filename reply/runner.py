@@ -50,12 +50,14 @@ class Run(Command):
         self.experiment.run()
 
     def init(self):
+        self.episodo_reward = 0
         return self.agent.init(self.env.init())
 
     def start(self):
         observation = self.env.start()
         action = self.agent.start(observation)
         self.last_action = action
+        self.episodo_reward = 0
         return observation, action
 
     def step(self):
@@ -65,6 +67,7 @@ class Run(Command):
         observation = rot.copy()
         del observation["reward"]
         del observation["terminal"]
+        self.episodo_reward += reward
 
         if terminal:
             self.agent.end(reward)
@@ -85,6 +88,20 @@ class Run(Command):
             terminal = roat["terminal"]
             steps += 1
 
+    def return_reward(self):
+        return self.episodo_reward
+
+    def agent_call(self, function_name, *args, **kwargs):
+        return getattr(self.agent, "on_"+function_name)(*args, **kwargs)
+
+    def agent_message(self, string):
+        return self.agent.message(string)
+
+    def env_call(self, function_name, *args, **kwargs):
+        return getattr(self.env, "on_"+function_name)(*args, **kwargs)
+
+    def env_message(self, string):
+        return self.env.message(string)
 
     def cleanup(self):
         self.env.cleanup()

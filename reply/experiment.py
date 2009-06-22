@@ -1,3 +1,4 @@
+import simplejson
 
 class Experiment(object):
     max_steps = 100
@@ -53,11 +54,25 @@ class Experiment(object):
                 "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.cleanup()
 
+    def agent_call(self, function_name, *args, **kwargs):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
+        return self.glue_experiment.agent_call(function_name,
+                                               *args, **kwargs)
+
     def agent_message(self, message):
         if self.glue_experiment is None:
             raise NotImplementedError(
                 "Glue Experiment has not been initialized yet.")
         return self.glue_experiment.agent_message(message)
+
+    def env_call(self, function_name, *args, **kwargs):
+        if self.glue_experiment is None:
+            raise NotImplementedError(
+                "Glue Experiment has not been initialized yet.")
+        return self.glue_experiment.agent_call(function_name,
+                                               *args, **kwargs)
 
     def env_message(self, message):
         if self.glue_experiment is None:

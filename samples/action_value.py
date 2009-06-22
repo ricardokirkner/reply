@@ -57,8 +57,10 @@ class ActionValueEnvironment(Environment):
         rot = dict(state=0, reward=r, terminal=True)
         return rot
 
-
+class ActionValueExperiment(Experiment):
+    model = actionValueModel
+    
 if __name__=="__main__":
     from reply.runner import Runner
-    r = Runner(ActionValueAgent(), ActionValueEnvironment(), Experiment())
+    r = Runner(ActionValueAgent(), ActionValueEnvironment(), ActionValueExperiment())
     r.run()

@@ -5,7 +5,8 @@ from reply.runner import Run
 from reply.experiment import Experiment
 from reply.learner import SarsaLearner
 
-from .samples.action_value import ActionValueAgent, ActionValueEnvironment
+from .samples.action_value import ActionValueAgent, ActionValueEnvironment, \
+        ActionValueExperiment
 
 class TestActionValue(unittest.TestCase):
     agent_class = ActionValueAgent
@@ -17,7 +18,7 @@ class TestActionValue(unittest.TestCase):
         env = ActionValueEnvironment()
         outterself = self
 
-        class TestExperiment(Experiment):
+        class TestExperiment(ActionValueExperiment):
             def run(self):
                 self.init()
                 for i in xrange(10000):
@@ -26,7 +27,7 @@ class TestActionValue(unittest.TestCase):
                 error = sum(sum(abs(
                     env.ps - agent.learner.policy.storage.data)))
                 outterself.assert_(error < 0.13, "Error too big: %s"%(error))
-                
+
         r = Run()
         r.run(agent, env, TestExperiment())
 
