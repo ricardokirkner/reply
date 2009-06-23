@@ -45,6 +45,16 @@ class SpaceEncoder(Encoder):
             item[key] = value
         return item
 
+    def get_action(self, action_id):
+        """
+        >>> from reply.datatypes import Integer, Space
+        >>> space = Space({'choice': Integer(0, 9)})
+        >>> encoder = SpaceEncoder(space)
+        >>> encoder.get_action(2)
+        {'choice': 2}
+        """
+        return self.decode((action_id,))
+
 
 class StateActionEncoder(SpaceEncoder):
     def __init__(self, state_encoder, action_encoder):
@@ -116,4 +126,3 @@ class StateActionEncoder(SpaceEncoder):
             action = self.encoder['action'].decode([encoded_action])
             item += (action,)
         return item
-

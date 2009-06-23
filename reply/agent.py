@@ -35,9 +35,7 @@ class LearningAgent(Agent):
     def init(self, task_spec):
         state_encoder = self.state_encoder_class(self.model.observations)
         action_encoder = self.action_encoder_class(self.model.actions)
-        encoder = StateActionEncoder(state_encoder, action_encoder)
-        size = (self.model.observations.size, self.model.actions.size)
-        storage = self.storage_class(size, encoder)
+        storage = self.storage_class(state_encoder, action_encoder)
         kwargs = {}
         if hasattr(self, 'random_action_rate'):
             kwargs['random_action_rate'] = self.random_action_rate

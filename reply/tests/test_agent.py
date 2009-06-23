@@ -69,6 +69,7 @@ class TestLearningAgent(unittest.TestCase):
             model = Model({'spec': {'o1': Integer(0, 1)}},
                           {'spec': {'a1': Integer(0, 1)}})
             learning_rate = 0
+            learning_rate_decay = 0
 
         self.agent = DummyLearningAgent()
         self.task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
@@ -79,14 +80,11 @@ class TestLearningAgent(unittest.TestCase):
 
     def test_init(self):
         self.agent.init(self.task_spec)
-        observation_spec = {'o1': Integer(0, 1)}
-        action_spec = {'a1': Integer(0, 1)}
-        encoder = StateActionEncoder(SpaceEncoder(Space(observation_spec)),
-                                     SpaceEncoder(Space(action_spec)))
-        size = (Space(observation_spec).size, Space(action_spec).size)
-        storage = TableStorage(size, encoder)
+        observations = Space({'o1': Integer(0, 1)})
+        actions = Space({'a1': Integer(0, 1)})
+        storage = TableStorage(SpaceEncoder(observations), SpaceEncoder(actions))
         policy = EGreedyPolicy(storage)
-        learner = QLearner(policy, 0)
+        learner = QLearner(policy, 0, learning_rate_decay=0)
         self.assertEqual(self.agent.learner, learner)
         self.assertEqual(self.agent.last_observation, None)
         self.assertEqual(self.agent.last_action, None)

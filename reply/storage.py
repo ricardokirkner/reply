@@ -1,7 +1,8 @@
 """Storage classes."""
 import numpy
 
-from reply.encoder import DummyEncoder
+from reply.datatypes import Space
+from reply.encoder import DummyEncoder, SpaceEncoder, StateActionEncoder
 
 
 class Storage(object):
@@ -31,17 +32,19 @@ class TableStorage(Storage):
 
     """Storage that uses a table for its data."""
 
-    def __init__(self, size, encoder=None):
+    def __init__(self, state_encoder=None, action_encoder=None):
         """
-        >>> storage = TableStorage((1,1))
+        >>> from reply.datatypes import Integer, Space
+        >>> from reply.encoder import SpaceEncoder
+        >>> state_encoder = SpaceEncoder(Space({'o': Integer(0, 0)}))
+        >>> action_encoder = SpaceEncoder(Space({'a': Integer(0, 0)}))
+        >>> storage = TableStorage(state_encoder, action_encoder)
         >>> storage.data
         array([[ 0.]])
         """
         super(TableStorage, self).__init__()
-        if encoder is None:
-            self.encoder = DummyEncoder()
-        else:
-            self.encoder = encoder
+        self.encoder = StateActionEncoder(state_encoder, action_encoder)
+        size = (state_encoder.space.size, action_encoder.space.size)
         self.data = numpy.zeros(size)
 
     def __eq__(self, other):
@@ -50,10 +53,17 @@ class TableStorage(Storage):
 
     def get(self, item):
         """
-        >>> storage = TableStorage((1, 1))
-        >>> storage.get((0,0))
+        >>> from reply.datatypes import Integer, Space
+        >>> from reply.encoder import SpaceEncoder
+        >>> state_encoder = SpaceEncoder(Space({'o': Integer(0, 0)}))
+        >>> action_encoder = SpaceEncoder(Space({'a': Integer(0, 0)}))
+        >>> storage = TableStorage(state_encoder, action_encoder)
+        >>> observation = {'o': 0}
+        >>> action = {'a': 0}
+        >>> storage.get((observation, action))
         0.0
-        >>> storage.get((0,1))
+        >>> action['a'] = 1
+        >>> storage.get((observation, action))
         Traceback (most recent call last):
           File "<console>", line 1, in <module>
           File "storage.py", line 80, in get
@@ -66,11 +76,17 @@ class TableStorage(Storage):
 
     def set(self, item, value):
         """
-        >>> storage = TableStorage((1, 1))
-        >>> storage.get((0, 0))
+        >>> from reply.datatypes import Integer, Space
+        >>> from reply.encoder import SpaceEncoder
+        >>> state_encoder = SpaceEncoder(Space({'o': Integer(0, 0)}))
+        >>> action_encoder = SpaceEncoder(Space({'a': Integer(0, 0)}))
+        >>> storage = TableStorage(state_encoder, action_encoder)
+        >>> observation = {'o': 0}
+        >>> action = {'a': 0}
+        >>> storage.get((observation, action))
         0.0
-        >>> storage.set((0, 0), 5)
-        >>> storage.get((0, 0))
+        >>> storage.set((observation, action), 5)
+        >>> storage.get((observation, action))
         5.0
         """
         encoded_item = self.encoder.encode(item)
@@ -78,27 +94,53 @@ class TableStorage(Storage):
 
     def clear(self):
         """
-        >>> storage = TableStorage((1, 1))
-        >>> storage.get((0, 0))
+        >>> from reply.datatypes import Integer, Space
+        >>> from reply.encoder import SpaceEncoder
+        >>> state_encoder = SpaceEncoder(Space({'o': Integer(0, 0)}))
+        >>> action_encoder = SpaceEncoder(Space({'a': Integer(0, 0)}))
+        >>> storage = TableStorage(state_encoder, action_encoder)
+        >>> observation = {'o': 0}
+        >>> action = {'a': 0}
+        >>> storage.get((observation, action))
         0.0
-        >>> storage.set((0, 0), 1)
-        >>> storage.get((0, 0))
+        >>> storage.set((observation, action), 1)
+        >>> storage.get((observation, action))
         1.0
         >>> storage.clear()
-        >>> storage.get((0, 0))
+        >>> storage.get((observation, action))
         0.0
         """
         self.data = numpy.zeros(self.data.shape)
 
     def filter(self, item, filter):
         """
-        >>> storage = TableStorage((1, 10))
+        >>> from reply.datatypes import Integer, Space
+        >>> from reply.encoder import SpaceEncoder
+        >>> state_encoder = SpaceEncoder(Space({'o': Integer(0, 0)}))
+        >>> action_encoder = SpaceEncoder(Space({'a': Integer(0, 9)}))
+        >>> storage = TableStorage(state_encoder, action_encoder)
+        >>> observation = {'o': 0}
         >>> for item in range(10):
-        ...     storage.set((0, item), item)
-        >>> storage.filter((0,), max)
+        ...     storage.set((observation, {'a': item}), item)
+        >>> storage.filter((observation,), max)
         9.0
         """
         encoded_values = self.get(item)
         filtered_values = filter(encoded_values)
         return filtered_values
+
+    def get_states(self):
+        num_states, num_actions = self.data.shape
+        for state in xrange(num_states):
+            state = self.encoder.encoder['state'].decode((state,))
+            yield state
+
+    def get_actions(self, state):
+        for action in self.get(state):
+            action = self.encoder.encoder['action'].decode((action,))
+            yield action
+
+    def get_action(self, encoded_action):
+        action = self.encoder.encoder['action'].decode((encoded_action,))
+        return action
 
