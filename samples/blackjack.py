@@ -79,6 +79,15 @@ class BlackJackEncoder(SpaceEncoder):
                         for key in self.space.get_names_list()]
         return tuple(encoded_item)
 
+    def decode(self, encoded_item):
+        item = {}
+        for key, value in zip(self.space.get_names_list(), encoded_item):
+            if value is not None:
+                item[key] = value + self.space[key].min
+            else:
+                item[key] = value
+        return item
+
 
 class BlackJackAgent(LearningAgent):
     model = blackJackModel
@@ -95,12 +104,7 @@ class BlackJackAgent(LearningAgent):
     random_action_decay = 0.999
 
     def start(self, observation):
-        #print 'NEW EPISODE'
         return super(BlackJackAgent, self).start(observation)
-
-    def end(self, reward):
-        super(BlackJackAgent, self).end(reward)
-        #print self.learner.policy.storage.data
 
 
 class BlackJackEnvironment(Environment):
@@ -114,7 +118,6 @@ class BlackJackEnvironment(Environment):
         self.history = []
 
     def start(self):
-        #print self.history
         self.history = []
         self.cards = []
         self.total_points = 0
