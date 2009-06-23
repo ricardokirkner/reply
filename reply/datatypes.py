@@ -1,3 +1,4 @@
+import itertools
 
 class Parameter(object):
     pass
@@ -145,6 +146,22 @@ class Space(object):
             for name, value in type_names:
                 names.append(str(name))
         return names
+
+    def get_items(self):
+        name_list = self.get_names_list()
+        key_values = []
+        # build all possible values for each attribute
+        for name in name_list:
+            name_values = range(self[name].min, self[name].max+1)
+            key_values.append(name_values)
+        # generate all possible combinations of those values
+        values = itertools.product(*key_values)
+        # for each combination, create the corresponding item
+        for value in values:
+            item = {}
+            for i, name in enumerate(name_list):
+                item[name] = value[i]
+            yield item
 
     def _build_data(self):
         spec = self.spec

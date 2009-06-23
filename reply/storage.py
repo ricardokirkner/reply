@@ -130,17 +130,18 @@ class TableStorage(Storage):
         return filtered_values
 
     def get_states(self):
-        num_states, num_actions = self.data.shape
-        for state in xrange(num_states):
-            state = self.encoder.encoder['state'].decode((state,))
-            yield state
+        state_space = self.encoder.encoder['state'].space
+        for value in state_space.get_items():
+            yield value
 
-    def get_actions(self, state):
-        for action in self.get(state):
-            action = self.encoder.encoder['action'].decode((action,))
-            yield action
+    def get_actions(self):
+        action_space = self.encoder.encoder['action'].space
+        for value in action_space.get_items():
+            yield value
 
     def get_action(self, encoded_action):
-        action = self.encoder.encoder['action'].decode((encoded_action,))
+        if not isinstance(encoded_action, (tuple, list)):
+            encoded_action = (encoded_action,)
+        action = self.encoder.encoder['action'].decode(encoded_action)
         return action
 
