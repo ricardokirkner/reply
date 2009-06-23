@@ -1,5 +1,6 @@
 
-from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup
+from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup, \
+    RL_agent_message, RL_env_message
 from rlglue.agent.Agent import Agent
 from rlglue.agent import AgentLoader
 from rlglue.environment.Environment import Environment
@@ -115,6 +116,21 @@ class RlGlueProxyExperiment(object):
     def cleanup(self):
         RL_cleanup()
 
+    def agent_call(self, function_name, *args, **kwargs):
+        return self.agent_message(simplejson.dumps(dict(
+            function_name=function_name,
+            args=args, kwargs=kwargs)))
+
+    def agent_message(self, message):
+        RL_agent_message(message)
+
+    def env_call(self, function_name, *args, **kwargs):
+        return self.env_message(simplejson.dumps(dict(
+            function_name=function_name,
+            args=args, kwargs=kwargs)))
+
+    def env_message(self, message):
+        RL_env_message(message)
 
 def adapt(source, space, target=None):
     if target is not None:
