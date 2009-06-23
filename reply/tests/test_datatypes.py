@@ -289,7 +289,12 @@ class TestSpace(unittest.TestCase):
         self.assertEqual(chars, ['f', 'e'])
         self.assertEqual(names, ['b', 'a', 'd', 'c', 'f', 'e'])
 
-
+    def test_get_items(self):
+        space = Space({'o1': Integer(0, 1), 'o2': Integer(1, 2)})
+        items = list(space.get_items())
+        expected_items = [{'o1': 0, 'o2': 1}, {'o1': 0, 'o2': 2},
+                          {'o1': 1, 'o2': 1}, {'o1': 1, 'o2': 2}]
+        self.assertEqual(items, expected_items)
 
 
 if __name__ == '__main__':

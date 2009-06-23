@@ -94,6 +94,45 @@ class TestTableStorage(unittest.TestCase):
         values = storage.filter((observation,), lambda x: filter(lambda y: y % 2 == 0, x))
         self.assertEqual(values, [0, 2, 4])
 
+    def test_get_states(self):
+        observations = Space({'o1': Integer(0, 1),
+                              'o2': Integer(2, 4)})
+        actions = Space({'a1': Integer(0, 1),
+                         'a2': Integer(1, 2)})
+        state_encoder = SpaceEncoder(observations)
+        action_encoder = SpaceEncoder(actions)
+        storage = TableStorage(state_encoder, action_encoder)
+        states = list(storage.get_states())
+        expected_states = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
+                           {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
+                           {'o1': 1, 'o2': 3}, {'o1': 1, 'o2': 4}]
+        self.assertEqual(states, expected_states)
+
+    def test_get_actions(self):
+        observations = Space({'o1': Integer(0, 1),
+                              'o2': Integer(2, 4)})
+        actions = Space({'a1': Integer(0, 1),
+                         'a2': Integer(1, 2)})
+        state_encoder = SpaceEncoder(observations)
+        action_encoder = SpaceEncoder(actions)
+        storage = TableStorage(state_encoder, action_encoder)
+        actions = list(storage.get_actions())
+        expected_actions = [{'a1': 0, 'a2': 1}, {'a1': 0, 'a2': 2},
+                            {'a1': 1, 'a2': 1}, {'a1': 1, 'a2': 2}]
+        self.assertEqual(actions, expected_actions)
+
+    def test_get_action(self):
+        observations = Space({'o1': Integer(0, 1),
+                              'o2': Integer(2, 4)})
+        actions = Space({'a1': Integer(0, 1),
+                         'a2': Integer(1, 2)})
+        state_encoder = SpaceEncoder(observations)
+        action_encoder = SpaceEncoder(actions)
+        storage = TableStorage(state_encoder, action_encoder)
+        action = storage.get_action((0,2))
+        expected_action = {'a1': 0, 'a2': 2}
+        self.assertEqual(action, expected_action)
+
 
 if __name__ == '__main__':
     unittest.main()
