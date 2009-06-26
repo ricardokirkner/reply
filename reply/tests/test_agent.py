@@ -14,7 +14,7 @@ class TestAgent(unittest.TestCase):
     def setUp(self):
         self.agent = Agent()
         self.task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
-            "DISCOUNTFACTOR 1.0" \
+            "DISCOUNTFACTOR 1.0 " \
             "OBSERVATIONS INTS (0 1) ACTIONS INTS (0 1) REWARDS (0 1) " \
             "EXTRA OBSERVATIONS INTS o1 ACTIONS INTS a1"
         self.task_spec = TaskSpec.parse(self.task_spec_str)
