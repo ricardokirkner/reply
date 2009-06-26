@@ -1,6 +1,9 @@
 import simplejson
 
-from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
+try:
+    from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
+except ImportError:
+    from reply.contrib.TaskSpecVRLGLUE3 import TaskSpecParser
 
 from reply.datatypes import Char, Double, Integer, Space
 

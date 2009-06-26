@@ -2,7 +2,18 @@ import numpy
 import simplejson
 import unittest
 
-from rlglue.types import Action, Observation, Reward_observation_action_terminal
+try:
+    import rlglue
+    has_rlglue = True
+except ImportError:
+    has_rlglue = False
+
+if has_rlglue:
+    from rlglue.types import Action, Observation, \
+        Reward_observation_action_terminal
+else:
+    from reply.mock.rlglue import Action, \
+        Observation, Reward_observation_action_terminal
 
 import reply.glue
 from reply.agent import Agent
