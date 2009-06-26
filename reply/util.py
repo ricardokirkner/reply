@@ -16,22 +16,24 @@ def parse_spaces(extra, parser):
         if parts[i] == 'OBSERVATIONS':
             names = {'INTS': [], 'DOUBLES': [], 'CHARS': []}
             _type = ''
-            while i < len(parts)-1 and parts[i] != 'ACTIONS':
-                i += 1
+            i += 1
+            while i < len(parts) and parts[i] != 'ACTIONS':
                 if parts[i] in ('INTS', 'DOUBLES', 'CHARS'):
                     _type = parts[i]
                 elif _type:
                     names[_type].append(parts[i])
+                i += 1
             observation_names = names
         elif parts[i] == 'ACTIONS':
             names = {'INTS': [], 'DOUBLES': [], 'CHARS': []}
             _type = ''
-            while i < len(parts)-1:
-                i += 1
+            i += 1
+            while i < len(parts):
                 if parts[i] in ('INTS', 'DOUBLES', 'CHARS'):
                     _type = parts[i]
                 elif _type:
                     names[_type].append(parts[i])
+                i += 1
             action_names = names
         else:
             # skip part
