@@ -1,13 +1,30 @@
 
-from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup, \
-    RL_agent_message, RL_env_message
-from rlglue.agent.Agent import Agent
-from rlglue.agent import AgentLoader
-from rlglue.environment.Environment import Environment
-from rlglue.environment import EnvironmentLoader
-from rlglue.types import Action, Observation, Reward_observation_terminal
+try:
+    import rlglue
+    has_rlglue = True
+except ImportError:
+    has_rlglue = False
+
+if has_rlglue:
+    from rlglue.RLGlue import RL_init, RL_start, RL_step, RL_cleanup, \
+        RL_agent_message, RL_env_message
+    from rlglue.agent.Agent import Agent
+    from rlglue.agent import AgentLoader
+    from rlglue.environment.Environment import Environment
+    from rlglue.environment import EnvironmentLoader
+    from rlglue.types import Action, Observation, Reward_observation_terminal
+else:
+    from reply.mock.rlglue import RL_init, RL_start, RL_step, RL_cleanup, \
+        RL_agent_message, RL_env_message
+    from reply.mock.rlglue import Agent
+    from reply.mock.rlglue import AgentLoader
+    from reply.mock.rlglue import Environment
+    from reply.mock.rlglue import EnvironmentLoader
+    from reply.mock.rlglue import Action, Observation, \
+        Reward_observation_terminal
 from reply.util import TaskSpec
 from reply.datatypes import Integer, Double, Char
+
 
 __all__ = ["start_agent", "start_environment"]
 

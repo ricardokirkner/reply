@@ -5,6 +5,13 @@ from reply.glue import start_agent
 from reply.glue import start_environment
 from reply.glue import start_experiment
 
+try:
+    import rlglue
+    has_rlglue = True
+except ImportError:
+    has_rlglue = False
+
+
 class Command(object):
     #: the command name
     name = "replace_me"
@@ -146,7 +153,8 @@ class RlGlueRun(Command):
         environment_p.join()
         experiment_p.join()
 
-register_command(RlGlueRun)
+if has_rlglue:
+    register_command(RlGlueRun)
 
 class RunAgent(Command):
     """Run the agent against an rl glue server"""

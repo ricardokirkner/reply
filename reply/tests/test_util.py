@@ -1,7 +1,16 @@
 import unittest
 import simplejson
 
-from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
+try:
+    import rlglue
+    has_rlglue = True
+except ImportError:
+    has_rlglue = False
+
+if has_rlglue:
+    from rlglue.utils.TaskSpecVRLGLUE3 import TaskSpecParser
+else:
+    from reply.contrib.TaskSpecVRLGLUE3 import TaskSpecParser
 
 from reply.datatypes import Char, Double, Integer, Space
 from reply.util import parse_spaces, build_spec, parse_names
