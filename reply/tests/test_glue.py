@@ -31,7 +31,7 @@ class TestRLGlue(unittest.TestCase):
         action.intArray = [0]
         reply_action = adapt(action, space)
 
-        expected_action = dict(choice=0)
+        expected_action = {'choice': 0, '': []}
 
         self.assertEquals(reply_action, expected_action)
 
@@ -42,7 +42,7 @@ class TestRLGlue(unittest.TestCase):
         action.intArray[0] = 0
         reply_action = adapt(action, space)
 
-        expected_action = dict(choice=0)
+        expected_action = {'choice': 0, '': []}
 
         self.assertEquals(reply_action, expected_action)
 
@@ -80,7 +80,8 @@ class TestRLGlue(unittest.TestCase):
         reply_action = adapt(action, space)
 
         expected_action = {'x': -0.23, 'y': 0.02,
-                           'angle': 23, 'spin': 'u'}
+                           'angle': 23, 'spin': 'u',
+                           '': []}
 
         self.assertEqual(reply_action, expected_action)
 
