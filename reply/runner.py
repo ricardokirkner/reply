@@ -57,14 +57,14 @@ class Run(Command):
         self.experiment.run()
 
     def init(self):
-        self.episodo_reward = 0
+        self.episode_reward = 0
         return self.agent.init(self.env.init())
 
     def start(self):
         observation = self.env.start()
         action = self.agent.start(observation)
         self.last_action = action
-        self.episodo_reward = 0
+        self.episode_reward = 0
         return observation, action
 
     def step(self):
@@ -74,7 +74,7 @@ class Run(Command):
         observation = rot.copy()
         del observation["reward"]
         del observation["terminal"]
-        self.episodo_reward += reward
+        self.episode_reward += reward
 
         if terminal:
             self.agent.end(reward)
@@ -96,7 +96,7 @@ class Run(Command):
             steps += 1
 
     def return_reward(self):
-        return self.episodo_reward
+        return self.episode_reward
 
     def agent_call(self, function_name, *args, **kwargs):
         return getattr(self.agent, "on_"+function_name)(*args, **kwargs)
