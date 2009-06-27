@@ -13,6 +13,10 @@ class Number(Parameter):
         return type(self) == type(other) and \
             (self.min == other.min and self.max == other.max)
 
+    @property
+    def size(self):
+        return self.max - self.min + 1
+
 
 class Integer(Number):
     def __str__(self):
@@ -99,15 +103,13 @@ class Space(object):
 
     @property
     def size(self):
-        size = 0
+        size = 1
         for _type in (Integer, Double, Char):
             for parameter in self._data[_type].values():
-                values = parameter.max - parameter.min + 1
-                size += values
+                size *= parameter.size
         unnamed = self._data.get('', [])
         for parameter in unnamed:
-            values = parameter.max - parameter.min + 1
-            size += values
+            size *= parameter.size
         return size
 
     def get_names_spec(self):
