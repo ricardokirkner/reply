@@ -99,7 +99,7 @@ class BlackJackAgent(LearningAgent):
 
     learning_rate = 0.1
     learning_rate_decay = 1.0
-    discount_value = 0.9
+    value_discount = 0.9
     random_action_rate = 0.1
     random_action_decay = 0.999
 
