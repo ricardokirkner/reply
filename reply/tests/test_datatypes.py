@@ -296,6 +296,13 @@ class TestSpace(unittest.TestCase):
                           {'o1': 1, 'o2': 1}, {'o1': 1, 'o2': 2}]
         self.assertEqual(items, expected_items)
 
+    def test_space_attributes(self):
+        o1 = Integer(0, 1)
+        space = Space({'o1': o1})
+        self.assertEqual(space['o1'], o1)
+        self.assertEqual(space.o1, o1)
+        self.assertRaises(AttributeError, lambda: space.o2)
+
 
 if __name__ == '__main__':
     unittest.main()

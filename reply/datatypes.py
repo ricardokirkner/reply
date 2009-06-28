@@ -69,6 +69,12 @@ class Space(object):
     def __getitem__(self, item):
         return self._data[item]
 
+    def __getattr__(self, attr):
+        if attr in self.spec:
+            return self._data[attr]
+        else:
+            return getattr(super(Space, self), attr)
+
     def __str__(self):
         items = []
         for item in (Integer, Double, Char):
