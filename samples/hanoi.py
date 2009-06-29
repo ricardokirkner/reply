@@ -52,7 +52,7 @@ class Peg(object):
 
 
 num_pegs = 3
-num_discs = 5
+num_discs = 3
 
 discs = ['disc_%d' % disc for disc in xrange(num_discs)]
 spec = {}
@@ -95,10 +95,6 @@ class HanoiSpaceEncoder(SpaceEncoder):
         return item
 
 
-class HanoiActionEncoder(SpaceEncoder):
-    pass
-
-
 class HanoiAgent(LearningAgent):
     model = hanoi_model
     state_encoder_class = HanoiSpaceEncoder
@@ -124,11 +120,11 @@ class HanoiEnvironment(Environment):
     discount_factor = 0.8
     rewards = Integer(-1, 1)
     model = hanoi_model
+    num_discs = num_discs
+    num_pegs = num_pegs
+    initial_peg = 0
 
     def init(self):
-        self.num_discs = num_discs # FIXME: make it a variable
-        self.num_pegs = num_pegs # FIXME: make it a variable
-        self.initial_peg = 0 # FIXME: make it a variable 
         self.pegs = [Peg(i) for i in xrange(self.num_pegs)]
 
     def start(self):
@@ -221,6 +217,47 @@ class HanoiEnvironment(Environment):
 
 
 if __name__ == "__main__":
-    from reply.runner import Runner
+    from reply.runner import Run, Runner, register_command, unregister_command
+    class HanoiRun(Run):
+        def register(self, parser):
+            super(HanoiRun, self).register(parser)
+            #parser.add_argument("--num-discs", type=int, dest="num_discs",
+            #                    help="the number of discs in the experiment")
+            parser.add_argument("--num-pegs", type=int, dest="num_pegs",
+                                help="the number of pegs in the experiment")
+            parser.add_argument("--initial-peg", type=int, dest="initial_peg",
+                                help="the initial peg number")
+            #parser.add_argument("--log-level", type=int, dest="log_level",
+            #                    help="verbosity (0|1|2)")
+
+        def run(self, agent, env, experiment, args=None):
+            self.agent = agent
+            self.env = env
+            self.experiment = experiment
+
+            if args is not None:
+                if args.max_episodes is not None:
+                    experiment.max_episodes = args.max_episodes
+                if args.max_steps is not None:
+                    experiment.max_steps = args.max_steps
+                #if args.num_discs is not None:
+                #    env.num_discs = args.num_discs
+                if args.num_pegs is not None:
+                    env.num_pegs = args.num_pegs
+                if args.initial_peg is not None:
+                    env.initial_peg = args.initial_peg
+                #if args.log_level is not None:
+                #    LOG_LEVEL = args.log_level
+
+            self.experiment.set_glue_experiment(self)
+
+            self.last_action = None
+            self.experiment.run()
+
+
     r = Runner(HanoiAgent(), HanoiEnvironment(), Experiment())
+    # replace default run command with a custom one
+    unregister_command(Run)
+    register_command(HanoiRun)
+    # run the experiment
     r.run()
