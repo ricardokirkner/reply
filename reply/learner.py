@@ -80,8 +80,5 @@ class SarsaLearner(QLearner):
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
-        
-        #print "state:", state, prev_value, "->", new_value,
-        #print "(r=%i, a=%i)"%(reward, action)
-        #print "max_next", max_value_next
+
         self.policy.storage.set((state, action), new_value)
