@@ -46,7 +46,7 @@ class RockPaperScissorAgent(LearningAgent):
 
 class RockPaperScissorEnvironment(Environment):
     problem_type = "episodic"
-    discount_factor = 1.0
+    discount_factor = 0.9
     rewards = Integer(-1, 1)
     model = rock_paper_scissor_model
 
