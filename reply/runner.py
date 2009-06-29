@@ -28,6 +28,9 @@ _commands = []
 def register_command(command_klass):
     _commands.append(command_klass)
 
+def unregister_command(command_klass):
+    _commands.remove(command_klass)
+
 class Run(Command):
     """Run the experiment in foreground"""
     name = "run"
