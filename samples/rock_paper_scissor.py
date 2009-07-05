@@ -51,8 +51,8 @@ class RockPaperScissorEnvironment(Environment):
     model = rock_paper_scissor_model
 
     def init(self):
-        super(RockPaperScissorEnvironment, self).init()
         self.history = []
+        return super(RockPaperScissorEnvironment, self).init()
 
     def start(self):
         self.history = []

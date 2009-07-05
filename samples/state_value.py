@@ -46,6 +46,7 @@ class StateValueEnvironment(Environment):
         maxval = self.model.observations['state'].max + 1
         self.ps = [ p/float(maxval) for p in range(1, maxval+1) ]
         self.state = None
+        return super(StateValueEnvironment, self).init()
 
     def start(self):
         self.state = random.randint(0, len(self.ps)-1)

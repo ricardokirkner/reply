@@ -114,8 +114,8 @@ class BlackJackEnvironment(Environment):
     model = blackJackModel
 
     def init(self):
-        super(BlackJackEnvironment, self).init()
         self.history = []
+        return super(BlackJackEnvironment, self).init()
 
     def start(self):
         self.history = []

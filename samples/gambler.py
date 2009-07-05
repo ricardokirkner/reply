@@ -53,7 +53,7 @@ class GamblerEnvironment(Environment):
     win_probability = 0.4
 
     def init(self):
-        super(GamblerEnvironment, self).init()
+        return super(GamblerEnvironment, self).init()
 
     def start(self):
         #print self.history

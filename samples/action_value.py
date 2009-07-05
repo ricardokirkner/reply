@@ -45,6 +45,7 @@ class ActionValueEnvironment(Environment):
     def init(self):
         maxval = self.model.actions["choice"].max + 1
         self.ps = [ p/float(maxval) for p in range(1, maxval+1) ]
+        return super(ActionValueEnvironment, self).init()
 
     def start(self):
         return dict(state=0)
@@ -59,7 +60,7 @@ class ActionValueEnvironment(Environment):
 
 class ActionValueExperiment(Experiment):
     model = actionValueModel
-    
+
 if __name__=="__main__":
     from reply.runner import Runner
     r = Runner(ActionValueAgent(), ActionValueEnvironment(), ActionValueExperiment())
