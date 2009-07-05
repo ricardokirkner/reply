@@ -126,6 +126,7 @@ class HanoiEnvironment(Environment):
 
     def init(self):
         self.pegs = [Peg(i) for i in xrange(self.num_pegs)]
+        return super(HanoiEnvironment, self).init()
 
     def start(self):
         # reset all pegs
