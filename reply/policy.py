@@ -44,7 +44,8 @@ class EGreedyPolicy(Policy):
         actions = []
         for state in self.storage.get_states():
             encoded_action = self.storage.filter(state, numpy.argmax)
-            action = self.storage.encoder.encoder['action'].decode((encoded_action,))
+            action = self.storage.encoder.encoder['action'].decode(
+                (encoded_action,))
             actions.append((state, action))
         return actions
 
@@ -82,3 +83,12 @@ class SoftMaxPolicy(Policy):
                     break
         action = self.storage.get_action(action_id)
         return action
+
+    def get_mappings(self):
+        actions = []
+        for state in self.storage.get_states():
+            encoded_action = self.storage.filter(state, numpy.argmax)
+            action = self.storage.encoder.encoder['action'].decode(
+                (encoded_action,))
+            actions.append((state, action))
+        return actions

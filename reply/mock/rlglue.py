@@ -8,7 +8,7 @@ def RL_start():
     pass
 
 def RL_step():
-    roat = Reward_observation_terminal()
+    roat = Reward_observation_action_terminal()
     return roat
 
 def RL_cleanup():
