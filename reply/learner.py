@@ -1,11 +1,10 @@
 """Learner classes."""
+from reply.base import AgentComponent, Parameter
 
-class Learner(object):
 
+class Learner(AgentComponent):
     """Learner base class."""
-
-    def __init__(self, policy):
-        self.policy = policy
+    policy = Parameter("The policy to improve")
 
     def new_episode(self):
         pass
@@ -25,13 +24,11 @@ class QLearner(Learner):
 
     """Learner implementing the Q algorithm."""
 
-    def __init__(self, policy, learning_rate, learning_rate_decay=1.0,
-                 learning_rate_min=0.0, value_discount=1.0):
-        super(QLearner, self).__init__(policy)
-        self.learning_rate = learning_rate
-        self.learning_rate_decay = learning_rate_decay
-        self.learning_rate_min = learning_rate_min
-        self.value_discount = value_discount
+    learning_rate = Parameter("The agents learning rate")
+    learning_rate_decay = Parameter("The learning rate decay per episode. "\
+                                    "(rate = decay * rate)", 1.0)
+    learning_rate_min = Parameter("The minimun value for the learning rate", 0.0)
+    value_discount = Parameter("The value discount", 1.0)
 
     def new_episode(self):
         """Start a new episode."""
