@@ -73,33 +73,34 @@ actions = Space({'play': Integer(0, 1)})
 blackJackModel = Model(observations, actions)
 
 
-class BlackJackEncoder(SpaceEncoder):
-    def encode(self, item):
-        encoded_item = [item[key] - self.space[key].min \
-                        for key in self.space.get_names_list()]
-        return tuple(encoded_item)
+#class BlackJackEncoder(SpaceEncoder):
+#    def encode(self, item):
+#        encoded_item = [item[key] - self.space[key].min \
+#                        for key in self.space.get_names_list()]
+#        return tuple(encoded_item)
+#
+#    def decode(self, encoded_item):
+#        item = {}
+#        for key, value in zip(self.space.get_names_list(), encoded_item):
+#            if value is not None:
+#                item[key] = value + self.space[key].min
+#            else:
+#                item[key] = value
+#        return item
 
-    def decode(self, encoded_item):
-        item = {}
-        for key, value in zip(self.space.get_names_list(), encoded_item):
-            if value is not None:
-                item[key] = value + self.space[key].min
-            else:
-                item[key] = value
-        return item
 
-
-class BlackJackStorage(TableStorage):
-    def __init__(self, observations=None, actions=None,
-                 observation_encoder=None, action_encoder=None):
-        observation_encoder = BlackJackEncoder(observations)
-        super(BlackJackStorage, self).__init__(observations, actions,
-                                               observation_encoder=observation_encoder)
+#class BlackJackStorage(TableStorage):
+#    def __init__(self, observations=None, actions=None,
+#                 observation_encoder=None, action_encoder=None):
+#        observation_encoder = BlackJackEncoder(observations)
+#        super(BlackJackStorage, self).__init__(observations, actions,
+#                                               observation_encoder=observation_encoder)
 
 
 class BlackJackAgent(LearningAgent):
     model = blackJackModel
-    storage_class = BlackJackStorage
+    #storage_class = BlackJackStorage
+    storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
 
