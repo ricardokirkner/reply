@@ -65,6 +65,7 @@ class PoleCartAgent(LearningAgent):
     random_action_rate = 1
 
 
+
 class PoleCartEnvironment(Environment):
     problem_type = "episodic"
     discount_factor = 1.0
@@ -129,7 +130,44 @@ class PoleCartExperiment(Experiment):
     model = PoleCartModel
 
 
+def run_simulation():
+    # INTIALISATION
+    import pygame, math, sys
+    from pygame import draw
+    from pygame.locals import *
+    x_size, y_size = 640, 480
+    screen = pygame.display.set_mode((x_size, y_size))
+    clock = pygame.time.Clock()
+    k_up = k_down = k_left = k_right = 0
+    position = x_size/2, y_size-100
+    height = -100
+    top_position = position[0], position[1]+height
+    while 1:
+        # USER INPUT
+        clock.tick(30)
+        for event in pygame.event.get():
+            if not hasattr(event, 'key'): continue
+            down = event.type == KEYDOWN     # key down or up?
+            if event.key == K_RIGHT: k_right = down * 5
+            elif event.key == K_LEFT: k_left = down * 5
+            elif event.key == K_UP: k_up = down * 2
+            elif event.key == K_DOWN: k_down = down * 2
+            elif event.key == K_ESCAPE: sys.exit(0)     # quit the game
+
+        # RENDERING
+        screen.fill((255,255,255))
+        base = pygame.Rect(0,0,75,50)
+        base.center = position
+        draw.line(screen, (0,0,0), position, top_position, 3)
+        draw.rect(screen, (0,0,0), base)
+        draw.circle(screen, (0,0,0), top_position, 30)
+        floor = pygame.Rect(0,0,x_size, 75)
+        floor.bottom = y_size
+        draw.rect(screen, (100,100,100), floor)
+        pygame.display.flip()
+
 if __name__=="__main__":
+    run_simulation()
     from reply.runner import Runner
     r = Runner(PoleCartAgent(), PoleCartEnvironment(), PoleCartExperiment())
     r.run()
