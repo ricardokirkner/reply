@@ -13,7 +13,12 @@ class Policy(object):
         raise NotImplementedError()
 
     def get_mappings(self):
-        raise NotImplementedError()
+        actions = []
+        for state in self.storage.get_states():
+            encoded_action = self.storage.filter(state, numpy.argmax)
+            action = self.storage.get_action(encoded_action)
+            actions.append((state, action))
+        return actions
 
 
 class EGreedyPolicy(Policy):
@@ -39,15 +44,6 @@ class EGreedyPolicy(Policy):
             action_id = numpy.argmax(action_values)
         action = self.storage.get_action(action_id)
         return action
-
-    def get_mappings(self):
-        actions = []
-        for state in self.storage.get_states():
-            encoded_action = self.storage.filter(state, numpy.argmax)
-            action = self.storage.encoder.encoder['action'].decode(
-                (encoded_action,))
-            actions.append((state, action))
-        return actions
 
 
 class SoftMaxPolicy(Policy):
@@ -84,11 +80,3 @@ class SoftMaxPolicy(Policy):
         action = self.storage.get_action(action_id)
         return action
 
-    def get_mappings(self):
-        actions = []
-        for state in self.storage.get_states():
-            encoded_action = self.storage.filter(state, numpy.argmax)
-            action = self.storage.encoder.encoder['action'].decode(
-                (encoded_action,))
-            actions.append((state, action))
-        return actions
