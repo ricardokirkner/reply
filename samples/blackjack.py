@@ -90,11 +90,11 @@ class BlackJackEncoder(SpaceEncoder):
 
 
 class BlackJackStorage(TableStorage):
-    def __init__(self, observations=None, actions=None,
+    def __init__(self, agent,
                  observation_encoder=None, action_encoder=None):
-        observation_encoder = BlackJackEncoder(observations)
-        super(BlackJackStorage, self).__init__(observations, actions,
-                                               observation_encoder=observation_encoder)
+        observation_encoder = BlackJackEncoder(agent.model.observations)
+        super(BlackJackStorage, self).__init__(
+            agent, observation_encoder=observation_encoder)
 
 
 class BlackJackAgent(LearningAgent):

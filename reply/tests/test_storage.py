@@ -1,14 +1,16 @@
 import numpy
 import unittest
 
-from reply.datatypes import Space, Integer
+from reply.datatypes import Space, Integer, Model
 from reply.storage import Storage, TableStorage
 
 identity = lambda x: True
 
 class TestStorage(unittest.TestCase):
     def setUp(self):
-        self.storage = Storage()
+        self.observations = Space({'o': Integer(0, 0)})
+        self.actions = Space({'a': Integer(0, 0)})
+        self.storage = Storage(self)
 
     def test_storage_getitem(self):
         self.assertRaises(NotImplementedError, self.storage.__getitem__, 1)
@@ -35,7 +37,10 @@ class TestTableStorage(unittest.TestCase):
         actions = Space({'a': Integer(0, 0)})
         self.size = observations.size + actions.size
         self.data = numpy.zeros(self.size)
-        self.storage = TableStorage(observations, actions)
+        self.observations = observations
+        self.actions = actions
+        self.model = Model(observations, actions)
+        self.storage = TableStorage(self)
 
     def test_storage_init_default(self):
         self.assertTrue((self.storage.data == self.data).all())
@@ -65,9 +70,10 @@ class TestTableStorage(unittest.TestCase):
         self.assertTrue((self.storage.data == self.data).all())
 
     def test_storage_filter(self):
-        observations = Space({'o': Integer(0, 1)})
-        actions = Space({'a': Integer(0, 5)})
-        storage = TableStorage(observations, actions)
+        self.observations = Space({'o': Integer(0, 1)})
+        self.actions = Space({'a': Integer(0, 5)})
+        self.model = Model(self.observations, self.actions)
+        storage = TableStorage(self)
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
@@ -76,9 +82,10 @@ class TestTableStorage(unittest.TestCase):
         self.assertEqual(value, 5.0)
 
     def test_storage_filter_many(self):
-        observations = Space({'o': Integer(0, 1)})
-        actions = Space({'a': Integer(0, 5)})
-        storage = TableStorage(observations, actions)
+        self.observations = Space({'o': Integer(0, 1)})
+        self.actions = Space({'a': Integer(0, 5)})
+        self.model = Model(self.observations, self.actions)
+        storage = TableStorage(self)
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
@@ -88,11 +95,12 @@ class TestTableStorage(unittest.TestCase):
         self.assertEqual(values, [0, 2, 4])
 
     def test_get_states(self):
-        observations = Space({'o1': Integer(0, 1),
+        self.observations = Space({'o1': Integer(0, 1),
                               'o2': Integer(2, 4)})
-        actions = Space({'a1': Integer(0, 1),
+        self.actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        storage = TableStorage(observations, actions)
+        self.model = Model(self.observations, self.actions)
+        storage = TableStorage(self)
         states = list(storage.get_states())
         expected_states = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
                            {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
@@ -100,22 +108,24 @@ class TestTableStorage(unittest.TestCase):
         self.assertEqual(states, expected_states)
 
     def test_get_actions(self):
-        observations = Space({'o1': Integer(0, 1),
+        self.observations = Space({'o1': Integer(0, 1),
                               'o2': Integer(2, 4)})
-        actions = Space({'a1': Integer(0, 1),
+        self.actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        storage = TableStorage(observations, actions)
+        self.model = Model(self.observations, self.actions)
+        storage = TableStorage(self)
         actions = list(storage.get_actions())
         expected_actions = [{'a1': 0, 'a2': 1}, {'a1': 0, 'a2': 2},
                             {'a1': 1, 'a2': 1}, {'a1': 1, 'a2': 2}]
         self.assertEqual(actions, expected_actions)
 
     def test_get_action(self):
-        observations = Space({'o1': Integer(0, 1),
+        self.observations = Space({'o1': Integer(0, 1),
                               'o2': Integer(2, 4)})
-        actions = Space({'a1': Integer(0, 1),
+        self.actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        storage = TableStorage(observations, actions)
+        self.model = Model(self.observations, self.actions)
+        storage = TableStorage(self)
         action = storage.get_action((0,2))
         expected_action = {'a1': 0, 'a2': 2}
         self.assertEqual(action, expected_action)
