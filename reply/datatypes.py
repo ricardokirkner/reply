@@ -1,10 +1,10 @@
 import itertools
 
-class Parameter(object):
+class Dimension(object):
     pass
 
 
-class Number(Parameter):
+class Number(Dimension):
     def __init__(self, min, max):
         self.min = min
         self.max = max
@@ -28,8 +28,7 @@ class Double(Number):
         return "(%f %f)" % (self.min, self.max)
 
 
-class Char(Parameter):
-
+class Char(Dimension):
     def __eq__(self, other):
         return True
 

@@ -1,10 +1,10 @@
 import numpy
 import random
 
+from reply.base import AgentComponent, Parameter
 
-class Policy(object):
-    def __init__(self, storage):
-        self.storage = storage
+class Policy(AgentComponent):
+    storage = Parameter("Where to store the policy")
 
     def __eq__(self, other):
         return self.storage == other.storage
@@ -21,12 +21,9 @@ class Policy(object):
 
 
 class EGreedyPolicy(Policy):
-    def __init__(self, storage, random_action_rate=0.0,
-                 random_action_rate_decay=1.0, random_action_rate_min=0.0):
-        super(EGreedyPolicy, self).__init__(storage)
-        self.random_action_rate = random_action_rate
-        self.random_action_rate_decay = random_action_rate_decay
-        self.random_action_rate_min = random_action_rate_min
+    random_action_rate = Parameter("The chance of taking a random action", 0.0)
+    random_action_rate_decay = Parameter("the random action rate decay", 1.0)
+    random_action_rate_min = Parameter("The minimum random action rate", 0.0)
 
     def __eq__(self, other):
         return (super(EGreedyPolicy, self).__eq__(other) and
@@ -47,9 +44,7 @@ class EGreedyPolicy(Policy):
 
 
 class SoftMaxPolicy(Policy):
-    def __init__(self, storage, temperature=0.0):
-        super(SoftMaxPolicy, self).__init__(storage)
-        self.temperature = temperature
+    temperature = Parameter("The softmax temperature", 0.0)
 
     def __eq__(self, other):
         return (super(SoftMaxPolicy, self).__eq__(other) and
