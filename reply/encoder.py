@@ -16,9 +16,13 @@ class DummyEncoder(Encoder):
 
 
 class BucketEncoder(Encoder):
-    def __init__(self, param, num_buckets=2):
+    def __init__(self, param, num_buckets=None):
         self._min = param.min
         self._max = param.max
+        if num_buckets is None:
+            # by default discretize as many integer values as given
+            # by the parameter's range
+            num_buckets = param.max - param.min
         self._num_buckets = num_buckets
         self.buckets = self._generate_buckets()
 
