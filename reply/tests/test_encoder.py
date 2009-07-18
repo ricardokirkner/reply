@@ -32,7 +32,7 @@ class TestDummyEncoder(unittest.TestCase):
 class TestBucketEncoder(unittest.TestCase):
     def setUp(self):
         self.param = Double(0, 1)
-        self.encoder = BucketEncoder(self.param)
+        self.encoder = BucketEncoder(self.param, num_buckets=2)
 
     def test_encode(self):
         encoded_item = self.encoder.encode(self.param.min)
@@ -106,7 +106,7 @@ class TestSpaceEncoder(unittest.TestCase):
 class TestCompoundSpaceEncoder(unittest.TestCase):
     def setUp(self):
         space = Space({'choice': Double(0, 1)})
-        encoders = {'choice': BucketEncoder(space.choice)}
+        encoders = {'choice': BucketEncoder(space.choice, num_buckets=2)}
         self.encoder = CompoundSpaceEncoder(space, encoders)
 
     def test_encode(self):
