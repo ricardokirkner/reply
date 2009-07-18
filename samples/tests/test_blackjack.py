@@ -25,7 +25,7 @@ class TestBlackJack(unittest.TestCase):
                          ({'total_points': 11}, {'play': HIT}),
                          ({'total_points': 12}, {'play': HIT}),
                          ({'total_points': 13}, {'play': HIT}),
-                         ({'total_points': 14}, {'play': STAND}),
+                         ({'total_points': 14}, {'play': HIT}),
                          ({'total_points': 15}, {'play': STAND}),
                          ({'total_points': 16}, {'play': HIT}),
                          ({'total_points': 17}, {'play': STAND}),
@@ -45,7 +45,7 @@ class TestBlackJack(unittest.TestCase):
         class TestExperiment(Experiment):
             def run(self):
                 self.init()
-                for i in xrange(100000):
+                for i in xrange(10000):
                     self.episode()
                 self.cleanup()
                 mappings = agent.learner.policy.get_mappings()
@@ -77,8 +77,8 @@ class TestSarsaBlackJack(TestBlackJack):
                          ({'total_points': 3}, {'play': HIT}),
                          ({'total_points': 4}, {'play': HIT}),
                          ({'total_points': 5}, {'play': HIT}),
-                         ({'total_points': 6}, {'play': STAND}),
-                         ({'total_points': 7}, {'play': STAND}),
+                         ({'total_points': 6}, {'play': HIT}),
+                         ({'total_points': 7}, {'play': HIT}),
                          ({'total_points': 8}, {'play': HIT}),
                          ({'total_points': 9}, {'play': HIT}),
                          ({'total_points': 10}, {'play': HIT}),
@@ -86,9 +86,9 @@ class TestSarsaBlackJack(TestBlackJack):
                          ({'total_points': 12}, {'play': HIT}),
                          ({'total_points': 13}, {'play': HIT}),
                          ({'total_points': 14}, {'play': STAND}),
-                         ({'total_points': 15}, {'play': STAND}),
+                         ({'total_points': 15}, {'play': HIT}),
                          ({'total_points': 16}, {'play': STAND}),
-                         ({'total_points': 17}, {'play': HIT}),
+                         ({'total_points': 17}, {'play': STAND}),
                          ({'total_points': 18}, {'play': STAND}),
                          ({'total_points': 19}, {'play': STAND}),
                          ({'total_points': 20}, {'play': STAND}),
