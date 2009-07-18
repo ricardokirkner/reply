@@ -91,7 +91,8 @@ class SpaceEncoder(Encoder):
         >>> encoder.encode({'choice': 5})
         (5,)
         """
-        encoded_item = [item[key] for key in self.space.get_names_list()]
+        encoded_item = [item[key] - self.space[key].min \
+                        for key in self.space.get_names_list()]
         return tuple(encoded_item)
 
     def decode(self, encoded_item):
@@ -104,7 +105,13 @@ class SpaceEncoder(Encoder):
         """
         item = {}
         for key, value in zip(self.space.get_names_list(), encoded_item):
-            item[key] = value
+            if value is not None:
+                if value >= self.space[key].size:
+                    raise ValueError("Encoded value (%s) outside of valid range: [%s, %s]."
+                        % (value, self.space[key].max - self.space[key].min))
+                item[key] = value + self.space[key].min
+            else:
+                item[key] = value
         return item
 
     def get_action(self, action_id):
