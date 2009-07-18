@@ -89,11 +89,17 @@ class BlackJackEncoder(SpaceEncoder):
         return item
 
 
+class BlackJackStorage(TableStorage):
+    def __init__(self, observations=None, actions=None,
+                 observation_encoder=None, action_encoder=None):
+        observation_encoder = BlackJackEncoder(observations)
+        super(BlackJackStorage, self).__init__(observations, actions,
+                                               observation_encoder=observation_encoder)
+
+
 class BlackJackAgent(LearningAgent):
     model = blackJackModel
-    state_encoder_class = BlackJackEncoder
-    action_encoder_class = SpaceEncoder
-    storage_class = TableStorage
+    storage_class = BlackJackStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
 

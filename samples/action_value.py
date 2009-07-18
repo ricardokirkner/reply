@@ -8,7 +8,6 @@ import random
 
 from reply.agent import LearningAgent
 from reply.datatypes import Integer, Model, Space
-from reply.encoder import SpaceEncoder
 from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.learner import QLearner
@@ -24,8 +23,6 @@ actionValueModel = Model(observations, actions)
 
 class ActionValueAgent(LearningAgent):
     model = actionValueModel
-    state_encoder_class = SpaceEncoder
-    action_encoder_class = SpaceEncoder
     storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
@@ -63,5 +60,6 @@ class ActionValueExperiment(Experiment):
 
 if __name__=="__main__":
     from reply.runner import Runner
-    r = Runner(ActionValueAgent(), ActionValueEnvironment(), ActionValueExperiment())
+    r = Runner(ActionValueAgent(), ActionValueEnvironment(),
+               ActionValueExperiment())
     r.run()

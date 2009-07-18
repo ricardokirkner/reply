@@ -1,7 +1,6 @@
 import unittest
 
 from reply.datatypes import Integer, Space
-from reply.encoder import SpaceEncoder
 from reply.learner import Learner, QLearner, SarsaLearner
 from reply.policy import EGreedyPolicy
 from reply.storage import TableStorage
@@ -24,8 +23,7 @@ class TestQLearner(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
-        storage = TableStorage(SpaceEncoder(observations),
-                               SpaceEncoder(actions))
+        storage = TableStorage(observations, actions)
         self.policy = EGreedyPolicy(storage)
         self.learning_rate = 1.0
         self.learning_rate_decay = 0.9
@@ -69,8 +67,7 @@ class TestSarsaLearner(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
-        storage = TableStorage(SpaceEncoder(observations),
-                               SpaceEncoder(actions))
+        storage = TableStorage(observations, actions)
         self.policy = EGreedyPolicy(storage)
         self.learning_rate = 1.0
         self.learning_rate_decay = 0.9

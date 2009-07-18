@@ -1,5 +1,4 @@
 from reply.datatypes import Model
-from reply.encoder import StateActionEncoder
 from reply.util import MessageHandler
 
 class Agent(MessageHandler):
@@ -33,9 +32,7 @@ class Agent(MessageHandler):
 
 class LearningAgent(Agent):
     def init(self, task_spec):
-        state_encoder = self.state_encoder_class(self.model.observations)
-        action_encoder = self.action_encoder_class(self.model.actions)
-        storage = self.storage_class(state_encoder, action_encoder)
+        storage = self.storage_class(self.model.observations, self.model.actions)
         kwargs = {}
         if hasattr(self, 'random_action_rate'):
             kwargs['random_action_rate'] = self.random_action_rate

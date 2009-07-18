@@ -95,11 +95,17 @@ class HanoiSpaceEncoder(SpaceEncoder):
         return item
 
 
+class HanoiStorage(TableStorage):
+    def __init__(self, observations=None, actions=None):
+        observation_encoder = HanoiSpaceEncoder(observations)
+        action_encoder = HanoiSpaceEncoder(actions)
+        super(HanoiStorage, self).__init__(observation_encoder=observation_encoder,
+                                           action_encoder=action_encoder)
+
+
 class HanoiAgent(LearningAgent):
     model = hanoi_model
-    state_encoder_class = HanoiSpaceEncoder
-    action_encoder_class = HanoiSpaceEncoder
-    storage_class = TableStorage
+    storage_class = HanoiStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
 

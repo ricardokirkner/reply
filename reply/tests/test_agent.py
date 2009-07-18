@@ -1,7 +1,6 @@
 import unittest
 
 from reply.agent import Agent, LearningAgent
-from reply.encoder import SpaceEncoder, StateActionEncoder
 from reply.storage import TableStorage
 from reply.policy import EGreedyPolicy
 from reply.learner import QLearner
@@ -61,8 +60,6 @@ class TestAgent(unittest.TestCase):
 class TestLearningAgent(unittest.TestCase):
     def setUp(self):
         class DummyLearningAgent(LearningAgent):
-            state_encoder_class = SpaceEncoder
-            action_encoder_class = SpaceEncoder
             storage_class = TableStorage
             policy_class = EGreedyPolicy
             learner_class = QLearner
@@ -82,7 +79,7 @@ class TestLearningAgent(unittest.TestCase):
         self.agent.init(self.task_spec)
         observations = Space({'o1': Integer(0, 1)})
         actions = Space({'a1': Integer(0, 1)})
-        storage = TableStorage(SpaceEncoder(observations), SpaceEncoder(actions))
+        storage = TableStorage(observations, actions)
         policy = EGreedyPolicy(storage)
         learner = QLearner(policy, 0, learning_rate_decay=0)
         self.assertEqual(self.agent.learner, learner)

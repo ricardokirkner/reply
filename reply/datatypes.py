@@ -109,14 +109,9 @@ class Space(object):
 
     @property
     def size(self):
-        size = 1
-        for _type in (Integer, Double, Char):
-            for parameter in self._data[_type].values():
-                size *= parameter.size
-        unnamed = self._data.get('', [])
-        for parameter in unnamed:
-            size *= parameter.size
-        return size
+        values = self.get_values()
+        size = map(lambda x: x.size, values)
+        return tuple(size)
 
     def get_names_spec(self):
         names = []
@@ -170,6 +165,14 @@ class Space(object):
             for i, name in enumerate(name_list):
                 item[name] = value[i]
             yield item
+
+    def get_values(self):
+        values = []
+        for _type in (Integer, Double, Char):
+            values.extend(self._data[_type].values())
+        unnamed = self._data.get('', [])
+        values.extend(unnamed)
+        return values
 
     def _build_data(self):
         spec = self.spec
