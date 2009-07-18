@@ -54,11 +54,11 @@ class TestBlackJack(unittest.TestCase):
                 pprint.pprint(outerself.expected_mappings)
                 outerself.assertEqual(mappings, outerself.expected_mappings)
                 outerself.assertEqual(
-                    agent.learner.policy.storage.get(({'total_points': 22},
-                                                      {'play': HIT})), 0)
+                    agent.learner.policy.storage.get({'total_points': 22},
+                                                      {'play': HIT}), 0)
                 outerself.assertEqual(
-                    agent.learner.policy.storage.get(({'total_points': 22},
-                                                      {'play': STAND})), 0)
+                    agent.learner.policy.storage.get({'total_points': 22},
+                                                      {'play': STAND}), 0)
 
         r = Run()
         r.run(agent, env, TestExperiment())

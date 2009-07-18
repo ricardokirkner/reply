@@ -33,7 +33,7 @@ class TestEGreedyPolicy(unittest.TestCase):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
         self.storage = TableStorage(observations, actions)
-        self.storage.set(({'o': 0}, {'a': 1}), 1)
+        self.storage.set({'o': 0}, {'a': 1}, 1)
         self.policy = EGreedyPolicy(self.storage)
 
     def test_builder(self):
@@ -64,7 +64,7 @@ class TestSoftMaxPolicy(unittest.TestCase):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
         self.storage = TableStorage(observations, actions)
-        self.storage.set(({'o': 0}, {'a': 1}), 1)
+        self.storage.set({'o': 0}, {'a': 1}, 1)
         self.policy = SoftMaxPolicy(self.storage)
 
     def test_builder(self):

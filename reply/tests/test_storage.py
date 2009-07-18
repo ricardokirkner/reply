@@ -43,25 +43,25 @@ class TestTableStorage(unittest.TestCase):
     def test_storage_get(self):
         observation = {'o': 0}
         action = {'a': 0}
-        value = self.storage.get((observation, action))
+        value = self.storage.get(observation, action)
         self.assertEqual(value, 0.0)
-        self.assertRaises(IndexError, self.storage.get, (observation, {'a': 1}))
+        self.assertRaises(IndexError, self.storage.get, observation, {'a': 1})
 
     def test_storage_set(self):
         observation = {'o': 0}
         action = {'a': 0}
-        self.assertEqual(self.storage.get((observation, action)), 0.0)
-        self.storage.set((observation, action), 5)
-        self.assertEquals(self.storage.get((observation, action)), 5.0)
+        self.assertEqual(self.storage.get(observation, action), 0.0)
+        self.storage.set(observation, action, 5)
+        self.assertEquals(self.storage.get(observation, action), 5.0)
 
     def test_storage_clear(self):
         observation = {'o': 0}
         action = {'a': 0}
-        self.assertEqual(self.storage.get((observation, action)), 0.0)
-        self.storage.set((observation, action), 1)
-        self.assertEqual(self.storage.get((observation, action)), 1.0)
+        self.assertEqual(self.storage.get(observation, action), 0.0)
+        self.storage.set(observation, action, 1)
+        self.assertEqual(self.storage.get(observation, action), 1.0)
         self.storage.clear()
-        self.assertEqual(self.storage.get((observation, action)), 0.0)
+        self.assertEqual(self.storage.get(observation, action), 0.0)
         self.assertTrue((self.storage.data == self.data).all())
 
     def test_storage_filter(self):
@@ -71,8 +71,8 @@ class TestTableStorage(unittest.TestCase):
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
-            storage.set((observation, action), action_value)
-        value = storage.filter((observation,), max)
+            storage.set(observation, action, action_value)
+        value = storage.filter(observation, filter=max)
         self.assertEqual(value, 5.0)
 
     def test_storage_filter_many(self):
@@ -82,9 +82,9 @@ class TestTableStorage(unittest.TestCase):
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
-            storage.set((observation, action), action_value)
-        values = storage.filter((observation,),
-                                lambda x: filter(lambda y: y % 2 == 0, x))
+            storage.set(observation, action, action_value)
+        values = storage.filter(observation,
+                                filter=lambda x: filter(lambda y: y % 2 == 0, x))
         self.assertEqual(values, [0, 2, 4])
 
     def test_get_states(self):

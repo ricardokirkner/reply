@@ -42,18 +42,18 @@ class QLearner(Learner):
 
     def update(self, state, action, reward, next_state):
         """Update the (state, action, next_state) -> reward relationship."""
-        prev_value = self.policy.storage.get((state, action))
+        prev_value = self.policy.storage.get(state, action)
         if next_state is None:
             max_value_next = 0
         else:
-            max_value_next = self.policy.storage.filter(next_state, max)
+            max_value_next = self.policy.storage.filter(next_state, filter=max)
 
         new_value = (
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
 
-        self.policy.storage.set((state, action), new_value)
+        self.policy.storage.set(state, action, new_value)
 
     def __eq__(self, other):
         return (super(QLearner, self).__eq__(other) and
@@ -69,16 +69,16 @@ class SarsaLearner(QLearner):
 
     def update(self, state, action, reward, next_state):
         """Update the (state, action, next_state) -> reward relationship."""
-        prev_value = self.policy.storage.get((state, action))
+        prev_value = self.policy.storage.get(state, action)
         if next_state is None:
             max_value_next = 0
         else:
             next_action = self.policy.select_action(next_state)
-            max_value_next = self.policy.storage.get((next_state, next_action))
+            max_value_next = self.policy.storage.get(next_state, next_action)
 
         new_value = (
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
 
-        self.policy.storage.set((state, action), new_value)
+        self.policy.storage.set(state, action, new_value)

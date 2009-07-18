@@ -15,7 +15,7 @@ class Policy(object):
     def get_mappings(self):
         actions = []
         for state in self.storage.get_states():
-            encoded_action = self.storage.filter(state, numpy.argmax)
+            encoded_action = self.storage.filter(state, filter=numpy.argmax)
             action = self.storage.get_action(encoded_action)
             actions.append((state, action))
         return actions

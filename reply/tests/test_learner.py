@@ -48,7 +48,7 @@ class TestQLearner(unittest.TestCase):
         reward = 1
 
         self.learner.update(state, action, reward, next_state)
-        state_value = self.learner.policy.storage.get((state, action))
+        state_value = self.learner.policy.storage.get(state, action)
         expected_state_value = 1
         self.assertEqual(state_value, expected_state_value)
 
@@ -58,7 +58,7 @@ class TestQLearner(unittest.TestCase):
         reward = 0
 
         self.learner.update(state, action, reward, None)
-        state_value = self.learner.policy.storage.get((state, action))
+        state_value = self.learner.policy.storage.get(state, action)
         expected_state_value = 0
         self.assertEqual(state_value, expected_state_value)
 
@@ -92,7 +92,7 @@ class TestSarsaLearner(unittest.TestCase):
         reward = 1
 
         self.learner.update(state, action, reward, next_state)
-        state_value = self.learner.policy.storage.get((state, action))
+        state_value = self.learner.policy.storage.get(state, action)
         expected_state_value = 1
         self.assertEqual(state_value, expected_state_value)
 
@@ -102,7 +102,7 @@ class TestSarsaLearner(unittest.TestCase):
         reward = 0
 
         self.learner.update(state, action, reward, None)
-        state_value = self.learner.policy.storage.get((state, action))
+        state_value = self.learner.policy.storage.get(state, action)
         expected_state_value = 0
         self.assertEqual(state_value, expected_state_value)
 
