@@ -25,9 +25,6 @@ class TestStorage(unittest.TestCase):
     def test_storage_clear(self):
         self.assertRaises(NotImplementedError, self.storage.clear)
 
-    def test_storage_filter(self):
-        self.assertRaises(NotImplementedError, self.storage.filter, 1, identity)
-
 
 class TestTableStorage(unittest.TestCase):
     def setUp(self):
@@ -64,7 +61,7 @@ class TestTableStorage(unittest.TestCase):
         self.assertEqual(self.storage.get(observation, action), 0.0)
         self.assertTrue((self.storage.data == self.data).all())
 
-    def test_storage_filter(self):
+    def test_storage_get_max_value(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 5)})
         storage = TableStorage(observations, actions)
@@ -72,20 +69,8 @@ class TestTableStorage(unittest.TestCase):
         for action_value in range(6):
             action = {'a': action_value}
             storage.set(observation, action, action_value)
-        value = storage.filter(observation, filter=max)
+        value = storage.get_max_value(observation)
         self.assertEqual(value, 5.0)
-
-    def test_storage_filter_many(self):
-        observations = Space({'o': Integer(0, 1)})
-        actions = Space({'a': Integer(0, 5)})
-        storage = TableStorage(observations, actions)
-        observation = {'o': 0}
-        for action_value in range(6):
-            action = {'a': action_value}
-            storage.set(observation, action, action_value)
-        values = storage.filter(observation,
-                                filter=lambda x: filter(lambda y: y % 2 == 0, x))
-        self.assertEqual(values, [0, 2, 4])
 
     def test_get_states(self):
         observations = Space({'o1': Integer(0, 1),
