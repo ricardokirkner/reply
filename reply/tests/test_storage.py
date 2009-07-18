@@ -116,7 +116,7 @@ class TestTableStorage(unittest.TestCase):
         actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
         storage = TableStorage(observations, actions)
-        action = storage.get_action((0,2))
+        action = storage.get_action((0,1))
         expected_action = {'a1': 0, 'a2': 2}
         self.assertEqual(action, expected_action)
 
