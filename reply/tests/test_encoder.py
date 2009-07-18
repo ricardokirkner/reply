@@ -2,7 +2,7 @@ import unittest
 
 from reply.datatypes import Double, Integer, Space
 from reply.encoder import BucketEncoder, DummyEncoder, Encoder, SpaceEncoder
-from reply.encoder import CompoundSpaceEncoder, StateActionEncoder
+from reply.encoder import CompoundSpaceEncoder
 
 
 class TestEncoder(unittest.TestCase):
@@ -129,50 +129,6 @@ class TestCompoundSpaceEncoder(unittest.TestCase):
         expected_item = {'choice': 0.5}
         self.assertEqual(item, expected_item)
 
-
-class TestStateActionEncoder(unittest.TestCase):
-    def setUp(self):
-        state_space = Space({'state': Integer(0, 0)})
-        action_space = Space({'choice': Integer(0, 9)})
-        state_encoder = SpaceEncoder(state_space)
-        action_encoder = SpaceEncoder(action_space)
-        self.encoder = StateActionEncoder(state_encoder, action_encoder)
-
-    def test_encode(self):
-        item = ({'state': 0}, {'choice': 3})
-        encoded_item = self.encoder.encode(item)
-        expected_encoded_item = (0, 3)
-        self.assertEqual(encoded_item, expected_encoded_item)
-        item = ({'state': 0},)
-        encoded_item = self.encoder.encode(item)
-        expected_encoded_item = (0,)
-        self.assertEqual(encoded_item, expected_encoded_item)
-        item = {'state': 0}
-        encoded_item = self.encoder.encode(item)
-        expected_encoded_item = (0,)
-        self.assertEqual(encoded_item, expected_encoded_item)
-
-    def test_encode_invalid_item(self):
-        item = ({'state': 0}, {'choice': 3}, {'other': 0})
-        self.assertRaises(ValueError, self.encoder.encode, item)
-
-    def test_decode(self):
-        encoded_item = (0, 3)
-        item = self.encoder.decode(encoded_item)
-        expected_item = ({'state': 0}, {'choice': 3})
-        self.assertEqual(item, expected_item)
-        encoded_item = (0,)
-        item = self.encoder.decode(encoded_item)
-        expected_item = ({'state': 0},)
-        self.assertEqual(item, expected_item)
-        encoded_item = 0
-        item = self.encoder.decode(encoded_item)
-        expected_item = ({'state': 0},)
-        self.assertEqual(item, expected_item)
-
-    def test_decode_invalid_item(self):
-        encoded_item = (0, 3, 0)
-        self.assertRaises(ValueError, self.encoder.decode, encoded_item)
 
 if __name__ == '__main__':
     unittest.main()

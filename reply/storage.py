@@ -2,7 +2,7 @@
 import numpy
 
 from reply.datatypes import Space
-from reply.encoder import DummyEncoder, SpaceEncoder, StateActionEncoder
+from reply.encoder import DummyEncoder, SpaceEncoder
 
 
 class Storage(object):
