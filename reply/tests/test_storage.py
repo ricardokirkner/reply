@@ -2,7 +2,6 @@ import numpy
 import unittest
 
 from reply.datatypes import Space, Integer
-from reply.encoder import SpaceEncoder, StateActionEncoder
 from reply.storage import Storage, TableStorage
 
 identity = lambda x: True
@@ -34,14 +33,11 @@ class TestTableStorage(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 0)})
         actions = Space({'a': Integer(0, 0)})
-        state_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        self.size = (observations.size, actions.size)
+        self.size = observations.size + actions.size
         self.data = numpy.zeros(self.size)
-        self.storage = TableStorage(state_encoder, action_encoder)
+        self.storage = TableStorage(observations, actions)
 
     def test_storage_init_default(self):
-        self.assertTrue(isinstance(self.storage.encoder, StateActionEncoder))
         self.assertTrue((self.storage.data == self.data).all())
 
     def test_storage_get(self):
@@ -71,9 +67,7 @@ class TestTableStorage(unittest.TestCase):
     def test_storage_filter(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 5)})
-        observation_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        storage = TableStorage(observation_encoder, action_encoder)
+        storage = TableStorage(observations, actions)
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
@@ -84,14 +78,13 @@ class TestTableStorage(unittest.TestCase):
     def test_storage_filter_many(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 5)})
-        observation_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        storage = TableStorage(observation_encoder, action_encoder)
+        storage = TableStorage(observations, actions)
         observation = {'o': 0}
         for action_value in range(6):
             action = {'a': action_value}
             storage.set((observation, action), action_value)
-        values = storage.filter((observation,), lambda x: filter(lambda y: y % 2 == 0, x))
+        values = storage.filter((observation,),
+                                lambda x: filter(lambda y: y % 2 == 0, x))
         self.assertEqual(values, [0, 2, 4])
 
     def test_get_states(self):
@@ -99,9 +92,7 @@ class TestTableStorage(unittest.TestCase):
                               'o2': Integer(2, 4)})
         actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        state_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        storage = TableStorage(state_encoder, action_encoder)
+        storage = TableStorage(observations, actions)
         states = list(storage.get_states())
         expected_states = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
                            {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
@@ -113,9 +104,7 @@ class TestTableStorage(unittest.TestCase):
                               'o2': Integer(2, 4)})
         actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        state_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        storage = TableStorage(state_encoder, action_encoder)
+        storage = TableStorage(observations, actions)
         actions = list(storage.get_actions())
         expected_actions = [{'a1': 0, 'a2': 1}, {'a1': 0, 'a2': 2},
                             {'a1': 1, 'a2': 1}, {'a1': 1, 'a2': 2}]
@@ -126,9 +115,7 @@ class TestTableStorage(unittest.TestCase):
                               'o2': Integer(2, 4)})
         actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        state_encoder = SpaceEncoder(observations)
-        action_encoder = SpaceEncoder(actions)
-        storage = TableStorage(state_encoder, action_encoder)
+        storage = TableStorage(observations, actions)
         action = storage.get_action((0,2))
         expected_action = {'a1': 0, 'a2': 2}
         self.assertEqual(action, expected_action)

@@ -6,7 +6,6 @@ import random
 
 from reply.agent import LearningAgent
 from reply.datatypes import Integer, Model, Space
-from reply.encoder import SpaceEncoder
 from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.learner import QLearner
@@ -31,8 +30,6 @@ rock_paper_scissor_model = Model(observations, actions)
 
 class RockPaperScissorAgent(LearningAgent):
     model = rock_paper_scissor_model
-    state_encoder_class = SpaceEncoder
-    action_encoder_class = SpaceEncoder
     storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
