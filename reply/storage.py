@@ -3,9 +3,9 @@ import numpy
 
 from reply.datatypes import Space
 from reply.encoder import DummyEncoder, SpaceEncoder, StateActionEncoder
+from reply.base import AgentComponent, Parameter
 
-
-class Storage(object):
+class Storage(AgentComponent):
 
     """Storage base class."""
 
@@ -32,13 +32,15 @@ class TableStorage(Storage):
 
     """Storage that uses a table for its data."""
 
-    def __init__(self, observations=None, actions=None,
+    model = Parameter("The (observations, actions) model")
+
+    def __init__(self, agent,
                  observation_encoder=None, action_encoder=None):
-        super(TableStorage, self).__init__()
+        super(TableStorage, self).__init__(agent)
         if observation_encoder is None:
-            observation_encoder = SpaceEncoder(observations)
+            observation_encoder = SpaceEncoder(self.model.observations)
         if action_encoder is None:
-            action_encoder = SpaceEncoder(actions)
+            action_encoder = SpaceEncoder(self.model.actions)
         self.encoder = StateActionEncoder(observation_encoder, action_encoder)
         size = observation_encoder.space.size + action_encoder.space.size
         self.data = numpy.zeros(size)
@@ -136,4 +138,3 @@ class TableStorage(Storage):
             encoded_action = (encoded_action,)
         action = self.encoder.encoder['action'].decode(encoded_action)
         return action
-

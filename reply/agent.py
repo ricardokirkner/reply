@@ -1,4 +1,5 @@
 from reply.datatypes import Model
+from reply.encoder import StateActionEncoder
 from reply.util import MessageHandler
 
 class Agent(MessageHandler):
@@ -31,18 +32,19 @@ class Agent(MessageHandler):
 
 
 class LearningAgent(Agent):
+    def build_storage(self):
+        self.storage = self.storage_class(self)
+
+    def build_policy(self):
+        self.policy = self.policy_class(self)
+
+    def build_learner(self):
+        self.learner = self.learner_class(self)
+
     def init(self, task_spec):
-        storage = self.storage_class(self.model.observations, self.model.actions)
-        kwargs = {}
-        if hasattr(self, 'random_action_rate'):
-            kwargs['random_action_rate'] = self.random_action_rate
-        policy = self.policy_class(storage, **kwargs)
-        kwargs = {}
-        if hasattr(self, 'learning_rate_decay'):
-            kwargs['learning_rate_decay'] = self.learning_rate_decay
-        if hasattr(self, 'learning_rate_min'):
-            kwargs['learning_rate_min'] = self.learning_rate_min
-        self.learner = self.learner_class(policy, self.learning_rate, **kwargs)
+        self.build_storage()
+        self.build_policy()
+        self.build_learner()
 
         self.last_observation = None
         self.last_action = None
