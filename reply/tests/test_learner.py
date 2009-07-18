@@ -10,7 +10,7 @@ from reply.storage import TableStorage
 class TestLearner(unittest.TestCase):
     def setUp(self):
         self.policy = None
-        self.learner = Learner(self.policy)
+        self.learner = Learner(self)
 
     def test_learner_builder(self):
         self.assertEqual(self.learner.policy, self.policy)
@@ -24,16 +24,14 @@ class TestQLearner(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
-        storage = TableStorage(SpaceEncoder(observations),
+        self.storage = TableStorage(SpaceEncoder(observations),
                                SpaceEncoder(actions))
-        self.policy = EGreedyPolicy(storage)
+        self.policy = EGreedyPolicy(self)
         self.learning_rate = 1.0
         self.learning_rate_decay = 0.9
         self.learning_rate_min = 0.1
         self.value_discount = 0.9
-        self.learner = QLearner(self.policy, self.learning_rate,
-                                self.learning_rate_decay,
-                                self.learning_rate_min, self.value_discount)
+        self.learner = QLearner(self)
 
     def test_learner_builder(self):
         self.assertEqual(self.learner.policy, self.policy)
@@ -69,16 +67,14 @@ class TestSarsaLearner(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 1)})
         actions = Space({'a': Integer(0, 1)})
-        storage = TableStorage(SpaceEncoder(observations),
+        self.storage = TableStorage(SpaceEncoder(observations),
                                SpaceEncoder(actions))
-        self.policy = EGreedyPolicy(storage)
+        self.policy = EGreedyPolicy(self)
         self.learning_rate = 1.0
         self.learning_rate_decay = 0.9
         self.learning_rate_min = 0.1
         self.value_discount = 0.9
-        self.learner = SarsaLearner(self.policy, self.learning_rate,
-                                    self.learning_rate_decay,
-                                    self.learning_rate_min, self.value_discount)
+        self.learner = SarsaLearner(self)
 
     def test_learner_builder(self):
         self.assertEqual(self.learner.policy, self.policy)
