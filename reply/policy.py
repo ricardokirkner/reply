@@ -15,8 +15,7 @@ class Policy(object):
     def get_mappings(self):
         actions = []
         for state in self.storage.get_states():
-            encoded_action = self.storage.filter(state, filter=numpy.argmax)
-            action = self.storage.get_action(encoded_action)
+            action = self.storage.get_max_action(state)
             actions.append((state, action))
         return actions
 
@@ -42,7 +41,8 @@ class EGreedyPolicy(Policy):
             action_id = random.randint(0, numpy.size(action_values)-1)
         else:
             action_id = numpy.argmax(action_values)
-        action = self.storage.get_action(action_id)
+        actions = list(self.storage.get_actions())
+        action = actions[action_id]
         return action
 
 
@@ -77,6 +77,7 @@ class SoftMaxPolicy(Policy):
                 current_pr += action_id_pr
                 if pr < current_pr:
                     break
-        action = self.storage.get_action(action_id)
+        actions = list(self.storage.get_actions())
+        action = actions[action_id]
         return action
 

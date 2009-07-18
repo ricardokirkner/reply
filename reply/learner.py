@@ -46,7 +46,7 @@ class QLearner(Learner):
         if next_state is None:
             max_value_next = 0
         else:
-            max_value_next = self.policy.storage.filter(next_state, filter=max)
+            max_value_next = self.policy.storage.get_max_value(next_state)
 
         new_value = (
             prev_value + self.learning_rate *

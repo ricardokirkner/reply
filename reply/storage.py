@@ -24,24 +24,16 @@ class Storage(object):
     def clear(self):
         raise NotImplementedError()
 
-    def filter(self, item, filter):
-        raise NotImplementedError()
-
 
 class TableStorage(Storage):
 
     """Storage that uses a table for its data."""
 
-    def __init__(self, observations=None, actions=None,
-                 observation_encoder=None, action_encoder=None):
+    def __init__(self, observations, actions):
         super(TableStorage, self).__init__()
-        if observation_encoder is None:
-            observation_encoder = SpaceEncoder(observations)
-        if action_encoder is None:
-            action_encoder = SpaceEncoder(actions)
-        self.observation_encoder = observation_encoder
-        self.action_encoder = action_encoder
-        size = observation_encoder.space.size + action_encoder.space.size
+        self.observation_encoder = SpaceEncoder(observations)
+        self.action_encoder = SpaceEncoder(actions)
+        size = observations.size + actions.size
         self.data = numpy.zeros(size)
 
     def __eq__(self, other):
@@ -67,12 +59,11 @@ class TableStorage(Storage):
             return self.data[item]
         IndexError: index (1) out of range (0<=index<1) in dimension 1
         """
-        encoded_observation = self.observation_encoder.encode(observation)
+        item = self.observation_encoder.encode(observation)
         if action is not None:
             encoded_action = self.action_encoder.encode(action)
-            value = self.data[encoded_observation, encoded_action]
-        else:
-            value = self.data[encoded_observation]
+            item += encoded_action
+        value = self.data[item]
         return value
 
     def set(self, observation, action, value):
@@ -89,9 +80,9 @@ class TableStorage(Storage):
         >>> storage.get(observation, action)
         5.0
         """
-        encoded_observation = self.observation_encoder.encode(observation)
-        encoded_action = self.action_encoder.encode(action)
-        self.data[encoded_observation, encoded_action] = value
+        item = self.observation_encoder.encode(observation)
+        item += self.action_encoder.encode(action)
+        self.data[item] = value
 
     def clear(self):
         """
@@ -112,27 +103,18 @@ class TableStorage(Storage):
         """
         self.data = numpy.zeros(self.data.shape)
 
-    def filter(self, observation, action=None, filter=None):
-        """
-        >>> from reply.datatypes import Integer, Space
-        >>> observations = Space({'o': Integer(0, 0)})
-        >>> action_encoder = Space({'a': Integer(0, 9)})
-        >>> storage = TableStorage(observations, actions)
-        >>> observation = {'o': 0}
-        >>> for item in range(10):
-        ...     storage.set(observation, {'a': item}, item)
-        >>> storage.filter(observation, filter=max)
-        9.0
-        """
-        if action is None:
-            encoded_values = self.get(observation)
-        else:
-            encoded_values = self.get(observation, action)
-        if filter is not None:
-            filtered_values = filter(encoded_values)
-        else:
-            filtered_values = encoded_values
-        return filtered_values
+    def get_max_value(self, observation):
+        encoded_values = self.get(observation)
+        max_value = encoded_values.max()
+        return max_value
+
+    def get_max_action(self, observation):
+        encoded_values = self.get(observation)
+        encoded_action_id = encoded_values.argmax()
+        encoded_action = numpy.unravel_index(encoded_action_id,
+                                             self.action_encoder.space.size)
+        max_action = self.action_encoder.decode(encoded_action)
+        return max_action
 
     def get_states(self):
         state_space = self.observation_encoder.space
