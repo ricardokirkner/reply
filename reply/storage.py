@@ -3,9 +3,9 @@ import numpy
 
 from reply.datatypes import Space
 from reply.encoder import DummyEncoder, SpaceEncoder, StateActionEncoder
+from reply.base import AgentComponent, Parameter
 
-
-class Storage(object):
+class Storage(AgentComponent):
 
     """Storage base class."""
 
@@ -144,4 +144,3 @@ class TableStorage(Storage):
             encoded_action = (encoded_action,)
         action = self.encoder.encoder['action'].decode(encoded_action)
         return action
-

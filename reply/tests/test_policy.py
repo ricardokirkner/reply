@@ -8,13 +8,14 @@ from reply.storage import TableStorage
 
 class TestPolicy(unittest.TestCase):
     def setUp(self):
-        self.policy = Policy(None)
+        self.storage = None
+        self.policy = Policy(self)
 
     def test_builder(self):
         self.assertTrue(self.policy.storage is None)
 
     def test_equal(self):
-        policy2 = Policy(None)
+        policy2 = Policy(self)
         self.assertEqual(self.policy, policy2)
 
     def test_select_action(self):
@@ -31,7 +32,7 @@ class TestEGreedyPolicy(unittest.TestCase):
         self.storage = TableStorage(SpaceEncoder(observations),
                                     SpaceEncoder(actions))
         self.storage.set(({'o': 0}, {'a': 1}), 1)
-        self.policy = EGreedyPolicy(self.storage)
+        self.policy = EGreedyPolicy(self)
 
     def test_builder(self):
         self.assertEqual(self.policy.storage, self.storage)
@@ -40,7 +41,7 @@ class TestEGreedyPolicy(unittest.TestCase):
         self.assertEqual(self.policy.random_action_rate_min, 0)
 
     def test_equal(self):
-        policy2 = EGreedyPolicy(self.storage)
+        policy2 = EGreedyPolicy(self)
         self.assertEqual(self.policy, policy2)
 
     def test_select_action(self):
@@ -59,19 +60,23 @@ class TestEGreedyPolicy(unittest.TestCase):
 class TestSoftMaxPolicy(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 1)})
+        self.temperature = 0
         actions = Space({'a': Integer(0, 1)})
         self.storage = TableStorage(SpaceEncoder(observations),
                                     SpaceEncoder(actions))
         self.storage.set(({'o': 0}, {'a': 1}), 1)
-        self.policy = SoftMaxPolicy(self.storage)
+        self.policy = SoftMaxPolicy(self)
 
     def test_builder(self):
         self.assertEqual(self.policy.storage, self.storage)
         self.assertEqual(self.policy.temperature, 0)
 
     def test_equal(self):
-        policy2 = SoftMaxPolicy(self.storage)
-        policy3 = SoftMaxPolicy(self.storage, temperature=1)
+        policy2 = SoftMaxPolicy(self)
+        old = self.temperature
+        self.temperature = 1
+        policy3 = SoftMaxPolicy(self)
+        self.temperature = old
         self.assertEqual(self.policy, policy2)
         self.assertNotEqual(self.policy, policy3)
 
@@ -83,7 +88,10 @@ class TestSoftMaxPolicy(unittest.TestCase):
         self.assertEqual(action, expected_action)
 
     def test_select_action_temperature(self):
-        policy = SoftMaxPolicy(self.storage, temperature=0.01)
+        old = self.temperature
+        self.temperature = 0.01
+
+        policy = SoftMaxPolicy(self)
         observation = {'o': 0}
         expected_action = {'a': 1}
         num_hits = 0
@@ -103,4 +111,3 @@ class TestSoftMaxPolicy(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

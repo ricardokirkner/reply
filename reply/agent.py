@@ -32,20 +32,21 @@ class Agent(MessageHandler):
 
 
 class LearningAgent(Agent):
-    def init(self, task_spec):
+    def build_storage(self):
         state_encoder = self.state_encoder_class(self.model.observations)
         action_encoder = self.action_encoder_class(self.model.actions)
-        storage = self.storage_class(state_encoder, action_encoder)
-        kwargs = {}
-        if hasattr(self, 'random_action_rate'):
-            kwargs['random_action_rate'] = self.random_action_rate
-        policy = self.policy_class(storage, **kwargs)
-        kwargs = {}
-        if hasattr(self, 'learning_rate_decay'):
-            kwargs['learning_rate_decay'] = self.learning_rate_decay
-        if hasattr(self, 'learning_rate_min'):
-            kwargs['learning_rate_min'] = self.learning_rate_min
-        self.learner = self.learner_class(policy, self.learning_rate, **kwargs)
+        self.storage = self.storage_class(self)
+
+    def build_policy(self):
+        self.policy = self.policy_class(self)
+
+    def build_learner(self):
+        self.learner = self.learner_class(self)
+
+    def init(self, task_spec):
+        self.build_storage()
+        self.build_policy()
+        self.build_learner()
 
         self.last_observation = None
         self.last_action = None
