@@ -68,44 +68,48 @@ class HanoiSpaceEncoder(SpaceEncoder):
     def encode(self, item):
         item = super(HanoiSpaceEncoder, self).encode(item)
 
-        values = []
-        for parameter in self.space.spec.values():
-            values.append(range(parameter.size))
-        items = list(itertools.product(*values))
-        try:
-            idx = items.index(item)
-            encoded_item = idx
-        except ValueError:
-            raise ValueError("invalid encoded item: %s" % str(item))
+        #values = []
+        #for parameter in self.space.spec.values():
+        #    values.append(range(parameter.size))
+        #items = list(itertools.product(*values))
+        #try:
+        #    idx = items.index(item)
+        #    encoded_item = idx
+        #except ValueError:
+        #    raise ValueError("invalid encoded item: %s" % str(item))
 
-        return (encoded_item,)
+        #return (encoded_item,)
+        return item
 
     def decode(self, encoded_item):
-        values = []
-        for parameter in self.space.spec.values():
-            values.append(range(parameter.size))
-        items = list(itertools.product(*values))
-        try:
-            idx = encoded_item[0]
-            item = items[idx]
-        except ValueError:
-            raise ValueError("invalid encoded item: %s" % str(encoded_item))
+        #values = []
+        #for parameter in self.space.spec.values():
+        #    values.append(range(parameter.size))
+        #items = list(itertools.product(*values))
+        #try:
+        #    idx = encoded_item[0]
+        #    item = items[idx]
+        #except ValueError:
+        #    raise ValueError("invalid encoded item: %s" % str(encoded_item))
 
+        item = encoded_item
         item = super(HanoiSpaceEncoder, self).decode(item)
         return item
 
 
 class HanoiStorage(TableStorage):
-    def __init__(self, observations=None, actions=None):
+    def __init__(self, observations, actions):
         observation_encoder = HanoiSpaceEncoder(observations)
         action_encoder = HanoiSpaceEncoder(actions)
-        super(HanoiStorage, self).__init__(observation_encoder=observation_encoder,
-                                           action_encoder=action_encoder)
+        super(HanoiStorage, self).__init__(observations, actions)
+        self.observation_encoder = observation_encoder
+        self.action_encoder = action_encoder
 
 
 class HanoiAgent(LearningAgent):
     model = hanoi_model
-    storage_class = HanoiStorage
+    #storage_class = HanoiStorage
+    storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
 
