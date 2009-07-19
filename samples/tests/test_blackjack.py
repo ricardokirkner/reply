@@ -34,7 +34,7 @@ class TestBlackJack(unittest.TestCase):
                          ({'total_points': 20}, {'play': STAND}),
                          ({'total_points': 21}, {'play': STAND}),
                          ({'total_points': 22}, {'play': HIT})]
-    def test_run(self):
+    def test_run(self, num_episodes=10000):
         # use fixed sequence for random
         random.seed(1)
 
@@ -45,7 +45,7 @@ class TestBlackJack(unittest.TestCase):
         class TestExperiment(Experiment):
             def run(self):
                 self.init()
-                for i in xrange(10000):
+                for i in xrange(num_episodes):
                     self.episode()
                 self.cleanup()
                 mappings = agent.learner.policy.get_mappings()
@@ -85,15 +85,18 @@ class TestSarsaBlackJack(TestBlackJack):
                          ({'total_points': 11}, {'play': HIT}),
                          ({'total_points': 12}, {'play': HIT}),
                          ({'total_points': 13}, {'play': HIT}),
-                         ({'total_points': 14}, {'play': STAND}),
-                         ({'total_points': 15}, {'play': HIT}),
-                         ({'total_points': 16}, {'play': STAND}),
+                         ({'total_points': 14}, {'play': HIT}),
+                         ({'total_points': 15}, {'play': STAND}),
+                         ({'total_points': 16}, {'play': HIT}),
                          ({'total_points': 17}, {'play': STAND}),
                          ({'total_points': 18}, {'play': STAND}),
                          ({'total_points': 19}, {'play': STAND}),
                          ({'total_points': 20}, {'play': STAND}),
                          ({'total_points': 21}, {'play': STAND}),
                          ({'total_points': 22}, {'play': HIT})]
+
+    def test_run(self):
+        super(TestSarsaBlackJack, self).test_run(20000)
 
 
 if __name__ == '__main__':
