@@ -45,10 +45,12 @@ class TableStorage(Storage):
 
     def get(self, observation, action=None):
         """
-        >>> from reply.datatypes import Integer, Space
+        >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
-        >>> storage = TableStorage(observations, actions)
+        >>> model = Model(observations, actions)
+        >>> agent = type('agent', (object,), {'model': model})
+        >>> storage = TableStorage(agent)
         >>> observation = {'o': 0}
         >>> action = {'a': 0}
         >>> storage.get(observation, action)
@@ -70,10 +72,12 @@ class TableStorage(Storage):
 
     def set(self, observation, action, value):
         """
-        >>> from reply.datatypes import Integer, Space
+        >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
-        >>> storage = TableStorage(observations, actions)
+        >>> model = Model(observations, actions)
+        >>> agent = type('agent', (object,), {'model': model})
+        >>> storage = TableStorage(agent)
         >>> observation = {'o': 0}
         >>> action = {'a': 0}
         >>> storage.get(observation, action)
@@ -88,10 +92,12 @@ class TableStorage(Storage):
 
     def clear(self):
         """
-        >>> from reply.datatypes import Integer, Space
+        >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
-        >>> storage = TableStorage(observations, actions)
+        >>> model = Model(observations, actions)
+        >>> agent = type('agent', (object,), {'model': model})
+        >>> storage = TableStorage(agent)
         >>> observation = {'o': 0}
         >>> action = {'a': 0}
         >>> storage.get(observation, action)
