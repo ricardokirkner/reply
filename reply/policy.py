@@ -9,6 +9,9 @@ class Policy(AgentComponent):
     def __eq__(self, other):
         return self.storage == other.storage
 
+    def new_episode(self):
+        pass
+
     def select_action(self, observation):
         raise NotImplementedError()
 
@@ -25,6 +28,11 @@ class EGreedyPolicy(Policy):
     random_action_rate_decay = Parameter("the random action rate decay", 1.0)
     random_action_rate_min = Parameter("The minimum random action rate", 0.0)
 
+    def new_episode(self):
+        self.random_action_rate = max(self.random_action_rate_min,
+                                      self.random_action_rate_decay *
+                                      self.random_action_rate)
+
     def __eq__(self, other):
         return (super(EGreedyPolicy, self).__eq__(other) and
                 self.random_action_rate == other.random_action_rate and
@@ -37,9 +45,12 @@ class EGreedyPolicy(Policy):
         if random.random() < self.random_action_rate:
             action_id = random.randint(0, numpy.size(action_values)-1)
         else:
+            #print sorted(observation.items()), self.storage.encode(observation)
             action_id = numpy.argmax(action_values)
+            #print action_values, action_id
         actions = list(self.storage.get_actions())
         action = actions[action_id]
+        #print "ACTION SELECTED", action_id, action
         return action
 
 
@@ -75,4 +86,3 @@ class SoftMaxPolicy(Policy):
         actions = list(self.storage.get_actions())
         action = actions[action_id]
         return action
-

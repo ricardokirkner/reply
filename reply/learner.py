@@ -44,13 +44,20 @@ class QLearner(Learner):
             max_value_next = 0
         else:
             max_value_next = self.policy.storage.get_max_value(next_state)
+            #print "MAX_VALUE_NEXT", max_value_next
 
         new_value = (
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
-
+        if next_state:
+            pass#print "NEW_VALUE", new_value, "for", self.policy.storage.encode(next_state), "state", self.policy.storage.encode(state), "action", action, "reward", reward
+        else:
+            pass#print "NEW_VALUE", new_value, "for last", "state", self.policy.storage.encode(state), "action", action, "reward", reward
+        #print "ENCODED", self.policy.storage.encode(state, action)
         self.policy.storage.set(state, action, new_value)
+        action_values = self.policy.storage.get(state)
+        #print "action_values", action_values
 
     def __eq__(self, other):
         return (super(QLearner, self).__eq__(other) and
