@@ -1,5 +1,6 @@
 """Storage classes."""
 import numpy
+from itertools import product
 
 from reply.base import AgentComponent, Parameter
 from reply.datatypes import Space
@@ -24,9 +25,112 @@ class Storage(AgentComponent):
     def clear(self):
         raise NotImplementedError()
 
+class BucketStorage(Storage):
+    model = Parameter("The (observations, actions) model")
+
+    storage_observation_buckets = Parameter("the number of buckets to "\
+                                            "divide each dimension", {})
+    storage_action_buckets = Parameter("the number of buckets to "\
+                                            "divide each dimension", {})
+
+    def __init__(self, agent):
+        super(BucketStorage, self).__init__(agent)
+        okeys = sorted(self.model.observations.get_names_list())
+        akeys = sorted(self.model.actions.get_names_list())
+
+        osizes = [self.storage_observation_buckets.get(k,
+                    self.model.observations[k].max -
+                    self.model.observations[k].min + 1)
+                for k in okeys]
+        asizes = [self.storage_action_buckets.get(k,
+                    self.model.actions[k].max -
+                    self.model.actions[k].min + 1)
+                for k in akeys]
+        oranges = [self.model.observations[k].max -
+                    self.model.observations[k].min
+                for k in okeys]
+        aranges = [self.model.actions[k].max -
+                    self.model.actions[k].min
+                for k in akeys]
+        ooffsets = [ self.model.observations[k].min
+                for k in okeys]
+        aoffsets = [ self.model.actions[k].min
+                for k in akeys]
+        self.data = numpy.zeros(osizes + asizes)
+        self.sizes = osizes + asizes
+        self.action_sizes = asizes
+        self.action_keys = akeys
+        self.action_ranges = aranges
+        self.action_offsets = aoffsets
+        self.ranges = oranges + aranges
+        self.offsets = ooffsets + aoffsets
+        self.keys = okeys + akeys
+
+    def __eq__(self, other):
+        return (self.osizes == other.osizes and
+                self.asizes == other.asizes and
+                self.okeys == other.okeys and
+                self.akeys == other.akeys and
+                (self.data == other.data).all())
+
+    def encode(self, observation, action=None):
+        action = action if action else {}
+        item = [ y for (x,y) in
+                    sorted(observation.items()) + sorted(action.items()) ]
+        encoded =  [ min(self.sizes[i]-1,      # put in [0, size)
+                int(                    # int buckets
+                (item[i]- self.offsets[i]+0.0001) # moved to 0
+                / self.ranges[i] # ranged into [0,1]
+                * self.sizes[i])) # distribute among buckets
+                for i in range(len(item))
+               ]
+        return tuple(encoded)
+
+
+    def get(self, observation, action=None):
+        key = self.encode(observation, action)
+        return self.data[key]
+
+
+    def set(self, observation, action, value):
+        key = self.encode(observation, action)
+        #print "SET", key, "-->", value
+        self.data[key] = value
+
+    def clear(self):
+        self.data = numpy.zeros(self.data.shape)
+
+    def get_max_value(self, observation):
+        key = self.encode(observation)
+        return numpy.max(self.data[key])
+
+    def get_actions(self):
+        result = []
+        combinations = product(*[ xrange(s) for s in self.action_sizes ])
+        combinations =  list(combinations)
+        for c in combinations:
+            r = []
+            for i, v in enumerate(c):
+                v = float(v)
+                nv = v/self.action_sizes[i]*self.action_ranges[i] \
+                        + self.action_offsets[i]
+                r.append(nv)
+            result.append( dict(zip(self.action_keys, r)))
+        return result
+
+
+    def get_action(self, encoded_action):
+        return dict([
+            (k,
+                (float(encoded_action[i])/self.action_sizes[i]*self.action_ranges[i]
+                 + self.action_offsets[i])
+            )
+            for i, k in enumerate(self.action_keys)])
+
+
+
 
 class TableStorage(Storage):
-
     """Storage that uses a table for its data."""
 
     model = Parameter("The (observations, actions) model")
