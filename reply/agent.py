@@ -50,6 +50,7 @@ class LearningAgent(Agent):
 
     def start(self, observation):
         self.learner.new_episode()
+        self.policy.new_episode()
         action = self.learner.policy.select_action(observation)
         self.last_observation = observation
         self.last_action = action
