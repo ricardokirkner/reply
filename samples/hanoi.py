@@ -64,51 +64,8 @@ actions = Space({'from_peg': Integer(0, num_pegs-1),
 hanoi_model = Model(observations, actions)
 
 
-class HanoiSpaceEncoder(SpaceEncoder):
-    def encode(self, item):
-        item = super(HanoiSpaceEncoder, self).encode(item)
-
-        #values = []
-        #for parameter in self.space.spec.values():
-        #    values.append(range(parameter.size))
-        #items = list(itertools.product(*values))
-        #try:
-        #    idx = items.index(item)
-        #    encoded_item = idx
-        #except ValueError:
-        #    raise ValueError("invalid encoded item: %s" % str(item))
-
-        #return (encoded_item,)
-        return item
-
-    def decode(self, encoded_item):
-        #values = []
-        #for parameter in self.space.spec.values():
-        #    values.append(range(parameter.size))
-        #items = list(itertools.product(*values))
-        #try:
-        #    idx = encoded_item[0]
-        #    item = items[idx]
-        #except ValueError:
-        #    raise ValueError("invalid encoded item: %s" % str(encoded_item))
-
-        item = encoded_item
-        item = super(HanoiSpaceEncoder, self).decode(item)
-        return item
-
-
-class HanoiStorage(TableStorage):
-    def __init__(self, observations, actions):
-        observation_encoder = HanoiSpaceEncoder(observations)
-        action_encoder = HanoiSpaceEncoder(actions)
-        super(HanoiStorage, self).__init__(observations, actions)
-        self.observation_encoder = observation_encoder
-        self.action_encoder = action_encoder
-
-
 class HanoiAgent(LearningAgent):
     model = hanoi_model
-    #storage_class = HanoiStorage
     storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
@@ -119,10 +76,6 @@ class HanoiAgent(LearningAgent):
     value_discount = 0.8
     random_action_rate = 0.9
     random_action_rate_decay = 0.995
-
-    def cleanup(self):
-        import pprint
-        pprint.pprint(self.learner.policy.get_mappings())
 
 
 class HanoiEnvironment(Environment):
@@ -150,7 +103,7 @@ class HanoiEnvironment(Environment):
     def step(self, action):
         from_peg_num = action['from_peg']
         to_peg_num = action['to_peg']
-        if LOG_LEVEL == DEBUG:
+        if LOG_LEVEL <= DEBUG:
             print 'moving from peg %d to peg %d' % (from_peg_num, to_peg_num)
         from_peg = self.pegs[int(from_peg_num)]
         to_peg = self.pegs[int(to_peg_num)]
@@ -159,7 +112,7 @@ class HanoiEnvironment(Environment):
             rot = self.get_state()
             rot['reward'] = -1
             rot['terminal'] = True
-            if LOG_LEVEL == DEBUG:
+            if LOG_LEVEL <= DEBUG:
                 print "move invalid: empty"
                 print "rot:", rot
             return rot
@@ -168,14 +121,14 @@ class HanoiEnvironment(Environment):
             rot = self.get_state()
             rot['reward'] = -1
             rot['terminal'] = True
-            if LOG_LEVEL == DEBUG:
+            if LOG_LEVEL <= DEBUG:
                 print "move invalid: too big"
                 print "rot:", rot
             return rot
 
         disc = from_peg.pop()
         to_peg.push(disc)
-        if LOG_LEVEL == INFO:
+        if LOG_LEVEL <= INFO:
             print "\t".join( [ str(peg.discs) for peg in self.pegs ] )
 
         rot = self.get_state()
@@ -189,13 +142,13 @@ class HanoiEnvironment(Environment):
         for peg in self.pegs:
             if not peg.is_valid:
                 # invalid disc layout
-                if LOG_LEVEL == DEBUG:
+                if LOG_LEVEL <= DEBUG:
                     print 'peg is invalid', peg.discs
                 reward = -1
                 break
             elif self.discs_moved(peg):
                 # all discs moved to another peg
-                if LOG_LEVEL == DEBUG:
+                if LOG_LEVEL <= DEBUG:
                     print 'all discs moved to peg %d' % peg.number, peg.discs
                 reward = 1
                 break
