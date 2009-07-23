@@ -4,12 +4,12 @@ import unittest
 from reply.datatypes import Space, Integer, Model, Double
 from reply.storage import Storage, TableStorage, BucketStorage
 
-identity = lambda x: True
 
 class TestStorage(unittest.TestCase):
     def setUp(self):
-        self.observations = Space({'o': Integer(0, 0)})
-        self.actions = Space({'a': Integer(0, 0)})
+        observations = Space({'o': Integer(0, 0)})
+        actions = Space({'a': Integer(0, 0)})
+        self.model = Model(observations, actions)
         self.storage = Storage(self)
 
     def test_storage_getitem(self):
@@ -32,10 +32,8 @@ class TestTableStorage(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 0)})
         actions = Space({'a': Integer(0, 0)})
-        self.size = observations.size + actions.size
-        self.data = numpy.zeros(self.size)
-        self.observations = observations
-        self.actions = actions
+        shape = (1, 1)
+        self.data = numpy.zeros(shape)
         self.model = Model(observations, actions)
         self.storage = TableStorage(self)
 
@@ -47,7 +45,7 @@ class TestTableStorage(unittest.TestCase):
         action = {'a': 0}
         value = self.storage.get(observation, action)
         self.assertEqual(value, 0.0)
-        self.assertRaises(IndexError, self.storage.get, observation, {'a': 1})
+        self.assertRaises(ValueError, self.storage.get, observation, {'a': 1})
 
     def test_storage_set(self):
         observation = {'o': 0}
@@ -80,25 +78,25 @@ class TestTableStorage(unittest.TestCase):
         value = storage.get_max_value(observation)
         self.assertEqual(value, 5.0)
 
-    def test_get_states(self):
-        self.observations = Space({'o1': Integer(0, 1),
+    def test_get_observations(self):
+        observations = Space({'o1': Integer(0, 1),
                               'o2': Integer(2, 4)})
-        self.actions = Space({'a1': Integer(0, 1),
+        actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        self.model = Model(self.observations, self.actions)
+        self.model = Model(observations, actions)
         storage = TableStorage(self)
-        states = list(storage.get_states())
-        expected_states = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
-                           {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
-                           {'o1': 1, 'o2': 3}, {'o1': 1, 'o2': 4}]
-        self.assertEqual(states, expected_states)
+        observations = list(storage.get_observations())
+        expected_observations = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
+                                 {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
+                                 {'o1': 1, 'o2': 3}, {'o1': 1, 'o2': 4}]
+        self.assertEqual(observations, expected_observations)
 
     def test_get_actions(self):
-        self.observations = Space({'o1': Integer(0, 1),
+        observations = Space({'o1': Integer(0, 1),
                               'o2': Integer(2, 4)})
-        self.actions = Space({'a1': Integer(0, 1),
+        actions = Space({'a1': Integer(0, 1),
                          'a2': Integer(1, 2)})
-        self.model = Model(self.observations, self.actions)
+        self.model = Model(observations, actions)
         storage = TableStorage(self)
         actions = list(storage.get_actions())
         expected_actions = [{'a1': 0, 'a2': 1}, {'a1': 0, 'a2': 2},
@@ -122,8 +120,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_simple_obs(self):
         observations = Space({'o': Double(0, 1)})
         actions = Space({'a': Double(0, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'o':10}
         self.model = Model(observations, actions)
@@ -135,8 +131,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_simple_obs_with_offset(self):
         observations = Space({'o': Double(-1, 1)})
         actions = Space({'a': Double(0, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'o':10}
         self.model = Model(observations, actions)
@@ -148,8 +142,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_max_value(self):
         observations = Space({'o': Double(0, 1)})
         actions = Space({'a': Double(0, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'o':10}
         self.model = Model(observations, actions)
@@ -167,8 +159,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_get_actions(self):
         observations = Space({'o': Double(0, 1)})
         actions = Space({'a': Double(0, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'a':10}
         self.model = Model(observations, actions)
@@ -180,8 +170,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_get_action(self):
         observations = Space({'o': Double(0, 1)})
         actions = Space({'a': Double(0, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'a':10}
         self.model = Model(observations, actions)
@@ -193,8 +181,6 @@ class TestBucketStorage(unittest.TestCase):
     def test_get_actions_encode(self):
         observations = Space({'o': Double(0, 1)})
         actions = Space({'a': Double(-1, 1)})
-        self.observations = observations
-        self.actions = actions
         self.storage_observation_buckets = {'o':10}
         self.storage_action_buckets = {'a':20}
         self.model = Model(observations, actions)

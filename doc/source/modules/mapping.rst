@@ -1,7 +1,7 @@
-:mod:`reply.encoder` -- Encoders
+:mod:`reply.mapping` -- Mappings
 ===========================================
 
-.. automodule:: reply.encoder
+.. automodule:: reply.mapping
    :show-inheritance:
    :members:
    :undoc-members:

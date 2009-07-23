@@ -1,7 +1,6 @@
 import unittest
 
 from reply.datatypes import Integer, Space, Model
-from reply.encoder import SpaceEncoder
 from reply.policy import Policy, EGreedyPolicy, SoftMaxPolicy
 from reply.storage import TableStorage
 

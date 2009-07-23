@@ -17,9 +17,9 @@ class Policy(AgentComponent):
 
     def get_mappings(self):
         actions = []
-        for state in self.storage.get_states():
-            action = self.storage.get_max_action(state)
-            actions.append((state, action))
+        for observation in self.storage.get_observations():
+            action = self.storage.get_max_action(observation)
+            actions.append((observation, action))
         return actions
 
 
@@ -67,7 +67,7 @@ class SoftMaxPolicy(Policy):
             # this should be absolute greedy selection
             action_id = numpy.argmax(action_values)
         else:
-            # get all actions for this state, and their values
+            # get all actions for this observation, and their values
             # select a probability
             pr = random.random()
             # get the total value
