@@ -13,10 +13,6 @@ class Number(Dimension):
         return type(self) == type(other) and \
             (self.min == other.min and self.max == other.max)
 
-    @property
-    def size(self):
-        return self.max - self.min + 1
-
 
 class Integer(Number):
     def __str__(self):
@@ -105,12 +101,6 @@ class Space(object):
 
     def __iter__(self):
         return iter(self._data)
-
-    @property
-    def size(self):
-        values = self.get_values()
-        size = map(lambda x: x.size, values)
-        return tuple(size)
 
     def get_names_spec(self):
         names = []

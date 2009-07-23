@@ -6,7 +6,6 @@ import random
 
 from reply.agent import LearningAgent
 from reply.datatypes import Integer, Model, Space
-from reply.encoder import SpaceEncoder
 from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.learner import QLearner

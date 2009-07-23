@@ -237,14 +237,6 @@ class TestSpace(unittest.TestCase):
         space2 = Space(spec2)
         self.assertNotEqual(space1, space2)
 
-    def test_space_size(self):
-        spec1 = {'a': Integer(0, 1)}
-        spec2 = {'a': Integer(0, 1), '': [Integer(1,2)]}
-        space1 = Space(spec1)
-        space2 = Space(spec2)
-        self.assertEqual(space1.size, (2,))
-        self.assertEqual(space2.size, (2, 2))
-
     def test_space_get_names_spec(self):
         spec = {'a': Integer(0, 1),
                 'b': Double(0.0, 1.0),

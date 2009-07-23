@@ -3,27 +3,58 @@ import numpy
 from itertools import product
 
 from reply.base import AgentComponent, Parameter
-from reply.datatypes import Space
-from reply.encoder import DummyEncoder, SpaceEncoder
+from reply.datatypes import Integer, Space
+from reply.mapping import OffsetIdentityMapping
+
 
 class Storage(AgentComponent):
 
-    """Storage base class."""
+    """A generic storage.
+
+    Storage defines the common API for all storage types.
+
+    """
+
+    model = Parameter("The (observations, actions) model")
+
+    def __init__(self, agent, observations_mapping=None, actions_mapping=None):
+        """Construct a new Storage object.
+
+        agent points to the Agent instance using this Storage.
+
+        If present, observations_mapping and actions_mapping must be
+        instances of Mapping. Otherwise, they are assumed to be
+        OffsetIdentityMapping by default.
+
+        """
+        super(Storage, self).__init__(agent)
+        if observations_mapping is None:
+            observations_mapping = OffsetIdentityMapping(self.model.observations)
+        if actions_mapping is None:
+            actions_mapping = OffsetIdentityMapping(self.model.actions)
+        self.observations_mapping = observations_mapping
+        self.actions_mapping = actions_mapping
 
     def __getitem__(self, item):
+        """Return the content associated to the parameter item."""
         return self.get(item)
 
     def __setitem__(self, item, value):
+        """Set the content associated to the parameter item."""
         self.set(item, value)
 
     def get(self, item):
+        """Return the content assocaited to the parameter item."""
         raise NotImplementedError()
 
     def set(self, item, value):
+        """Set the content associated to the parameter item."""
         raise NotImplementedError()
 
     def clear(self):
+        """Reset the storage contents to its default value."""
         raise NotImplementedError()
+
 
 class BucketStorage(Storage):
     model = Parameter("The (observations, actions) model")
@@ -128,24 +159,34 @@ class BucketStorage(Storage):
             for i, k in enumerate(self.action_keys)])
 
 
-
-
 class TableStorage(Storage):
-    """Storage that uses a table for its data."""
 
-    model = Parameter("The (observations, actions) model")
+    """A storage that uses a multi-dimensional table for its contents."""
 
-    def __init__(self, agent):
-        super(TableStorage, self).__init__(agent)
-        self.observation_encoder = SpaceEncoder(self.model.observations)
-        self.action_encoder = SpaceEncoder(self.model.actions)
-        size = self.model.observations.size + self.model.actions.size
-        self.data = numpy.zeros(size)
+    def __init__(self, agent, observations_mapping=None, actions_mapping=None):
+        """Construct a new TableStorage object.
 
-    def __eq__(self, other):
-        return (self.observation_encoder == other.observation_encoder and
-                self.action_encoder == other.action_encoder and
-                (self.data == other.data).all())
+        Both observations_mapping and actions_mapping must have an image
+        space composed entirely by Integer dimensions.
+
+        """
+        super(TableStorage, self).__init__(agent,
+                                           observations_mapping,
+                                           actions_mapping)
+        # make sure the output of the mappings is as expected
+        observations_image = self.observations_mapping.image
+        actions_image = self.actions_mapping.image
+        storage_domain_items = observations_image.get_values() + \
+                               actions_image.get_values()
+        for item in storage_domain_items:
+            assert isinstance(item, Integer)
+
+        # build underlying data store
+        shape = []
+        for item in storage_domain_items:
+            item_size = item.max - item.min + 1
+            shape.append(item_size)
+        self.data = numpy.zeros(shape)
 
     def get(self, observation, action=None):
         """
@@ -167,10 +208,9 @@ class TableStorage(Storage):
             return self.data[item]
         IndexError: index (1) out of range (0<=index<1) in dimension 1
         """
-        item = self.observation_encoder.encode(observation)
+        item = self.observations_mapping.value(observation)
         if action is not None:
-            encoded_action = self.action_encoder.encode(action)
-            item += encoded_action
+            item += self.actions_mapping.value(action)
         value = self.data[item]
         return value
 
@@ -190,8 +230,8 @@ class TableStorage(Storage):
         >>> storage.get(observation, action)
         5.0
         """
-        item = self.observation_encoder.encode(observation)
-        item += self.action_encoder.encode(action)
+        item = self.observations_mapping.value(observation)
+        item += self.actions_mapping.value(action)
         self.data[item] = value
 
     def clear(self):
@@ -216,30 +256,32 @@ class TableStorage(Storage):
         self.data = numpy.zeros(self.data.shape)
 
     def get_max_value(self, observation):
-        encoded_values = self.get(observation)
-        max_value = encoded_values.max()
+        values = self.get(observation)
+        max_value = values.max()
         return max_value
 
     def get_max_action(self, observation):
-        encoded_values = self.get(observation)
-        encoded_action_id = encoded_values.argmax()
-        encoded_action = numpy.unravel_index(encoded_action_id,
-                                             self.action_encoder.space.size)
-        max_action = self.action_encoder.decode(encoded_action)
+        values = self.get(observation)
+        image_action_id = values.argmax()
+        image_shape = []
+        for item in self.actions_mapping.image.get_values():
+            image_shape.append(item.max - item.min + 1)
+        image_action = numpy.unravel_index(image_action_id, image_shape)
+        max_action = self.actions_mapping.value(image_action, inverse=True)
         return max_action
 
-    def get_states(self):
-        state_space = self.observation_encoder.space
-        for value in state_space.get_items():
+    def get_observations(self):
+        observation_space = self.observations_mapping.domain
+        for value in observation_space.get_items():
             yield value
 
     def get_actions(self):
-        action_space = self.action_encoder.space
+        action_space = self.actions_mapping.domain
         for value in action_space.get_items():
             yield value
 
-    def get_action(self, encoded_action):
-        if not isinstance(encoded_action, (tuple, list)):
-            encoded_action = (encoded_action,)
-        action = self.action_encoder.decode(encoded_action)
+    def get_action(self, action_image):
+        if not isinstance(action_image, (tuple, list)):
+            action_image = (action_image,)
+        action = self.actions_mapping.value(action_image, inverse=True)
         return action

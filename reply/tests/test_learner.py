@@ -1,7 +1,6 @@
 import unittest
 
 from reply.datatypes import Integer, Space, Model
-from reply.encoder import SpaceEncoder
 from reply.learner import Learner, QLearner, SarsaLearner
 from reply.policy import EGreedyPolicy
 from reply.storage import TableStorage
