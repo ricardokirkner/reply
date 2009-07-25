@@ -4,6 +4,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import itertools
 import math
+import simplejson
+
+import pygame
+from pygame import draw
+from pygame.locals import K_SPACE, K_ESCAPE
 
 from reply.agent import LearningAgent
 from reply.datatypes import Integer, Model, Space
@@ -53,23 +58,25 @@ class Peg(object):
 num_pegs = 3
 num_discs = 3
 
-discs = ['disc_%d' % disc for disc in xrange(num_discs)]
-spec = {}
-for disc in discs:
-    spec[disc] = Integer(0, num_pegs-1)
+def build_model(num_pegs, num_discs):
+    discs = ['disc_%d' % disc for disc in xrange(num_discs)]
+    spec = {}
+    for disc in discs:
+        spec[disc] = Integer(0, num_pegs-1)
+
+    observations = Space(spec)
+    actions = Space({'from_peg': Integer(0, num_pegs-1),
+                     'to_peg': Integer(0, num_pegs-1)},
+                     valid=is_valid_action)
+    model = Model(observations, actions)
+    return model
 
 def is_valid_action(action):
     return action['from_peg'] != action['to_peg']
 
-observations = Space(spec)
-actions = Space({'from_peg': Integer(0, num_pegs-1),
-                 'to_peg': Integer(0, num_pegs-1)},
-                 valid=is_valid_action)
-hanoi_model = Model(observations, actions)
-
 
 class HanoiAgent(LearningAgent):
-    model = hanoi_model
+    model = build_model(num_pegs, num_discs)
     storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
@@ -86,10 +93,10 @@ class HanoiEnvironment(Environment):
     problem_type = "episodic"
     discount_factor = 0.8
     rewards = Integer(-1, 1)
-    model = hanoi_model
     num_discs = num_discs
     num_pegs = num_pegs
     initial_peg = 0
+    model = build_model(num_pegs, num_discs)
     last_action = None
 
     def init(self):
@@ -151,7 +158,7 @@ class HanoiEnvironment(Environment):
         rot = self.get_state()
         rot['reward'] = self.get_reward()
         rot['terminal'] = self.is_final()
-        if rot['terminal']: print 'FINAL...'
+        #if rot['terminal']: print 'FINAL...'
         return rot
 
     def get_reward(self):
@@ -196,14 +203,114 @@ class HanoiEnvironment(Environment):
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, str(self.pegs))
 
+    def on_get_num_pegs(self):
+        return self.num_pegs
+
+    def on_get_num_discs(self):
+        return self.num_discs
+
+
+class HanoiExperiment(Experiment):
+    model = build_model(num_pegs, num_discs)
+    max_episodes = 10000
+
+    def setup(self):
+        x_size, y_size = 640, 480
+        self.screen = pygame.display.set_mode((x_size, y_size))
+        self.clock = pygame.time.Clock()
+
+        k_up = k_down = k_left = k_right = 0
+        position = x_size/2, y_size-100
+        height = -100
+        top_position = position[0], position[1]+height
+
+        self.x_size, self.y_size = x_size, y_size
+        self.slow = False
+        self.step_average = 0
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if not hasattr(event, 'key'):
+                continue
+            elif event.key == K_SPACE:
+                self.slow = not self.slow
+            elif event.key == K_ESCAPE:
+                # quit
+                sys.exit(0)
+
+    def draw(self, observation):
+        if self.slow:
+            self.clock.tick(5)
+            self.screen.fill((240,240,255))
+        else:
+            self.screen.fill((255,255,255))
+
+        num_pegs = self.env_call('get_num_pegs')
+        num_discs = self.env_call('get_num_discs')
+
+        pegs = []
+        for peg in range(num_pegs):
+            pegs.append([])
+
+        for disc in range(num_discs-1,-1,-1):
+            peg = observation['disc_%d' % disc]
+            pegs[peg].append(disc)
+
+        for p in range(num_pegs):
+            # draw the peg
+            px = 100 + p*200
+            peg = pygame.Rect(px, 275, 20, 200)
+            peg.bottom = self.y_size - 75
+            draw.rect(self.screen, (100, 100, 100), peg)
+
+            # draw the discs
+            for i,d in enumerate(pegs[p]):
+                w, h = 150 - (num_discs-1-d)*20, 20
+                d_left = px - (w-20)/2
+                d_top = 75+h*i
+                disc = pygame.Rect(d_left, d_top, w, h)
+                disc.bottom = self.y_size - d_top
+                draw.rect(self.screen, (200,0,200), disc)
+
+        floor = pygame.Rect(0,0,self.x_size,75)
+        floor.bottom = self.y_size
+        draw.rect(self.screen, (100,100,100), floor)
+
+        pygame.display.flip()
+
+    def run(self):
+        # setup screen
+        self.setup()
+
+        # initialize experiment
+        self.init()
+
+        for episode in range(self.max_episodes):
+            self.start()
+            steps = 0
+            terminal = False
+            while steps < self.max_steps and not terminal:
+                roat = self.step()
+                terminal = roat['terminal']
+
+                self.handle_events()
+                self.draw(roat)
+
+                steps += 1
+
+            alpha = 0.05
+            self.step_average = alpha*steps + (1-alpha)*self.step_average
+            print "Episode:", episode, "epsilon", self.glue_experiment.agent.policy.random_action_rate, "Steps:", steps, "avg:", self.step_average
+        self.cleanup()
+
 
 if __name__ == "__main__":
     from reply.runner import Run, Runner, register_command, unregister_command
     class HanoiRun(Run):
         def register(self, parser):
             super(HanoiRun, self).register(parser)
-            #parser.add_argument("--num-discs", type=int, dest="num_discs",
-            #                    help="the number of discs in the experiment")
+            parser.add_argument("--num-discs", type=int, dest="num_discs",
+                                help="the number of discs in the experiment")
             parser.add_argument("--num-pegs", type=int, dest="num_pegs",
                                 help="the number of pegs in the experiment")
             parser.add_argument("--initial-peg", type=int, dest="initial_peg",
@@ -221,10 +328,16 @@ if __name__ == "__main__":
                     experiment.max_episodes = args.max_episodes
                 if args.max_steps is not None:
                     experiment.max_steps = args.max_steps
-                #if args.num_discs is not None:
-                #    env.num_discs = args.num_discs
+                if args.num_discs is not None:
+                    env.num_discs = args.num_discs
+                    model = build_model(env.num_pegs, env.num_discs)
+                    env.model = model
+                    agent.model = model
                 if args.num_pegs is not None:
                     env.num_pegs = args.num_pegs
+                    model = build_model(env.num_pegs, env.num_discs)
+                    env.model = model
+                    agent.model = model
                 if args.initial_peg is not None:
                     env.initial_peg = args.initial_peg
                 #if args.log_level is not None:
@@ -234,7 +347,7 @@ if __name__ == "__main__":
             self.experiment.run()
 
 
-    r = Runner(HanoiAgent(), HanoiEnvironment(), Experiment())
+    r = Runner(HanoiAgent(), HanoiEnvironment(), HanoiExperiment())
     # replace default run command with a custom one
     unregister_command(Run)
     register_command(HanoiRun)
