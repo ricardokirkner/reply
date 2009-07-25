@@ -71,8 +71,8 @@ class Experiment(object):
         if self.glue_experiment is None:
             raise NotImplementedError(
                 "Glue Experiment has not been initialized yet.")
-        return self.glue_experiment.agent_call(function_name,
-                                               *args, **kwargs)
+        return self.glue_experiment.env_call(function_name,
+                                             *args, **kwargs)
 
     def env_message(self, message):
         if self.glue_experiment is None:
