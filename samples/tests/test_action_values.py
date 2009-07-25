@@ -25,7 +25,7 @@ class TestActionValue(unittest.TestCase):
                     self.episode()
                 self.cleanup()
                 error = sum(sum(abs(
-                    env.ps - agent.learner.policy.storage.data)))
+                    env.ps - agent.storage.data)))
                 outterself.assert_(error < 0.13, "Error too big: %s"%(error))
 
         r = Run()

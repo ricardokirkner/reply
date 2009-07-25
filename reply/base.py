@@ -5,6 +5,10 @@ class Parameter(object):
         self.__doc__ = docstring
         self.default = default
 
+    def __call__(self, *args, **kwargs):
+        raise Exception("Parameter objects cannot be directly called; "
+            "they have to be replaced by the expected parameter instance.")
+
 class AgentComponent(object):
     def __init__(self, agent):
         self.agent = agent

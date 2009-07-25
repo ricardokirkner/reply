@@ -23,7 +23,7 @@ class TestStateValue(unittest.TestCase):
                 for i in xrange(10000):
                     self.episode()
                 self.cleanup()
-                data = agent.learner.policy.storage.data.transpose()
+                data = agent.storage.data.transpose()
                 error = sum(sum(abs(
                     env.ps - data)))
                 outterself.assert_(error < 0.14, "Error too big: %s"%(error))

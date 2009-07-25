@@ -4,12 +4,10 @@ import random
 from reply.base import AgentComponent, Parameter
 
 class Policy(AgentComponent):
-    storage = Parameter("Where to store the policy")
-
     def __eq__(self, other):
-        return self.storage == other.storage
+        return self.agent.storage == other.agent.storage
 
-    def new_episode(self):
+    def on_episode_start(self):
         pass
 
     def select_action(self, observation):
@@ -17,8 +15,8 @@ class Policy(AgentComponent):
 
     def get_mappings(self):
         actions = []
-        for observation in self.storage.get_observations():
-            action = self.storage.get_max_action(observation)
+        for observation in self.agent.storage.get_observations():
+            action = self.agent.storage.get_max_action(observation)
             actions.append((observation, action))
         return actions
 
@@ -28,30 +26,33 @@ class EGreedyPolicy(Policy):
     random_action_rate_decay = Parameter("the random action rate decay", 1.0)
     random_action_rate_min = Parameter("The minimum random action rate", 0.0)
 
-    def new_episode(self):
+    def on_episode_start(self):
         self.random_action_rate = max(self.random_action_rate_min,
                                       self.random_action_rate_decay *
                                       self.random_action_rate)
 
     def __eq__(self, other):
         return (super(EGreedyPolicy, self).__eq__(other) and
-                self.random_action_rate == other.random_action_rate and
+               self.random_action_rate == other.random_action_rate and
                 self.random_action_rate_decay == \
                     other.random_action_rate_decay and
                 self.random_action_rate_min == other.random_action_rate_min)
 
     def select_action(self, observation):
-        action_values = self.storage.get(observation)
+        actions = self.agent.model.actions.get_items()
         if random.random() < self.random_action_rate:
-            action_id = random.randint(0, numpy.size(action_values)-1)
+            action = random.choice(actions)
         else:
-            #print sorted(observation.items()), self.storage.encode(observation)
+            action_values = [self.agent.storage.get(observation, action) for action in actions]
             action_id = numpy.argmax(action_values)
-            #print action_values, action_id
-        actions = list(self.storage.get_actions())
-        action = actions[action_id]
-        #print "ACTION SELECTED", action_id, action
+            action = actions[action_id]
         return action
+
+
+class GreedyPolicy(EGreedyPolicy):
+    random_action_rate = 0
+    random_action_rate_decay = 0
+    random_action_rate_min = 0
 
 
 class SoftMaxPolicy(Policy):
@@ -62,7 +63,8 @@ class SoftMaxPolicy(Policy):
                 self.temperature == other.temperature)
 
     def select_action(self, observation):
-        action_values = self.storage.get(observation)
+        actions = self.agent.model.actions.get_items()
+        action_values = [self.agent.storage.get(observation, action) for action in actions]
         if self.temperature == 0:
             # this should be absolute greedy selection
             action_id = numpy.argmax(action_values)
@@ -83,6 +85,5 @@ class SoftMaxPolicy(Policy):
                 current_pr += action_id_pr
                 if pr < current_pr:
                     break
-        actions = list(self.storage.get_actions())
         action = actions[action_id]
         return action

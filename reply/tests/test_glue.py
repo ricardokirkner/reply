@@ -17,11 +17,13 @@ else:
 
 import reply.glue
 from reply.agent import Agent
+from reply.datatypes import Char, Double, Integer, Model, Space
 from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.glue import adapt, RlGlueProxyAgent, RlGlueProxyEnvironment
 from reply.glue import RlGlueProxyExperiment
-from reply.datatypes import Char, Double, Integer, Model, Space
+from reply.policy import EGreedyPolicy
+from reply.storage import TableStorage
 
 
 class TestRLGlue(unittest.TestCase):
@@ -100,7 +102,8 @@ class TestRLGlue(unittest.TestCase):
 class TestRLGlueAgent(unittest.TestCase):
 
     def setUp(self):
-        self.agent = Agent()
+        self.agent = Agent(policy_class=EGreedyPolicy,
+                           storage_class=TableStorage)
         self.proxy = RlGlueProxyAgent(self.agent)
         self.task_spec = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0 " \
             "OBSERVATIONS INTS (-10 10) (-10 10) ACTIONS INTS (0 3) REWARDS (-1 0) " \
@@ -119,6 +122,7 @@ class TestRLGlueAgent(unittest.TestCase):
         action = self.proxy.agent_start(observation)
 
         expected_action = Action()
+        expected_action.intArray = [0]
         self.assertTrue(action.sameAs(expected_action))
 
     def test_agent_step(self):
@@ -129,6 +133,7 @@ class TestRLGlueAgent(unittest.TestCase):
         action = self.proxy.agent_step(reward, observation)
 
         expected_action = Action()
+        expected_action.intArray = [0]
         self.assertTrue(action.sameAs(expected_action))
 
     def test_agent_end(self):

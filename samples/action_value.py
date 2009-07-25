@@ -45,7 +45,7 @@ class ActionValueEnvironment(Environment):
         return super(ActionValueEnvironment, self).init()
 
     def start(self):
-        return dict(state=0)
+        return dict(state=1)
 
     def step(self, action):
         if random.random() < self.ps[action['choice']]:
