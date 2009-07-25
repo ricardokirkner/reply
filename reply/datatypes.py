@@ -51,12 +51,13 @@ class Model(object):
 
 
 class Space(object):
-    def __init__(self, spec=None, order=None):
+    def __init__(self, spec=None, order=None, valid=None):
         if spec is None:
             self.spec = {}
         else:
             self.spec = spec
         self.order = order
+        self.valid = valid
         self._data = {Integer: {}, Double: {}, Char: {}}
 
         self._build_data()
@@ -149,11 +150,15 @@ class Space(object):
         # generate all possible combinations of those values
         values = itertools.product(*key_values)
         # for each combination, create the corresponding item
+        items = []
         for value in values:
             item = {}
             for i, name in enumerate(name_list):
                 item[name] = value[i]
-            yield item
+            items.append(item)
+        if self.valid is not None:
+            items = filter(self.valid, items)
+        return items
 
     def get_values(self):
         values = []

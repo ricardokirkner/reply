@@ -57,9 +57,14 @@ discs = ['disc_%d' % disc for disc in xrange(num_discs)]
 spec = {}
 for disc in discs:
     spec[disc] = Integer(0, num_pegs-1)
+
+def is_valid_action(action):
+    return action['from_peg'] != action['to_peg']
+
 observations = Space(spec)
 actions = Space({'from_peg': Integer(0, num_pegs-1),
-                 'to_peg': Integer(0, num_pegs-1)})
+                 'to_peg': Integer(0, num_pegs-1)},
+                 valid=is_valid_action)
 hanoi_model = Model(observations, actions)
 
 
@@ -85,6 +90,7 @@ class HanoiEnvironment(Environment):
     num_discs = num_discs
     num_pegs = num_pegs
     initial_peg = 0
+    last_action = None
 
     def init(self):
         self.pegs = [Peg(i) for i in xrange(self.num_pegs)]
@@ -125,11 +131,23 @@ class HanoiEnvironment(Environment):
                 print "rot:", rot
             return rot
 
+        if self.last_action is not None:
+            if to_peg_num == self.last_action['from_peg'] and \
+               from_peg_num == self.last_action['to_peg']:
+                rot = self.get_state()
+                rot['reward'] = -1
+                rot['terminal'] = True
+                if LOG_LEVEL <= DEBUG:
+                    print 'move invalid: backtracking'
+                    print 'rot:', rot
+                return rot
+
         disc = from_peg.pop()
         to_peg.push(disc)
         if LOG_LEVEL <= INFO:
             print "\t".join( [ str(peg.discs) for peg in self.pegs ] )
 
+        self.last_action = action
         rot = self.get_state()
         rot['reward'] = self.get_reward()
         rot['terminal'] = self.is_final()
@@ -213,8 +231,6 @@ if __name__ == "__main__":
                 #    LOG_LEVEL = args.log_level
 
             self.experiment.set_glue_experiment(self)
-
-            self.last_action = None
             self.experiment.run()
 
 

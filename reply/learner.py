@@ -4,9 +4,8 @@ from reply.base import AgentComponent, Parameter
 
 class Learner(AgentComponent):
     """Learner base class."""
-    policy = Parameter("The policy to improve")
 
-    def new_episode(self):
+    def on_episode_start(self):
         pass
 
     def update(self, state, action, reward, next_state):
@@ -17,7 +16,7 @@ class Learner(AgentComponent):
         raise NotImplementedError()
 
     def __eq__(self, other):
-        return self.policy == other.policy
+        return self.agent.policy == other.agent.policy
 
 
 class QLearner(Learner):
@@ -30,34 +29,26 @@ class QLearner(Learner):
     learning_rate_min = Parameter("The minimun value for the learning rate", 0.0)
     value_discount = Parameter("The value discount", 1.0)
 
-    def new_episode(self):
+    def on_episode_start(self):
         """Start a new episode."""
-        super(QLearner, self).new_episode()
+        super(QLearner, self).on_episode_start()
         self.learning_rate *= self.learning_rate_decay
         self.learning_rate = max(self.learning_rate_min, self.learning_rate)
-#        self.rl.current_episode.learning_rate = self.learning_rate
 
     def update(self, state, action, reward, next_state):
         """Update the (state, action, next_state) -> reward relationship."""
-        prev_value = self.policy.storage.get(state, action)
+        prev_value = self.agent.storage.get(state, action)
         if next_state is None:
             max_value_next = 0
         else:
-            max_value_next = self.policy.storage.get_max_value(next_state)
-            #print "MAX_VALUE_NEXT", max_value_next
+            max_value_next = self.agent.storage.get_max_value(next_state)
 
         new_value = (
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
-        if next_state:
-            pass#print "NEW_VALUE", new_value, "for", self.policy.storage.encode(next_state), "state", self.policy.storage.encode(state), "action", action, "reward", reward
-        else:
-            pass#print "NEW_VALUE", new_value, "for last", "state", self.policy.storage.encode(state), "action", action, "reward", reward
-        #print "ENCODED", self.policy.storage.encode(state, action)
-        self.policy.storage.set(state, action, new_value)
-        action_values = self.policy.storage.get(state)
-        #print "action_values", action_values
+        self.agent.storage.set(state, action, new_value)
+        action_values = self.agent.storage.get(state)
 
     def __eq__(self, other):
         return (super(QLearner, self).__eq__(other) and
@@ -73,16 +64,16 @@ class SarsaLearner(QLearner):
 
     def update(self, state, action, reward, next_state):
         """Update the (state, action, next_state) -> reward relationship."""
-        prev_value = self.policy.storage.get(state, action)
+        prev_value = self.agent.storage.get(state, action)
         if next_state is None:
             max_value_next = 0
         else:
-            next_action = self.policy.select_action(next_state)
-            max_value_next = self.policy.storage.get(next_state, next_action)
+            next_action = self.agent.policy.select_action(next_state)
+            max_value_next = self.agent.storage.get(next_state, next_action)
 
         new_value = (
             prev_value + self.learning_rate *
             ( reward + self.value_discount*max_value_next - prev_value )
             )
 
-        self.policy.storage.set(state, action, new_value)
+        self.agent.storage.set(state, action, new_value)

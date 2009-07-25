@@ -27,12 +27,12 @@ class TestRockPaperScissor(unittest.TestCase):
                 for i in xrange(10000):
                     self.episode()
                 self.cleanup()
-                mappings = agent.learner.policy.get_mappings()
+                mappings = agent.policy.get_mappings()
                 import pprint
                 pprint.pprint(mappings)
                 pprint.pprint(outerself.expected_mappings)
                 outerself.assertEqual(mappings, outerself.expected_mappings)
-                print agent.learner.policy.storage.data
+                print agent.storage.data
 
         r = Run()
         r.run(agent, env, TestExperiment())

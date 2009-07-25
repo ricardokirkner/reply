@@ -7,11 +7,15 @@ from reply.storage import TableStorage
 
 class TestPolicy(unittest.TestCase):
     def setUp(self):
-        self.storage = None
+        observations = Space({'o': Integer(0, 1)})
+        actions = Space({'a': Integer(0, 1)})
+
+        self.model = Model(observations, actions)
+        self.storage = TableStorage(self)
         self.policy = Policy(self)
 
     def test_builder(self):
-        self.assertTrue(self.policy.storage is None)
+        self.assertEqual(self.policy.agent, self)
 
     def test_equal(self):
         policy2 = Policy(self)
@@ -33,7 +37,7 @@ class TestEGreedyPolicy(unittest.TestCase):
         self.policy = EGreedyPolicy(self)
 
     def test_builder(self):
-        self.assertEqual(self.policy.storage, self.storage)
+        self.assertEqual(self.policy.agent, self)
         self.assertEqual(self.policy.random_action_rate, 0)
         self.assertEqual(self.policy.random_action_rate_decay, 1)
         self.assertEqual(self.policy.random_action_rate_min, 0)
@@ -68,7 +72,7 @@ class TestSoftMaxPolicy(unittest.TestCase):
         self.policy = SoftMaxPolicy(self)
 
     def test_builder(self):
-        self.assertEqual(self.policy.storage, self.storage)
+        self.assertEqual(self.policy.agent, self)
         self.assertEqual(self.policy.temperature, 0)
 
     def test_equal(self):

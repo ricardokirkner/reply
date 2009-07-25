@@ -10,16 +10,15 @@ from .samples.hanoi import HanoiAgent, HanoiEnvironment
 
 class TestHanoi(unittest.TestCase):
     agent_class = HanoiAgent
-    expected_mappings = [({'disc_0': 0, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 2}),
-                         ({'disc_0': 2, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 1}),
-                         ({'disc_0': 2, 'disc_1': 1, 'disc_2': 0}, {'from_peg': 2, 'to_peg': 1}),
-                         ({'disc_0': 1, 'disc_1': 1, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 2}),
-                         ({'disc_0': 1, 'disc_1': 1, 'disc_2': 2}, {'from_peg': 1, 'to_peg': 0}),
-                         ({'disc_0': 0, 'disc_1': 1, 'disc_2': 2}, {'from_peg': 1, 'to_peg': 2}),
-                         ({'disc_0': 0, 'disc_1': 2, 'disc_2': 2}, {'from_peg': 0, 'to_peg': 2})]
+    expected_mappings = [({'disc_0': 0, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 1}),
+                         ({'disc_0': 1, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 2}),
+                         ({'disc_0': 1, 'disc_1': 2, 'disc_2': 0}, {'from_peg': 1, 'to_peg': 2}),
+                         ({'disc_0': 2, 'disc_1': 2, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 1}),
+                         ({'disc_0': 2, 'disc_1': 2, 'disc_2': 1}, {'from_peg': 2, 'to_peg': 0}),
+                         ({'disc_0': 0, 'disc_1': 2, 'disc_2': 1}, {'from_peg': 2, 'to_peg': 1}),
+                         ({'disc_0': 0, 'disc_1': 1, 'disc_2': 1}, {'from_peg': 0, 'to_peg': 1})]
 
-
-    def test_run(self, num_episodes=150000):
+    def test_run(self, num_episodes=500):
         # use fixed sequence for random
         random.seed(1)
 
@@ -33,7 +32,7 @@ class TestHanoi(unittest.TestCase):
                 for i in xrange(num_episodes):
                     self.episode()
                 self.cleanup()
-                mappings = agent.learner.policy.get_mappings()
+                mappings = agent.policy.get_mappings()
                 import pprint
                 pprint.pprint(mappings)
                 pprint.pprint(outerself.expected_mappings)
@@ -55,16 +54,9 @@ class SarsaHanoiAgent(HanoiAgent):
 
 class TestSarsaHanoi(TestHanoi):
     agent_class = SarsaHanoiAgent
-    expected_mappings = [({'disc_0': 0, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 2}),
-                         ({'disc_0': 2, 'disc_1': 0, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 1}),
-                         ({'disc_0': 2, 'disc_1': 1, 'disc_2': 0}, {'from_peg': 2, 'to_peg': 1}),
-                         ({'disc_0': 1, 'disc_1': 1, 'disc_2': 0}, {'from_peg': 0, 'to_peg': 2}),
-                         ({'disc_0': 1, 'disc_1': 1, 'disc_2': 2}, {'from_peg': 1, 'to_peg': 0}),
-                         ({'disc_0': 0, 'disc_1': 1, 'disc_2': 2}, {'from_peg': 1, 'to_peg': 2}),
-                         ({'disc_0': 0, 'disc_1': 2, 'disc_2': 2}, {'from_peg': 0, 'to_peg': 2})]
 
     def test_run(self):
-        super(TestSarsaHanoi, self).test_run(num_episodes=300000)
+        super(TestSarsaHanoi, self).test_run(num_episodes=1000)
 
 
 if __name__ == '__main__':

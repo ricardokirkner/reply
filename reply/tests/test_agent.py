@@ -11,12 +11,16 @@ from reply.util import TaskSpec
 class TestAgent(unittest.TestCase):
 
     def setUp(self):
-        self.agent = Agent()
+        self.agent = Agent(policy_class=EGreedyPolicy,
+                           storage_class=TableStorage)
         self.task_spec_str = "VERSION RL-Glue-3.0 PROBLEMTYPE episodic " \
             "DISCOUNTFACTOR 1.0 " \
             "OBSERVATIONS INTS (0 1) ACTIONS INTS (0 1) REWARDS (0 1) " \
             "EXTRA OBSERVATIONS INTS o1 ACTIONS INTS a1"
         self.task_spec = TaskSpec.parse(self.task_spec_str)
+        actions = Space({'a1': Integer(0, 1), '': []})
+        observations = Space({'o1': Integer(0, 1), '': []})
+        self.model = Model(observations, actions)
 
     def test_agent_builder(self):
         self.assertEqual(self.agent.initialized, False)
@@ -30,25 +34,25 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(self.agent.initialized, True)
 
     def test_agent_init_model(self):
-        actions = Space({'a1': Integer(0, 1), '': []})
-        observations = Space({'o1': Integer(0, 1), '': []})
-        model = Model(observations, actions)
-        self.agent.model = model
+        self.agent.model = self.model
         self.agent.init('')
-        self.assertEqual(self.agent.model.actions, actions)
-        self.assertEqual(self.agent.model.observations, observations)
+        self.assertEqual(self.agent.model, self.model)
         self.assertEqual(self.agent.initialized, True)
 
     def test_agent_start_abstract(self):
         obs = {'o1': 1}
+        self.agent.model = self.model
+        self.agent.init('')
         action = self.agent.start(obs)
-        self.assertEqual(action, {})
+        self.assertEqual(action, {'a1': 0})
 
     def test_agent_step_abstract(self):
         reward = 0
         obs = {'o1': 1}
+        self.agent.model = self.model
+        self.agent.init('')
         action = self.agent.step(reward, obs)
-        self.assertEqual(action, {})
+        self.assertEqual(action, {'a1': 0})
 
     def test_agent_end(self):
         self.assertEqual(self.agent.end(0), None)

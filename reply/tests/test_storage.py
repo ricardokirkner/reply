@@ -8,7 +8,7 @@ from reply.storage import Storage, TableStorage, BucketStorage
 class TestStorage(unittest.TestCase):
     def setUp(self):
         observations = Space({'o': Integer(0, 0)})
-        actions = Space({'a': Integer(0, 0)})
+        actions = Space({})
         self.model = Model(observations, actions)
         self.storage = Storage(self)
 

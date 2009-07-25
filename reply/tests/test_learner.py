@@ -8,11 +8,10 @@ from reply.storage import TableStorage
 
 class TestLearner(unittest.TestCase):
     def setUp(self):
-        self.policy = None
         self.learner = Learner(self)
 
     def test_learner_builder(self):
-        self.assertEqual(self.learner.policy, self.policy)
+        self.assertEqual(self.learner.agent, self)
 
     def test_learner_update(self):
         self.assertRaises(NotImplementedError, self.learner.update,
@@ -33,7 +32,7 @@ class TestQLearner(unittest.TestCase):
         self.learner = QLearner(self)
 
     def test_learner_builder(self):
-        self.assertEqual(self.learner.policy, self.policy)
+        self.assertEqual(self.learner.agent, self)
         self.assertEqual(self.learner.learning_rate, self.learning_rate)
         self.assertEqual(self.learner.learning_rate_decay,
                          self.learning_rate_decay)
@@ -47,7 +46,7 @@ class TestQLearner(unittest.TestCase):
         reward = 1
 
         self.learner.update(state, action, reward, next_state)
-        state_value = self.learner.policy.storage.get(state, action)
+        state_value = self.learner.agent.storage.get(state, action)
         expected_state_value = 1
         self.assertEqual(state_value, expected_state_value)
 
@@ -57,7 +56,7 @@ class TestQLearner(unittest.TestCase):
         reward = 0
 
         self.learner.update(state, action, reward, None)
-        state_value = self.learner.policy.storage.get(state, action)
+        state_value = self.learner.agent.storage.get(state, action)
         expected_state_value = 0
         self.assertEqual(state_value, expected_state_value)
 
@@ -76,7 +75,7 @@ class TestSarsaLearner(unittest.TestCase):
         self.learner = SarsaLearner(self)
 
     def test_learner_builder(self):
-        self.assertEqual(self.learner.policy, self.policy)
+        self.assertEqual(self.learner.agent, self)
         self.assertEqual(self.learner.learning_rate, self.learning_rate)
         self.assertEqual(self.learner.learning_rate_decay,
                          self.learning_rate_decay)
@@ -90,7 +89,7 @@ class TestSarsaLearner(unittest.TestCase):
         reward = 1
 
         self.learner.update(state, action, reward, next_state)
-        state_value = self.learner.policy.storage.get(state, action)
+        state_value = self.learner.agent.storage.get(state, action)
         expected_state_value = 1
         self.assertEqual(state_value, expected_state_value)
 
@@ -100,7 +99,7 @@ class TestSarsaLearner(unittest.TestCase):
         reward = 0
 
         self.learner.update(state, action, reward, None)
-        state_value = self.learner.policy.storage.get(state, action)
+        state_value = self.learner.agent.storage.get(state, action)
         expected_state_value = 0
         self.assertEqual(state_value, expected_state_value)
 
