@@ -90,6 +90,8 @@ class HanoiEnvironment(Environment):
     problem_type = "episodic"
     discount_factor = 0.8
     rewards = Integer(-1, 1)
+    num_pegs = 3
+    num_discs = 3
     initial_peg = 0
     model = build_model()
     last_action = None
@@ -255,14 +257,14 @@ class HanoiExperiment(Experiment):
 
         for p in range(num_pegs):
             # draw the peg
-            px = 100 + p*200
+            px = 100 + p*((num_discs+1)*20)
             peg = pygame.Rect(px, 275, 20, 200)
             peg.bottom = self.y_size - 75
             draw.rect(self.screen, (100, 100, 100), peg)
 
             # draw the discs
             for i,d in enumerate(pegs[p]):
-                w, h = 150 - (num_discs-1-d)*20, 20
+                w, h = (d+2)*20, 20
                 d_left = px - (w-20)/2
                 d_top = 75+h*i
                 disc = pygame.Rect(d_left, d_top, w, h)
