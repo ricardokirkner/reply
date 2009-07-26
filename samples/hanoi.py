@@ -55,10 +55,7 @@ class Peg(object):
         return disc in self.discs
 
 
-num_pegs = 3
-num_discs = 3
-
-def build_model(num_pegs, num_discs):
+def build_model(num_pegs=3, num_discs=3):
     discs = ['disc_%d' % disc for disc in xrange(num_discs)]
     spec = {}
     for disc in discs:
@@ -76,7 +73,7 @@ def is_valid_action(action):
 
 
 class HanoiAgent(LearningAgent):
-    model = build_model(num_pegs, num_discs)
+    model = build_model()
     storage_class = TableStorage
     policy_class = EGreedyPolicy
     learner_class = QLearner
@@ -93,10 +90,8 @@ class HanoiEnvironment(Environment):
     problem_type = "episodic"
     discount_factor = 0.8
     rewards = Integer(-1, 1)
-    num_discs = num_discs
-    num_pegs = num_pegs
     initial_peg = 0
-    model = build_model(num_pegs, num_discs)
+    model = build_model()
     last_action = None
 
     def init(self):
@@ -211,11 +206,13 @@ class HanoiEnvironment(Environment):
 
 
 class HanoiExperiment(Experiment):
-    model = build_model(num_pegs, num_discs)
-    max_episodes = 10000
+    max_episodes = 1000
 
     def setup(self):
-        x_size, y_size = 640, 480
+        num_pegs = self.env_call('get_num_pegs')
+        scale = num_pegs / 3.0
+
+        x_size, y_size = 640 * scale, 480 * scale
         self.screen = pygame.display.set_mode((x_size, y_size))
         self.clock = pygame.time.Clock()
 
@@ -323,6 +320,8 @@ if __name__ == "__main__":
             self.env = env
             self.experiment = experiment
 
+            model_updated = False
+
             if args is not None:
                 if args.max_episodes is not None:
                     experiment.max_episodes = args.max_episodes
@@ -330,18 +329,19 @@ if __name__ == "__main__":
                     experiment.max_steps = args.max_steps
                 if args.num_discs is not None:
                     env.num_discs = args.num_discs
-                    model = build_model(env.num_pegs, env.num_discs)
-                    env.model = model
-                    agent.model = model
+                    model_updated = True
                 if args.num_pegs is not None:
                     env.num_pegs = args.num_pegs
-                    model = build_model(env.num_pegs, env.num_discs)
-                    env.model = model
-                    agent.model = model
+                    model_updated = True
                 if args.initial_peg is not None:
                     env.initial_peg = args.initial_peg
                 #if args.log_level is not None:
                 #    LOG_LEVEL = args.log_level
+
+            if model_updated:
+                model = build_model(env.num_pegs, env.num_discs)
+                env.model = model
+                agent.model = model
 
             self.experiment.set_glue_experiment(self)
             self.experiment.run()
