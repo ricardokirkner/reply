@@ -1,3 +1,4 @@
+from reply.datatypes import Integer, Double, Space
 
 class Mapping(object):
 
@@ -20,10 +21,19 @@ class Mapping(object):
 
         """
         if inverse:
-            return self._inverse(argument)
+            if __debug__:
+                self.image.assert_valid(argument)
+            result =  self._inverse(argument)
+            if __debug__:
+                self.domain.assert_valid(result)
         else:
-            return self._value(argument)
+            if __debug__:
+                self.domain.assert_valid(argument)
+            result =  self._value(argument)
+            if __debug__:
+                self.image.assert_valid(result)
 
+        return result
     def _value(self, argument):
         """Return the image value of the argument."""
         raise NotImplementedError()
@@ -31,6 +41,9 @@ class Mapping(object):
     def _inverse(self, argument):
         """Return the domain value of the argument."""
         raise NotImplementedError()
+
+    def __repr__(self):
+        return "<mapping %s --> %s>" % (self.domain, self.image)
 
 
 class IdentityMapping(Mapping):
@@ -48,72 +61,74 @@ class IdentityMapping(Mapping):
 
     def _value(self, argument):
         """Return the image value of the argument.
-
-        If the argument is not within the range specified by the image, a
-        ValueError is raised.
-
         """
-        value = []
-        for key in self.domain.get_names_list():
-            if argument[key] > self.image[key].max or \
-               argument[key] < self.image[key].min:
-                raise ValueError("Domain attribute %s value (%s) outside of image range: "
-                    "[%s, %s]." % (key, argument[key], self.image[key].min,
-                                   self.image[key].max))
-            value.append(argument[key])
-        return tuple(value)
+        return argument
 
     def _inverse(self, argument):
         """Return the domain value of the argument.
-
-        If the argument is not within the range specified by the domain, a
-        ValueError is raised.
-
         """
-        item = {}
-        for key, value in zip(self.domain.get_names_list(), argument):
-            if value is not None:
-                if value > self.domain[key].max or value < self.domain[key].min:
-                    raise ValueError("Image value (%s) outside of domain range: [%s, %s]."
-                        % (value, self.domain[key].min, self.domain[key].max))
-            item[key] = value
-        return item
+        return argument
 
 
 class OffsetIdentityMapping(IdentityMapping):
 
     """A Mapping that implements an origin-offset Identity function."""
+    def __init__(self, domain):
+        image = Space(dict([ (key, Integer(0.0, domain[key].max - domain[key].min))
+            for key in domain.get_names_list()]))
+        super(IdentityMapping, self).__init__(domain, image)
 
     def _value(self, argument):
         """Return the image value of the argument.
-
-        If the argument is not within the range specified by the image, a
-        ValueError is raised.
-
         """
-        value = []
-        for key in self.domain.get_names_list():
-            if argument[key] > self.image[key].max or \
-               argument[key] < self.image[key].min:
-                   raise ValueError("Domain attribute %s value (%s) outside of image range: "
-                        "[%s, %s]." % (key, argument[key], self.image[key].min,
-                                       self.image[key].max))
-            value.append(argument[key] - self.domain[key].min)
-        return tuple(value)
+        item = {}
+        for key, value in argument.items():
+            item[key] = value - self.domain[key].min
+        return item
 
     def _inverse(self, argument):
         """Return the domain value of the argument.
-
-        If the argument is not within the range specified by the domain, a
-        ValueError is raised.
-
         """
         item = {}
-        for key, value in zip(self.image.get_names_list(), argument):
-            if value is not None:
-                value += self.domain[key].min
-                if value > self.domain[key].max or value < self.domain[key].min:
-                    raise ValueError("Image value (%s) outside of domain range: [%s, %s]."
-                        % (value, self.domain[key].min, self.domain[key].max))
+        for key, value in argument.items():
+            value += self.domain[key].min
             item[key] = value
+        return item
+
+class TileMapping(Mapping):
+    def __init__(self, domain, buckets):
+        """Maps the domain into a series of buckets per dimension
+
+        buckets should be a dictionary with:
+            key = the dimension name
+            value = the number of buckets for that dimension
+        """
+        self.domain = domain
+        self.buckets = dict( (k, float(v)) for k,v in buckets.items() )
+        for key in domain.get_names_list():
+            dim = domain[key]
+            if not (isinstance(dim, Integer) or isinstance(dim, Double)):
+                raise TypeError("Domain dimensions must be numerical")
+
+        self.image = Space(dict([ (key, Integer(0.0, float(buckets[key])-1))
+            for key in domain.get_names_list() ]))
+        self.ranges = dict([ (key, float(domain[key].max - domain[key].min))
+            for key in domain.get_names_list() ])
+
+    def _value(self, argument):
+        item = {}
+        for key, value in argument.items():
+            item[key] = int(min(self.image[key].max, max(0,
+                    (value - self.domain[key].min) /
+                    self.ranges[key] * self.buckets[key])))
+        return item
+
+    def _inverse(self, argument):
+        item = {}
+        for key, value in argument.items():
+            # report a value in the middle of the range
+            half_step = self.ranges[key] / self.buckets[key] / 2
+            item[key] = min(self.domain[key].max, max(self.domain[key].min,
+                    value / self.buckets[key] * self.ranges[key]
+                    + self.domain[key].min + half_step))
         return item

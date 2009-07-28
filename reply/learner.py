@@ -48,7 +48,6 @@ class QLearner(Learner):
             ( reward + self.value_discount*max_value_next - prev_value )
             )
         self.agent.storage.set(state, action, new_value)
-        action_values = self.agent.storage.get(state)
 
     def __eq__(self, other):
         return (super(QLearner, self).__eq__(other) and

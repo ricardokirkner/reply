@@ -97,6 +97,9 @@ class Space(object):
                     items.append(str(len(self._data[item])))
         return ' '.join(items)
 
+    def __repr__(self):
+        return "<Space %s>" % (self.__str__(),)
+
     def __eq__(self, other):
         return (self.spec == other.spec and
                 self.order == other.order)
@@ -163,10 +166,8 @@ class Space(object):
 
     def get_values(self):
         values = []
-        for _type in (Integer, Double, Char):
-            values.extend(self._data[_type].values())
-        unnamed = self._data.get('', [])
-        values.extend(unnamed)
+        for key in self.get_names_list():
+            values.append( self[key] )
         return values
 
     def _build_data(self):
@@ -176,3 +177,17 @@ class Space(object):
             _type = type(value)
             values = self._data.setdefault(_type, {})
             values[name] = value
+
+    def assert_valid(self, point):
+        """Check if point belongs to this space
+
+        Raise ValueError otherwise.
+        """
+        if not isinstance(point, dict):
+            raise ValueError("Value %s is not a point (dict)" % (point))
+        for key, value in point.items():
+            if value > self[key].max or \
+               value < self[key].min:
+                raise ValueError("Image attribute %s=%s outside of range: "
+                    "[%s, %s] in %s." % (key, value, self[key].min,
+                                   self[key].max, self))

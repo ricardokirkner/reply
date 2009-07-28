@@ -2,7 +2,7 @@ import numpy
 import unittest
 
 from reply.datatypes import Space, Integer, Model, Double
-from reply.storage import Storage, TableStorage, BucketStorage
+from reply.storage import Storage, TableStorage
 
 
 class TestStorage(unittest.TestCase):
@@ -89,7 +89,7 @@ class TestTableStorage(unittest.TestCase):
         expected_observations = [{'o1': 0, 'o2': 2}, {'o1': 0, 'o2': 3},
                                  {'o1': 0, 'o2': 4}, {'o1': 1, 'o2': 2},
                                  {'o1': 1, 'o2': 3}, {'o1': 1, 'o2': 4}]
-        self.assertEqual(observations, expected_observations)
+        self.assertEqual(sorted(observations), sorted(expected_observations))
 
     def test_get_actions(self):
         observations = Space({'o1': Integer(0, 1),
@@ -103,91 +103,6 @@ class TestTableStorage(unittest.TestCase):
                             {'a1': 1, 'a2': 1}, {'a1': 1, 'a2': 2}]
         self.assertEqual(actions, expected_actions)
 
-    def test_get_action(self):
-        observations = Space({'o1': Integer(0, 1),
-                              'o2': Integer(2, 4)})
-        actions = Space({'a1': Integer(0, 1),
-                         'a2': Integer(1, 2)})
-
-        self.model = Model(observations, actions)
-        storage = TableStorage(self)
-
-        action = storage.get_action((0,1))
-        expected_action = {'a1': 0, 'a2': 2}
-        self.assertEqual(action, expected_action)
-
-class TestBucketStorage(unittest.TestCase):
-    def test_simple_obs(self):
-        observations = Space({'o': Double(0, 1)})
-        actions = Space({'a': Double(0, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'o':10}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i in range(10):
-            self.assertEqual((i,) , self.storage.encode({'o':i/10.0}))
-
-    def test_simple_obs_with_offset(self):
-        observations = Space({'o': Double(-1, 1)})
-        actions = Space({'a': Double(0, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'o':10}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i in range(10):
-            self.assertEqual((i,) , self.storage.encode({'o':(i-4.9)/5}))
-
-    def test_max_value(self):
-        observations = Space({'o': Double(0, 1)})
-        actions = Space({'a': Double(0, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'o':10}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i in range(10):
-            self.storage.set(
-                {'o':(i/10.0)},
-                {'a':(i/10.0)},
-                i)
-        for i in range(10):
-            self.assertEqual(i ,
-                self.storage.get_max_value({'o':(i/10.0)}))
-
-    def test_get_actions(self):
-        observations = Space({'o': Double(0, 1)})
-        actions = Space({'a': Double(0, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'a':10}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i, a in enumerate(self.storage.get_actions()):
-            self.assertEqual(i/10.0, a['a'])
-
-    def test_get_action(self):
-        observations = Space({'o': Double(0, 1)})
-        actions = Space({'a': Double(0, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'a':10}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i, a in enumerate(self.storage.get_actions()):
-            self.assertEqual(self.storage.get_action((i,)), a)
-
-    def test_get_actions_encode(self):
-        observations = Space({'o': Double(0, 1)})
-        actions = Space({'a': Double(-1, 1)})
-        self.storage_observation_buckets = {'o':10}
-        self.storage_action_buckets = {'a':20}
-        self.model = Model(observations, actions)
-        self.storage = BucketStorage(self)
-
-        for i, a in enumerate(self.storage.get_actions()):
-            self.assertEqual( self.storage.encode({'o':0}, a), (0,i) )
 
 if __name__ == '__main__':
     unittest.main()
