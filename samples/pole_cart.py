@@ -18,7 +18,8 @@ from reply.environment import Environment
 from reply.experiment import Experiment
 from reply.learner import QLearner
 from reply.policy import EGreedyPolicy
-from reply.storage import BucketStorage
+from reply.storage import TableStorage
+from reply.mapping import TileMapping
 
 
 GRAVITY = 9.8
@@ -44,7 +45,7 @@ PoleCartModel = Model(observations, actions)
 
 class PoleCartAgent(LearningAgent):
     model = PoleCartModel
-    storage_class = BucketStorage
+    storage_class = TableStorage
     storage_observation_buckets = dict(position=1, velocity=10, angle=20, angle_velocity=10)
     storage_action_buckets = dict(force=20)
     policy_class = EGreedyPolicy
@@ -53,9 +54,14 @@ class PoleCartAgent(LearningAgent):
     learning_rate = 0.3
     learning_rate_decay = 0.999
     learning_rate_min = 0.005
-    random_action_rate = 1
+    random_action_rate = 0
     random_action_rate_decay = 0.99
-    random_action_rate_min = 0.01
+    random_action_rate_min = 0.00
+
+    def build_storage(self):
+        self.storage = self.storage_class(self,
+                TileMapping(observations, dict(velocity=10, position=1, angle=20, angle_velocity=10)),
+                TileMapping(actions, dict(force=20)))
 
 def cap(n, m, M):
     return max(m, min(M, n))
@@ -88,7 +94,8 @@ class PoleCartEnvironment(Environment):
 
     def step(self, action):
         force = (action['force']*50) * (1 + random.random()/10 - 0.05)
-        #print "FORCE", force
+        print "FORCE", action['force']*50
+
         costheta = math.cos(self.theta)
         sintheta = math.sin(self.theta)
 
@@ -175,6 +182,7 @@ class PoleCartExperiment(Experiment):
             alpha = 0.05
             step_average = alpha*steps + (1-alpha)*step_average
             print "Episode:", episode, "epsilon", self.glue_experiment.agent.policy.random_action_rate, "Steps:", steps, "avg:", step_average
+            print "***"*200
         self.cleanup()
 
 def run_simulation():
