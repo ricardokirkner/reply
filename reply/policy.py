@@ -16,6 +16,7 @@ class Policy(AgentComponent):
     def get_mappings(self):
         actions = []
         for observation in self.agent.storage.get_observations():
+            print "test", observation
             action = self.agent.storage.get_max_action(observation)
             actions.append((observation, action))
         return actions
@@ -39,12 +40,15 @@ class EGreedyPolicy(Policy):
                 self.random_action_rate_min == other.random_action_rate_min)
 
     def select_action(self, observation):
-        actions = self.agent.model.actions.get_items()
+        actions = self.agent.storage.get_actions()
         if random.random() < self.random_action_rate:
             action = random.choice(actions)
         else:
+            print "actions", actions
             action_values = [self.agent.storage.get(observation, action) for action in actions]
+            print "action values", action_values
             action_id = numpy.argmax(action_values)
+            print "selection", action_id
             action = actions[action_id]
         return action
 
@@ -63,8 +67,9 @@ class SoftMaxPolicy(Policy):
                 self.temperature == other.temperature)
 
     def select_action(self, observation):
-        actions = self.agent.model.actions.get_items()
+        actions = self.agent.storage.get_actions()
         action_values = [self.agent.storage.get(observation, action) for action in actions]
+        print action_values
         if self.temperature == 0:
             # this should be absolute greedy selection
             action_id = numpy.argmax(action_values)

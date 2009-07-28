@@ -56,109 +56,6 @@ class Storage(AgentComponent):
         raise NotImplementedError()
 
 
-class BucketStorage(Storage):
-    model = Parameter("The (observations, actions) model")
-
-    storage_observation_buckets = Parameter("the number of buckets to "\
-                                            "divide each dimension", {})
-    storage_action_buckets = Parameter("the number of buckets to "\
-                                            "divide each dimension", {})
-
-    def __init__(self, agent):
-        super(BucketStorage, self).__init__(agent)
-        okeys = sorted(self.model.observations.get_names_list())
-        akeys = sorted(self.model.actions.get_names_list())
-
-        osizes = [self.storage_observation_buckets.get(k,
-                    self.model.observations[k].max -
-                    self.model.observations[k].min + 1)
-                for k in okeys]
-        asizes = [self.storage_action_buckets.get(k,
-                    self.model.actions[k].max -
-                    self.model.actions[k].min + 1)
-                for k in akeys]
-        oranges = [self.model.observations[k].max -
-                    self.model.observations[k].min
-                for k in okeys]
-        aranges = [self.model.actions[k].max -
-                    self.model.actions[k].min
-                for k in akeys]
-        ooffsets = [ self.model.observations[k].min
-                for k in okeys]
-        aoffsets = [ self.model.actions[k].min
-                for k in akeys]
-        self.data = numpy.zeros(osizes + asizes)
-        self.sizes = osizes + asizes
-        self.action_sizes = asizes
-        self.action_keys = akeys
-        self.action_ranges = aranges
-        self.action_offsets = aoffsets
-        self.ranges = oranges + aranges
-        self.offsets = ooffsets + aoffsets
-        self.keys = okeys + akeys
-
-    def __eq__(self, other):
-        return (self.osizes == other.osizes and
-                self.asizes == other.asizes and
-                self.okeys == other.okeys and
-                self.akeys == other.akeys and
-                (self.data == other.data).all())
-
-    def encode(self, observation, action=None):
-        action = action if action else {}
-        item = [ y for (x,y) in
-                    sorted(observation.items()) + sorted(action.items()) ]
-        encoded =  [ min(self.sizes[i]-1,      # put in [0, size)
-                int(                    # int buckets
-                (item[i]- self.offsets[i]+0.0001) # moved to 0
-                / self.ranges[i] # ranged into [0,1]
-                * self.sizes[i])) # distribute among buckets
-                for i in range(len(item))
-               ]
-        return tuple(encoded)
-
-
-    def get(self, observation, action=None):
-        key = self.encode(observation, action)
-        return self.data[key]
-
-
-    def set(self, observation, action, value):
-        key = self.encode(observation, action)
-        #print "SET", key, "-->", value
-        self.data[key] = value
-
-    def clear(self):
-        self.data = numpy.zeros(self.data.shape)
-
-    def get_max_value(self, observation):
-        key = self.encode(observation)
-        return numpy.max(self.data[key])
-
-    def get_actions(self):
-        result = []
-        combinations = product(*[ xrange(s) for s in self.action_sizes ])
-        combinations =  list(combinations)
-        for c in combinations:
-            r = []
-            for i, v in enumerate(c):
-                v = float(v)
-                nv = v/self.action_sizes[i]*self.action_ranges[i] \
-                        + self.action_offsets[i]
-                r.append(nv)
-            result.append( dict(zip(self.action_keys, r)))
-        return result
-
-
-    def get_action(self, encoded_action):
-        return dict([
-            (k,
-                (float(encoded_action[i])/self.action_sizes[i]*self.action_ranges[i]
-                 + self.action_offsets[i])
-            )
-            for i, k in enumerate(self.action_keys)])
-
-
 class TableStorage(Storage):
 
     """A storage that uses a multi-dimensional table for its contents."""
@@ -187,6 +84,25 @@ class TableStorage(Storage):
             item_size = item.max - item.min + 1
             shape.append(item_size)
         self.data = numpy.zeros(shape)
+        self.all_actions = [ self.actions_mapping._inverse(item)
+                            for item in self.actions_mapping.image.get_items()]
+        self.all_observations = [ self.observations_mapping._inverse(item)
+                            for item in self.observations_mapping.image.get_items()]
+
+        self.observation_keys = observations_image.get_names_list()
+        self.action_keys = actions_image.get_names_list()
+
+    def encode(self, observation, action=None):
+        result = [ observation[key] for key in self.observation_keys ]
+        if action is not None:
+            result += [ action[key] for key in self.action_keys ]
+        return tuple(result)
+
+    def decode_action(self, action):
+        item = {}
+        for i, v in enumerate(action):
+            item[self.action_keys[i]] = v
+        return item
 
     def get(self, observation, action=None):
         """
@@ -208,10 +124,15 @@ class TableStorage(Storage):
             return self.data[item]
         IndexError: index (1) out of range (0<=index<1) in dimension 1
         """
-        item = self.observations_mapping.value(observation)
         if action is not None:
-            item += self.actions_mapping.value(action)
+            item = self.encode(
+                self.observations_mapping.value(observation),
+                self.actions_mapping.value(action))
+        else:
+            item = self.encode(
+                self.observations_mapping.value(observation))
         value = self.data[item]
+        print "GET", item, "-->", value
         return value
 
     def set(self, observation, action, value):
@@ -230,8 +151,9 @@ class TableStorage(Storage):
         >>> storage.get(observation, action)
         5.0
         """
-        item = self.observations_mapping.value(observation)
-        item += self.actions_mapping.value(action)
+        item = self.encode(
+            self.observations_mapping.value(observation),
+            self.actions_mapping.value(action))
         self.data[item] = value
 
     def clear(self):
@@ -267,21 +189,12 @@ class TableStorage(Storage):
         for item in self.actions_mapping.image.get_values():
             image_shape.append(item.max - item.min + 1)
         image_action = numpy.unravel_index(image_action_id, image_shape)
-        max_action = self.actions_mapping.value(image_action, inverse=True)
+        action = self.decode_action(image_action)
+        max_action = self.actions_mapping.value(action, inverse=True)
         return max_action
 
     def get_observations(self):
-        observation_space = self.observations_mapping.domain
-        for value in observation_space.get_items():
-            yield value
+        return self.all_observations
 
     def get_actions(self):
-        action_space = self.actions_mapping.domain
-        for value in action_space.get_items():
-            yield value
-
-    def get_action(self, action_image):
-        if not isinstance(action_image, (tuple, list)):
-            action_image = (action_image,)
-        action = self.actions_mapping.value(action_image, inverse=True)
-        return action
+        return self.all_actions
