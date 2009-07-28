@@ -2,12 +2,12 @@
 import numpy
 from itertools import product
 
-from reply.base import AgentComponent, Parameter
+from reply.base import AgentComponent, Parameter, PersistingObject
 from reply.datatypes import Integer, Space
 from reply.mapping import OffsetIdentityMapping
 
 
-class Storage(AgentComponent):
+class Storage(AgentComponent, PersistingObject):
 
     """A generic storage.
 
@@ -134,6 +134,21 @@ class BucketStorage(Storage):
     def get_max_value(self, observation):
         key = self.encode(observation)
         return numpy.max(self.data[key])
+
+    def get_max_action(self, observation):
+        values = self.get(observation)
+        image_action_id = values.argmax()
+        image_shape = []
+        for item in self.actions_mapping.image.get_values():
+            image_shape.append(item.max - item.min + 1)
+        image_action = numpy.unravel_index(image_action_id, image_shape)
+        max_action = self.actions_mapping.value(image_action, inverse=True)
+        return max_action
+
+    def get_observations(self):
+        observation_space = self.observations_mapping.domain
+        for value in observation_space.get_items():
+            yield value
 
     def get_actions(self):
         result = []

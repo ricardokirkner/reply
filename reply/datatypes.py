@@ -66,10 +66,11 @@ class Space(object):
         return self._data[item]
 
     def __getattr__(self, attr):
-        if attr in self.spec:
+        if hasattr(self, 'spec') and hasattr(self, '_data') and \
+           attr in self.spec:
             return self._data[attr]
         else:
-            return getattr(super(Space, self), attr)
+            raise AttributeError, attr
 
     def __str__(self):
         items = []

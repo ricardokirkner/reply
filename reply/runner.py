@@ -4,6 +4,7 @@ from reply.contrib import argparse
 from reply.glue import start_agent
 from reply.glue import start_environment
 from reply.glue import start_experiment
+from reply.util import ConfigureAction
 
 try:
     import rlglue
@@ -42,26 +43,86 @@ class Run(Command):
                             help="the maximum number of steps per "
                             "episodes to execute")
 
+        parser.add_argument("--save-agent", action=ConfigureAction,
+                            dest="save_agent",
+                            help="save the agent to disk on exit")
+        parser.add_argument("--load-agent", action=ConfigureAction,
+                            dest="load_agent",
+                            help="load the agent from disk on start")
+        parser.add_argument("--agent-name", type=str, dest="agent_name",
+                            help="prefix for the filename to use when "
+                            "saving/loading the agent")
+
+        parser.add_argument("--save-storage", action=ConfigureAction,
+                            dest="save_storage",
+                            help="save the storage to disk on exit")
+        parser.add_argument("--load-storage", action=ConfigureAction,
+                            dest="load_storage",
+                            help="load the storage from disk on start")
+        parser.add_argument("--storage-name", type=str, dest="storage_name",
+                            help="prefix for the filename to use when "
+                            "saving/loading the storage")
 
     def run(self, agent, env, experiment, args=None):
         self.agent = agent
         self.env = env
         self.experiment = experiment
 
+        self.save_agent = False
+        self.load_agent = False
+        self.agent_name = ""
+
+        self.save_storage = False
+        self.load_storage = False
+        self.storage_name = ""
+
         if args is not None:
             if args.max_episodes is not None:
                 experiment.max_episodes = args.max_episodes
             if args.max_steps is not None:
                 experiment.max_steps = args.max_steps
+            if args.save_agent:
+                self.save_agent = args.save_agent
+            if args.load_agent:
+                self.load_agent = args.load_agent
+            if args.agent_name:
+                self.agent_name = args.agent_name
+            if args.save_storage:
+                self.save_storage = args.save_storage
+            if args.load_storage:
+                self.load_storage = args.load_storage
+            if args.storage_name:
+                self.storage_name = args.storage_name
 
         self.experiment.set_glue_experiment(self)
 
         self.last_action = None
-        self.experiment.run()
+
+        if self.load_agent:
+            prefix = self.agent_name
+            self.agent = agent.load(prefix)
+            try:
+                print self.agent.storage.data
+            except:
+                pass
+        elif self.load_storage:
+            prefix = self.storage_name
+            self.agent.init(None)
+            self.agent.storage.load(prefix)
+
+        try:
+            self.experiment.run()
+        finally:
+            if self.save_agent:
+                prefix = self.agent_name
+                self.agent.save(prefix)
+            elif self.save_storage:
+                prefix = self.storage_name
+                self.agent.storage.save(prefix)
 
     def init(self):
         self.episode_reward = 0
-        return self.agent.init(self.env.init())
+        self.agent.init(self.env.init())
 
     def start(self):
         observation = self.env.start()
