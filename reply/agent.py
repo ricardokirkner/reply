@@ -45,11 +45,6 @@ class Agent(MessageHandler):
         return action
 
     def step(self, reward, observation):
-        print "IN", observation
-        print "CODED", self.storage.observations_mapping.value(observation)
-
-        print self.storage.get(observation)
-
         action = self.policy.select_action(observation)
         return action
 

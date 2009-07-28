@@ -44,11 +44,8 @@ class EGreedyPolicy(Policy):
         if random.random() < self.random_action_rate:
             action = random.choice(actions)
         else:
-            print "actions", actions
             action_values = [self.agent.storage.get(observation, action) for action in actions]
-            print "action values", action_values
             action_id = numpy.argmax(action_values)
-            print "selection", action_id
             action = actions[action_id]
         return action
 
