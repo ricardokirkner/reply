@@ -128,14 +128,6 @@ class TileMapping(Mapping):
         for key, value in argument.items():
             # report a value in the middle of the range
             half_step = self.ranges[key] / self.buckets[key] / 2
-            print "!", self.buckets[key], self.ranges[key]
-            print value, value/self.buckets[key],  value / self.buckets[key] * self.ranges[key],  value / self.buckets[key] * self.ranges[key] + self.domain[key].min
-            print value / self.buckets[key] * self.ranges[key] + self.domain[key].min + half_step, max(self.domain[key].min,
-                    value / self.buckets[key] * self.ranges[key]
-                    + self.domain[key].min + half_step), min(self.domain[key].max, max(self.domain[key].min,
-                    value / self.buckets[key] * self.ranges[key]
-                    + self.domain[key].min + half_step))
-
             item[key] = min(self.domain[key].max, max(self.domain[key].min,
                     value / self.buckets[key] * self.ranges[key]
                     + self.domain[key].min + half_step))

@@ -54,9 +54,9 @@ class PoleCartAgent(LearningAgent):
     learning_rate = 0.3
     learning_rate_decay = 0.999
     learning_rate_min = 0.005
-    random_action_rate = 0
+    random_action_rate = 1
     random_action_rate_decay = 0.99
-    random_action_rate_min = 0.00
+    random_action_rate_min = 0.01
 
     def build_storage(self):
         self.storage = self.storage_class(self,
@@ -83,18 +83,22 @@ class PoleCartEnvironment(Environment):
         return self.get_state()
 
     def get_state(self):
-        return dict(position=self.x,
+        return dict(position=cap(self.x,
+                                 observations.position.min,
+                                 observations.position.max),
                     velocity=cap(self.x_dot,
                                  observations.velocity.min,
                                  observations.velocity.max),
-                    angle=self.theta,
+                    angle=cap(self.theta,
+                                       observations.angle.min,
+                                       observations.angle.max),
                     angle_velocity=cap(self.theta_dot,
                                        observations.angle_velocity.min,
                                        observations.angle_velocity.max))
 
     def step(self, action):
         force = (action['force']*50) * (1 + random.random()/10 - 0.05)
-        print "FORCE", action['force']*50
+        #print "FORCE", action['force']*50
 
         costheta = math.cos(self.theta)
         sintheta = math.sin(self.theta)
@@ -182,7 +186,6 @@ class PoleCartExperiment(Experiment):
             alpha = 0.05
             step_average = alpha*steps + (1-alpha)*step_average
             print "Episode:", episode, "epsilon", self.glue_experiment.agent.policy.random_action_rate, "Steps:", steps, "avg:", step_average
-            print "***"*200
         self.cleanup()
 
 def run_simulation():

@@ -132,7 +132,6 @@ class TableStorage(Storage):
             item = self.encode(
                 self.observations_mapping.value(observation))
         value = self.data[item]
-        print "GET", item, "-->", value
         return value
 
     def set(self, observation, action, value):

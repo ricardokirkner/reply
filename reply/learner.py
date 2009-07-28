@@ -48,10 +48,6 @@ class QLearner(Learner):
             ( reward + self.value_discount*max_value_next - prev_value )
             )
         self.agent.storage.set(state, action, new_value)
-        if next_state:
-            print "next state", self.agent.storage.observations_mapping.value(next_state)
-            print "max value next", max_value_next
-        print "SET", self.agent.storage.observations_mapping.value(state), "value", new_value
 
     def __eq__(self, other):
         return (super(QLearner, self).__eq__(other) and
