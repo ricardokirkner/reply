@@ -2,12 +2,12 @@
 import numpy
 from itertools import product
 
-from reply.base import AgentComponent, Parameter
+from reply.base import AgentComponent, Parameter, PersistingObject
 from reply.datatypes import Integer, Space
 from reply.mapping import OffsetIdentityMapping
 
 
-class Storage(AgentComponent):
+class Storage(AgentComponent, PersistingObject):
 
     """A generic storage.
 
