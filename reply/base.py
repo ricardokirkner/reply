@@ -1,3 +1,6 @@
+import cPickle as pickle
+import traceback
+
 class _nodefault(object): pass
 
 class Parameter(object):
@@ -28,3 +31,29 @@ class AgentComponent(object):
                     else:
                         new_value = value.default
                 setattr(self, name, new_value)
+
+
+class PersistingObject(object):
+    def load(self, prefix=""):
+        if not prefix:
+            prefix = self.__class__.__name__
+        filename = "%s.dump" % prefix.lower()
+        try:
+            f = open(filename, 'rb')
+            agent = pickle.load(f)
+            f.close()
+        except Exception:
+            print "%s could not be loaded. Continuing" % prefix
+            traceback.print_exc()
+            agent = self
+        return agent
+
+    def save(self, prefix=""):
+        if not prefix:
+            prefix = self.__class__.__name__
+        filename = "%s.dump" % prefix.lower()
+        f = open(filename, 'wb')
+        pickle.dump(self, f)
+        f.close()
+
+

@@ -206,6 +206,9 @@ class HanoiEnvironment(Environment):
     def on_get_num_discs(self):
         return self.num_discs
 
+    def on_get_initial_peg(self):
+        return self.initial_peg
+
 
 class HanoiExperiment(Experiment):
     max_episodes = 1000
@@ -214,7 +217,7 @@ class HanoiExperiment(Experiment):
         num_pegs = self.env_call('get_num_pegs')
         scale = num_pegs / 3.0
 
-        x_size, y_size = 640 * scale, 480 * scale
+        x_size, y_size = int(640 * scale), int(480 * scale)
         self.screen = pygame.display.set_mode((x_size, y_size))
         self.clock = pygame.time.Clock()
 
@@ -246,6 +249,8 @@ class HanoiExperiment(Experiment):
 
         num_pegs = self.env_call('get_num_pegs')
         num_discs = self.env_call('get_num_discs')
+        initial_peg = self.env_call('get_initial_peg')
+        color = {True: (0, 200, 0), False: (200, 0, 200)}
 
         pegs = []
         for peg in range(num_pegs):
@@ -262,6 +267,7 @@ class HanoiExperiment(Experiment):
             peg.bottom = self.y_size - 75
             draw.rect(self.screen, (100, 100, 100), peg)
 
+            won = len(pegs[p]) == num_discs and p != initial_peg
             # draw the discs
             for i,d in enumerate(pegs[p]):
                 w, h = (d+2)*20, 20
@@ -269,13 +275,16 @@ class HanoiExperiment(Experiment):
                 d_top = 75+h*i
                 disc = pygame.Rect(d_left, d_top, w, h)
                 disc.bottom = self.y_size - d_top
-                draw.rect(self.screen, (200,0,200), disc)
+                draw.rect(self.screen, color[won], disc)
 
         floor = pygame.Rect(0,0,self.x_size,75)
         floor.bottom = self.y_size
         draw.rect(self.screen, (100,100,100), floor)
 
         pygame.display.flip()
+        if won:
+            # stop the world! show everyone we learned!
+            self.clock.tick(2)
 
     def run(self):
         # setup screen
@@ -318,17 +327,9 @@ if __name__ == "__main__":
             #                    help="verbosity (0|1|2)")
 
         def run(self, agent, env, experiment, args=None):
-            self.agent = agent
-            self.env = env
-            self.experiment = experiment
-
             model_updated = False
 
             if args is not None:
-                if args.max_episodes is not None:
-                    experiment.max_episodes = args.max_episodes
-                if args.max_steps is not None:
-                    experiment.max_steps = args.max_steps
                 if args.num_discs is not None:
                     env.num_discs = args.num_discs
                     model_updated = True
@@ -345,8 +346,7 @@ if __name__ == "__main__":
                 env.model = model
                 agent.model = model
 
-            self.experiment.set_glue_experiment(self)
-            self.experiment.run()
+            super(HanoiRun, self).run(agent, env, experiment, args)
 
 
     r = Runner(HanoiAgent(), HanoiEnvironment(), HanoiExperiment())
