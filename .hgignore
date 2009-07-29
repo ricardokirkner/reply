@@ -1,0 +1,7 @@
+syntax: glob
+
+# ignore python compiled files
+*.pyc
+
+# ignore documentation build leftovers
+doc/build
