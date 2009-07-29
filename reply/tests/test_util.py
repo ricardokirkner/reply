@@ -13,7 +13,7 @@ else:
     from reply.contrib.TaskSpecVRLGLUE3 import TaskSpecParser
 
 from reply.datatypes import Char, Double, Integer, Space
-from reply.util import parse_spaces, build_spec, parse_names
+from reply.util import parse_spaces, build_spec
 from reply.util import TaskSpec, MessageHandler
 
 
@@ -38,8 +38,8 @@ class TestUtil(unittest.TestCase):
                                        'od3': Double(-0.07, 0.07),
                                        'oc1': Char(),
                                        'oc2': Char(),
-                                       '': []})
-        expected_actions = Space({'ai1': Integer(0, 4), '': []})
+                                       })
+        expected_actions = Space({'ai1': Integer(0, 4), })
 
         self.assertEqual(observations, expected_observations)
         self.assertEqual(actions, expected_actions)
@@ -63,9 +63,9 @@ class TestUtil(unittest.TestCase):
                                        'od3': Double(-0.07, 0.07),
                                        'oc1': Char(),
                                        'oc2': Char(),
-                                       '': []})
+                                       })
         expected_actions = Space({'': [Integer(0, 4)]})
-
+        print actions._data, expected_actions._data
         self.assertEqual(observations, expected_observations)
         self.assertEqual(actions, expected_actions)
 
@@ -77,7 +77,7 @@ class TestUtil(unittest.TestCase):
         expected_spec = {'a': Integer(0, 1),
                          'b': Double(0.0, 1.0),
                          'c': Char(),
-                         '': []}
+                         }
 
         self.assertEqual(spec, expected_spec)
 
@@ -86,24 +86,9 @@ class TestUtil(unittest.TestCase):
         values = {'INTS': [[0, 1], [1,2]], 'DOUBLES': [[0.0, 1.0], [1.0, 2.0]],
                   'CHARS': 2}
         spec = build_spec(names, values)
-        expected_spec = {'a': Integer(0, 1),
-                         'b': Double(0.0, 1.0),
-                         'c': Char(),
-                         '': [Integer(1, 2), Double(1.0, 2.0), Char()]}
 
-        self.assertEqual(spec, expected_spec)
-
-    def test_parse_names(self):
-        names = ['INTS', 'a', 'DOUBLES', 'b', 'CHARS', 'c']
-        values = {'INTS': [[0, 1]], 'DOUBLES': [[0.0, 1.0]], 'CHARS': 1}
-        result = {}
-        parse_names(names, values, result)
-
-        expected_result = {Integer: {'a': Integer(0, 1)},
-                           Double: {'b': Double(0.0, 1.0)},
-                           Char: {'c': Char()}}
-
-        self.assertEqual(result, expected_result)
+        self.assert_(all(x in spec.values())
+            for x in [Integer(1, 2), Double(1.0, 2.0), Char()])
 
 
 class TestTaskSpec(unittest.TestCase):
@@ -148,8 +133,8 @@ class TestTaskSpec(unittest.TestCase):
                               'od2': Double(-1.2, 0.5),
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
-        actions = Space({'ai1': Integer(0, 4), '': []})
+                              })
+        actions = Space({'ai1': Integer(0, 4),})
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -177,8 +162,8 @@ class TestTaskSpec(unittest.TestCase):
                               'od2': Double(-1.2, 0.5),
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
-        actions = Space({'': [Integer(0, 4)]})
+                              })
+        actions = Space({'var0': [Integer(0, 4)]})
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -197,8 +182,8 @@ class TestTaskSpec(unittest.TestCase):
         observations = {Integer: [Integer(0, 1)] * 3,
                         Double: [Double(-1.2, 0.5)] * 2 + [Double(-0.07, 0.07)],
                         Char: [Char()] * 0,
-                        '': []}
-        actions = {Integer: [Integer(0, 4)], Double: [], Char: [], '': []}
+                        }
+        actions = {Integer: [Integer(0, 4)], Double: [], Char: [], }
         rewards = Double(-5.0, 5.0)
         extra = "some other stuff goes here"
         task_spec = TaskSpec(version, problem_type, discount_factor,
@@ -227,8 +212,8 @@ class TestTaskSpec(unittest.TestCase):
                               'od2': Double(-1.2, 0.5),
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
-        actions = Space({'ai1': Integer(0, 4), '': []})
+                              })
+        actions = Space({'ai1': Integer(0, 4), })
         rewards = Double(-5.0, 5.0)
         extra = "some other stuff goes here"
         task_spec = TaskSpec(version, problem_type, discount_factor,
@@ -252,8 +237,8 @@ class TestTaskSpec(unittest.TestCase):
                               'od2': Double(-1.2, 0.5),
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
-        actions = Space({'ai1': Integer(0, 4), '': []})
+                              })
+        actions = Space({'ai1': Integer(0, 4), })
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1"
@@ -286,10 +271,10 @@ class TestTaskSpec(unittest.TestCase):
                               'od2': Double(-1.2, 0.5),
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
+                              })
         actions = Space({'ai1': Integer(0, 4), 'ad1': Double(0.0, 1.0),
                          'ac1': Char(), 'ac2': Char(),
-                         '': []})
+                         })
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi1 oi2 oi3 DOUBLES od1 od2 od3 " \
             "CHARS oc1 oc2 ACTIONS INTS ai1 DOUBLES ad1 CHARS ac1 ac2 "
@@ -321,8 +306,8 @@ class TestTaskSpec(unittest.TestCase):
                               'od3': Double(-1.2, 0.5),
                               'od2': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
-                              '': []})
-        actions = Space({'ai2': Integer(0, 4), '': []})
+                              })
+        actions = Space({'ai2': Integer(0, 4), })
         rewards = Double(-5.0, 5.0)
         extra = "OBSERVATIONS INTS oi3 oi1 oi2 DOUBLES od3 od1 od2 " \
             "CHARS oc1 oc2 ACTIONS INTS ai2"
@@ -346,7 +331,13 @@ class TestTaskSpec(unittest.TestCase):
         other = TaskSpec.parse(task_spec_str)
         self.assertEqual(task_spec, other)
 
-
+    def test_task_spec_noempty(self):
+        task_spec_str =  "VERSION RL-Glue-3.0 PROBLEMTYPE episodic DISCOUNTFACTOR 1.0 " \
+            "OBSERVATIONS INTS (-10 10) (-10 10) ACTIONS INTS (0 3) REWARDS (-1 0) " \
+            "EXTRA OBSERVATIONS INTS x y ACTIONS INTS dir"
+        task_spec = TaskSpec.parse(task_spec_str)
+        self.assert_(not '' in task_spec.observations._data)
+        self.assert_(not '' in task_spec.actions._data)
 class TestMessageHandler(unittest.TestCase):
     def setUp(self):
         class TestHandler(MessageHandler):

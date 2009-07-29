@@ -13,6 +13,12 @@ class Number(Dimension):
         return type(self) == type(other) and \
             (self.min == other.min and self.max == other.max)
 
+    def assert_belongs(self, value):
+        if value > self.max or \
+            value < self.min:
+             raise ValueError("Image attribute %s outside of range: "
+                 "[%s, %s] in %s." % (value, self.min,
+                                   self.max, self))
 
 class Integer(Number):
     def __str__(self):
@@ -28,7 +34,9 @@ class Char(Dimension):
     def __eq__(self, other):
         return True
 
-
+    def assert_belongs(self, value):
+        if not isinstance(value, str) or len(value) != 1:
+            raise ValueError("Value %s is not char" % (value,))
 class Model(object):
     def __init__(self, observations=None, actions=None):
         self.observations = self._build_space(observations)
@@ -185,8 +193,4 @@ class Space(object):
         if not isinstance(point, dict):
             raise ValueError("Value %s is not a point (dict)" % (point))
         for key, value in point.items():
-            if value > self[key].max or \
-               value < self[key].min:
-                raise ValueError("Image attribute %s=%s outside of range: "
-                    "[%s, %s] in %s." % (key, value, self[key].min,
-                                   self[key].max, self))
+            self[key].assert_belongs(value)

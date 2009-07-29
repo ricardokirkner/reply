@@ -130,6 +130,8 @@ class TestRLGlueAgent(unittest.TestCase):
         observation = Observation()
         observation.intArray = [1,0]
         reward = -1
+        print dir(self.agent)
+        print self.agent.model.observations._data
         action = self.proxy.agent_step(reward, observation)
 
         expected_action = Action()

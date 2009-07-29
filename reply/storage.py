@@ -182,13 +182,15 @@ class TableStorage(Storage):
         return max_value
 
     def get_max_action(self, observation):
+        print "observation", observation
         values = self.get(observation)
         image_action_id = values.argmax()
         image_shape = []
         for item in self.actions_mapping.image.get_values():
-            image_shape.append(item.max - item.min + 1)
+            image_shape.append(int(item.max - item.min + 1))
         image_action = numpy.unravel_index(image_action_id, image_shape)
         action = self.decode_action(image_action)
+        print "GOT ACTION", action, image_action, image_action_id, values, image_shape
         max_action = self.actions_mapping.value(action, inverse=True)
         return max_action
 

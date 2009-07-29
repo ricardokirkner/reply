@@ -57,7 +57,8 @@ def parse_spaces(extra, parser):
     return (observations, actions)
 
 def build_spec(names, values):
-    spec = {'': []}
+    spec = {}
+    varcount = 0
     for _type in ('INTS', 'DOUBLES', 'CHARS'):
         i = 0
         if _type == 'INTS':
@@ -71,12 +72,11 @@ def build_spec(names, values):
                     spec[name] = Integer(*value)
                     i += 1
             # build ints by value
-            unnamed = []
             while i < len(int_values):
                 value = int_values[i]
-                unnamed.append(Integer(*value))
+                spec["var_"+str(varcount)] = Integer(*value)
+                varcount += 1
                 i += 1
-            spec[''].extend(unnamed)
         elif _type == 'DOUBLES':
             double_values = values['DOUBLES']
             if 'DOUBLES' in names:
@@ -88,12 +88,11 @@ def build_spec(names, values):
                     spec[name] = Double(*value)
                     i += 1
             # build doubles by value
-            unnamed = []
             while i < len(double_values):
                 value = double_values[i]
-                unnamed.append(Double(*value))
+                spec["var_"+str(varcount)] = Double(*value)
+                varcount += 1
                 i += 1
-            spec[''].extend(unnamed)
         elif _type == 'CHARS':
             char_values = range(values['CHARS'])
             if 'CHARS' in names:
@@ -104,42 +103,12 @@ def build_spec(names, values):
                     spec[name] = Char()
                     i += 1
             # build chars by value
-            unnamed = []
             while i < len(char_values):
                 value = char_values[i]
-                unnamed.append(Char())
+                spec["var_"+str(varcount)] = Char()
+                varcount += 1
                 i += 1
-            spec[''].extend(unnamed)
     return spec
-
-def parse_names(names, values, result):
-    i = 0
-    while i < len(names):
-        name = names[i]
-        if name == 'INTS':
-            data = {}
-            i += 1
-            for value in values['INTS']:
-                name = names[i]
-                data[name] = Integer(*value)
-                i += 1
-            result[Integer] = data
-        elif name == 'DOUBLES':
-            data = {}
-            i += 1
-            for value in values['DOUBLES']:
-                name = names[i]
-                data[name] = Double(*value)
-                i += 1
-            result[Double] = data
-        elif name == 'CHARS':
-            data = {}
-            i += 1
-            for j in xrange(values['CHARS']):
-                name = names[i]
-                data[name] = Char()
-                i += 1
-            result[Char] = data
 
 
 class TaskSpec(object):
