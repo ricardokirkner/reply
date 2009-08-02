@@ -45,11 +45,9 @@ class Number(Dimension):
         Raise a ValueError otherwise.
 
         """
-        if value > self.max or \
-            value < self.min:
-             raise ValueError("Image attribute %s outside of range: "
-                 "[%s, %s] in %s." % (value, self.min,
-                                   self.max, self))
+        if value > self.max or value < self.min:
+            raise ValueError("Image attribute %s outside of range: "
+                "[%s, %s] in %s." % (value, self.min, self.max, self))
         return True
 
 class Integer(Number):

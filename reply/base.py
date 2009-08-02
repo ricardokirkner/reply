@@ -40,7 +40,7 @@ class AgentComponent(object):
             if isinstance(value, Parameter):
                 try:
                     new_value = getattr(agent, name)
-                except AttributeError, e:
+                except AttributeError:
                     if value.default == _nodefault:
                         raise AttributeError(
                             "Configuration of %s requires that the agent %s "\

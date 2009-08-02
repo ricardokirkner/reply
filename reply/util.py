@@ -205,8 +205,8 @@ def boolean(string):
 class ConfigureAction(argparse.Action):
     def __init__(self, option_strings, dest, default=None,
                  required=False, help=None, metavar=None,
-                 positive_prefixes=['--', '--with-', '--enable-'],
-                 negative_prefixes=['--no-', '--without-', '--disable-']):
+                 positive_prefixes=('--', '--with-', '--enable-'),
+                 negative_prefixes=('--no-', '--without-', '--disable-')):
         strings = []
         self.positive_strings = set()
         self.negative_strings = set()

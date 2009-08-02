@@ -70,7 +70,7 @@ class IdentityMapping(Mapping):
         return argument
 
 
-class OffsetIdentityMapping(IdentityMapping):
+class OffsetIdentityMapping(Mapping):
 
     """A Mapping that implements an origin-offset Identity function."""
 
@@ -83,9 +83,10 @@ class OffsetIdentityMapping(IdentityMapping):
         All Space values are shifted by their respective origin offset.
 
         """
-        image = Space(dict([ (key, Integer(0.0, domain[key].max - domain[key].min))
-            for key in domain.get_names_list()]))
-        super(IdentityMapping, self).__init__(domain, image)
+        image = Space(dict([ (key, Integer(0.0,
+            domain[key].max - domain[key].min)) \
+            for key in domain.get_names_list() ]))
+        super(OffsetIdentityMapping, self).__init__(domain, image)
 
     def _value(self, argument):
         """Return the image value of the argument."""
@@ -118,7 +119,7 @@ class TileMapping(Mapping):
     def __init__(self, domain, buckets):
         """Constructs a TileMapping object."""
         self.domain = domain
-        self.buckets = dict( (k, float(v)) for k,v in buckets.items() )
+        self.buckets = dict( (k, float(v)) for k, v in buckets.items() )
         for key in domain.get_names_list():
             dim = domain[key]
             if not (isinstance(dim, Integer) or isinstance(dim, Double)):

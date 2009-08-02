@@ -1,3 +1,4 @@
+import simplejson
 
 try:
     import rlglue

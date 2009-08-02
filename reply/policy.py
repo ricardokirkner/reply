@@ -82,7 +82,8 @@ class EGreedyPolicy(Policy):
         if random.random() < self.random_action_rate:
             action = random.choice(actions)
         else:
-            action_values = [self.agent.storage.get(observation, action) for action in actions]
+            action_values = [self.agent.storage.get(observation, action) \
+                             for action in actions]
             action_id = numpy.argmax(action_values)
             action = actions[action_id]
         return action
@@ -117,7 +118,8 @@ class SoftMaxPolicy(Policy):
     def select_action(self, observation):
         """Return the mapped action for the *observation*."""
         actions = self.agent.storage.get_actions()
-        action_values = [self.agent.storage.get(observation, action) for action in actions]
+        action_values = [self.agent.storage.get(observation, action) \
+                         for action in actions]
         print action_values
         if self.temperature == 0:
             # this should be absolute greedy selection
