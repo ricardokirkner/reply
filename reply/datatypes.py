@@ -19,6 +19,7 @@ class Number(Dimension):
              raise ValueError("Image attribute %s outside of range: "
                  "[%s, %s] in %s." % (value, self.min,
                                    self.max, self))
+        return True
 
 class Integer(Number):
     def __str__(self):
@@ -37,6 +38,9 @@ class Char(Dimension):
     def assert_belongs(self, value):
         if not isinstance(value, str) or len(value) != 1:
             raise ValueError("Value %s is not char" % (value,))
+        return True
+
+
 class Model(object):
     def __init__(self, observations=None, actions=None):
         self.observations = self._build_space(observations)
@@ -195,3 +199,4 @@ class Space(object):
             raise ValueError("Value %s is not a point (dict)" % (point))
         for key, value in point.items():
             self[key].assert_belongs(value)
+        return True

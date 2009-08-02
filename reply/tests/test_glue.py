@@ -44,7 +44,7 @@ class TestRLGlue(unittest.TestCase):
         action.intArray = [0]
         reply_action = adapt(action, space)
 
-        expected_action = {'choice': 0, '': []}
+        expected_action = {'choice': 0}
 
         self.assertEquals(reply_action, expected_action)
 
@@ -55,7 +55,7 @@ class TestRLGlue(unittest.TestCase):
         action.intArray[0] = 0
         reply_action = adapt(action, space)
 
-        expected_action = {'choice': 0, '': []}
+        expected_action = {'choice': 0}
 
         self.assertEquals(reply_action, expected_action)
 
@@ -93,8 +93,7 @@ class TestRLGlue(unittest.TestCase):
         reply_action = adapt(action, space)
 
         expected_action = {'x': -0.23, 'y': 0.02,
-                           'angle': 23, 'spin': 'u',
-                           '': []}
+                           'angle': 23, 'spin': 'u'}
 
         self.assertEqual(reply_action, expected_action)
 
@@ -130,8 +129,6 @@ class TestRLGlueAgent(unittest.TestCase):
         observation = Observation()
         observation.intArray = [1,0]
         reward = -1
-        print dir(self.agent)
-        print self.agent.model.observations._data
         action = self.proxy.agent_step(reward, observation)
 
         expected_action = Action()

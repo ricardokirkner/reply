@@ -46,6 +46,10 @@ class TestIdentityMapping(unittest.TestCase):
                           lambda x: self.mapping.value(x, inverse=True),
                           value_image)
 
+    def test_repr(self):
+        expected_repr = "<mapping %s --> %s>" % (self.domain, self.domain)
+        self.assertEqual(repr(self.mapping), expected_repr)
+
 
 class TestOffsetIdentityMapping(unittest.TestCase):
     def setUp(self):
