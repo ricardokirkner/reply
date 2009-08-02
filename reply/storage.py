@@ -13,6 +13,10 @@ class Storage(AgentComponent, PersistingObject):
 
     Storage defines the common API for all storage types.
 
+    Parameters:
+
+    - model -- the (observation, action) model
+
     """
 
     model = Parameter("The (observations, actions) model")
@@ -36,23 +40,35 @@ class Storage(AgentComponent, PersistingObject):
         self.actions_mapping = actions_mapping
 
     def __getitem__(self, item):
-        """Return the content associated to the parameter item."""
+        """Return the content associated to the *item*."""
         return self.get(item)
 
     def __setitem__(self, item, value):
-        """Set the content associated to the parameter item."""
+        """Set the content associated to the *item*."""
         self.set(item, value)
 
     def get(self, item):
-        """Return the content assocaited to the parameter item."""
+        """Return the content assocaited to the *item*.
+
+        Raise a NotImplemntedError, as this method is supposed to be overriden.
+
+        """
         raise NotImplementedError()
 
     def set(self, item, value):
-        """Set the content associated to the parameter item."""
+        """Set the content associated to the *item*.
+
+        Raise a NotImplementedError, as this method is supposed to be overriden.
+
+        """
         raise NotImplementedError()
 
     def clear(self):
-        """Reset the storage contents to its default value."""
+        """Reset the storage contents to its default value.
+
+        Raise a NotImplementedError, as this method is supposed to be overriden.
+
+        """
         raise NotImplementedError()
 
 
@@ -93,19 +109,32 @@ class TableStorage(Storage):
         self.action_keys = actions_image.get_names_list()
 
     def encode(self, observation, action=None):
+        """Return a tuple of integer indexes on the table data.
+
+        The tuple is the result of applying the mappings to both the
+        *observation* and *action*, if available.
+
+        """
         result = [ observation[key] for key in self.observation_keys ]
         if action is not None:
             result += [ action[key] for key in self.action_keys ]
         return tuple(result)
 
     def decode_action(self, action):
+        """Return an action.
+
+        Apply the inverse mapping to transform an integer index tuple
+        to the action represented by that tuple.
+
+        """
         item = {}
         for i, v in enumerate(action):
             item[self.action_keys[i]] = v
         return item
 
     def get(self, observation, action=None):
-        """
+        """Return the content assocaited to the *observation* and *action*.
+
         >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
@@ -123,6 +152,7 @@ class TableStorage(Storage):
           File "storage.py", line 80, in get
             return self.data[item]
         IndexError: index (1) out of range (0<=index<1) in dimension 1
+
         """
         if action is not None:
             item = self.encode(
@@ -135,7 +165,8 @@ class TableStorage(Storage):
         return value
 
     def set(self, observation, action, value):
-        """
+        """Set the content associated to the *observation* and *action*.
+
         >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
@@ -149,6 +180,7 @@ class TableStorage(Storage):
         >>> storage.set(observation, action, 5)
         >>> storage.get(observation, action)
         5.0
+
         """
         item = self.encode(
             self.observations_mapping.value(observation),
@@ -156,7 +188,8 @@ class TableStorage(Storage):
         self.data[item] = value
 
     def clear(self):
-        """
+        """Reset the storage contents to its default value.
+
         >>> from reply.datatypes import Integer, Model, Space
         >>> observations = Space({'o': Integer(0, 0)})
         >>> actions = Space({'a': Integer(0, 0)})
@@ -173,16 +206,18 @@ class TableStorage(Storage):
         >>> storage.clear()
         >>> storage.get(observation, action)
         0.0
+
         """
         self.data = numpy.zeros(self.data.shape)
 
     def get_max_value(self, observation):
+        """Return the maximum value associated the the *observation*."""
         values = self.get(observation)
         max_value = values.max()
         return max_value
 
     def get_max_action(self, observation):
-        print "observation", observation
+        """Return the maximum-value action for the *observation*."""
         values = self.get(observation)
         image_action_id = values.argmax()
         image_shape = []
@@ -190,12 +225,13 @@ class TableStorage(Storage):
             image_shape.append(int(item.max - item.min + 1))
         image_action = numpy.unravel_index(image_action_id, image_shape)
         action = self.decode_action(image_action)
-        print "GOT ACTION", action, image_action, image_action_id, values, image_shape
         max_action = self.actions_mapping.value(action, inverse=True)
         return max_action
 
     def get_observations(self):
+        """Return the list of possible observations."""
         return self.all_observations
 
     def get_actions(self):
+        """Return the list of possible actions."""
         return self.all_actions

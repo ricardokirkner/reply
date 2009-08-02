@@ -6,22 +6,38 @@ class Learner(AgentComponent):
     """Learner base class."""
 
     def on_episode_start(self):
+        """Handle an episode start."""
         pass
 
     def update(self, state, action, reward, next_state):
         """Update the (state, action, next_state) -> reward relationship.
 
         next_state is None when state is a final state.
+
+        Raise a NotImplementedError, as this method should be overriden.
         """
         raise NotImplementedError()
 
     def __eq__(self, other):
+        """Return True if both agents are equal."""
         return self.agent.policy == other.agent.policy
 
 
 class QLearner(Learner):
 
-    """Learner implementing the Q algorithm."""
+    """Learner implementing the Q algorithm.
+
+    Parmeters:
+
+    - learning_rate -- the agents learning rate
+
+    - learning_rate_decay -- the learning rate decay per episode
+
+    - learning_rate_min -- the minimum value for the learning rate
+
+    - value_discount -- the value discount
+
+    """
 
     learning_rate = Parameter("The agents learning rate")
     learning_rate_decay = Parameter("The learning rate decay per episode. "\
@@ -50,6 +66,7 @@ class QLearner(Learner):
         self.agent.storage.set(state, action, new_value)
 
     def __eq__(self, other):
+        """Return True if both learners are equal."""
         return (super(QLearner, self).__eq__(other) and
                 self.learning_rate == other.learning_rate and
                 self.learning_rate_decay == other.learning_rate_decay and

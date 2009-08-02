@@ -4,6 +4,14 @@ import traceback
 class _nodefault(object): pass
 
 class Parameter(object):
+
+    """A Parameter represents a parameter's abstraction.
+
+    It allows for automatically determining the availability of required
+    parameters, and their default values by means of introspection.
+
+    """
+
     def __init__(self, docstring, default=_nodefault):
         self.__doc__ = docstring
         self.default = default
@@ -13,7 +21,19 @@ class Parameter(object):
             "they have to be replaced by the expected parameter instance.")
 
 class AgentComponent(object):
+
+    """An AgentComponent represents an exchangable part within an agent."""
+
     def __init__(self, agent):
+        """Initialize the AgentComponent instance.
+
+        Initialization has two primary effects:
+
+        - Binds the component to the agent
+
+        - Validates that all required parameters are provided
+
+        """
         self.agent = agent
         for name in dir(self):
             value = getattr(self, name, None)
@@ -34,7 +54,17 @@ class AgentComponent(object):
 
 
 class PersistingObject(object):
+
+    """This is a mixin class providing persistence capabilities."""
+
     def load(self, prefix=""):
+        """Load an object from a file and return it.
+
+        The filename used for retrieving the pickled object is determined
+        by the object's class name. If present, *prefix* is prepended to the
+        object's class name for defining the filename.
+
+        """
         if not prefix:
             prefix = self.__class__.__name__
         filename = "%s.dump" % prefix.lower()
@@ -49,6 +79,13 @@ class PersistingObject(object):
         return agent
 
     def save(self, prefix=""):
+        """Save an object to a file.
+
+        The filename used for storing the pickled object is determined
+        by the object's class name. If present, *prefix* is prepended to the
+        object's class name for defining the filename.
+
+        """
         if not prefix:
             prefix = self.__class__.__name__
         filename = "%s.dump" % prefix.lower()
