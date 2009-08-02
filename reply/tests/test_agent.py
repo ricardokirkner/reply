@@ -18,16 +18,16 @@ class TestAgent(unittest.TestCase):
             "OBSERVATIONS INTS (0 1) ACTIONS INTS (0 1) REWARDS (0 1) " \
             "EXTRA OBSERVATIONS INTS o1 ACTIONS INTS a1"
         self.task_spec = TaskSpec.parse(self.task_spec_str)
-        actions = Space({'a1': Integer(0, 1), '': []})
-        observations = Space({'o1': Integer(0, 1), '': []})
+        actions = Space({'a1': Integer(0, 1)})
+        observations = Space({'o1': Integer(0, 1)})
         self.model = Model(observations, actions)
 
     def test_agent_builder(self):
         self.assertEqual(self.agent.initialized, False)
 
     def test_agent_init(self):
-        action_spec = {'a1': Integer(0, 1), '': []}
-        observation_spec = {'o1': Integer(0, 1), '': []}
+        action_spec = {'a1': Integer(0, 1)}
+        observation_spec = {'o1': Integer(0, 1)}
         self.agent.init(self.task_spec)
         self.assertEqual(self.agent.model.actions, Space(action_spec))
         self.assertEqual(self.agent.model.observations, Space(observation_spec))

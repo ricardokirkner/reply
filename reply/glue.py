@@ -178,28 +178,19 @@ def adapt(source, space, target=None):
         chars = space.get_names_list(Char)
 
         # build result dictionary
-        result = {'': []}
+        result = {}
         if len(source.intArray):
             for i, value in enumerate(source.intArray):
-                try:
-                    key = ints[i]
-                    result[key] = value
-                except IndexError:
-                    result[''].append(value)
+                key = ints[i]
+                result[key] = value
         if len(source.doubleArray):
             for i, value in enumerate(source.doubleArray):
-                try:
-                    key = doubles[i]
-                    result[key] = value
-                except IndexError:
-                    result[''].append(value)
+                key = doubles[i]
+                result[key] = value
         if len(source.charArray):
             for i, value in enumerate(source.charArray):
-                try:
-                    key = chars[i]
-                    result[key] = value
-                except IndexError:
-                    result[''].append(value)
+                key = chars[i]
+                result[key] = value
 
     return result
 

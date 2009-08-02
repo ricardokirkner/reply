@@ -15,6 +15,7 @@ else:
 from reply.datatypes import Char, Double, Integer, Space
 from reply.util import parse_spaces, build_spec
 from reply.util import TaskSpec, MessageHandler
+from reply.util import boolean, ConfigureAction
 
 
 class TestUtil(unittest.TestCase):
@@ -64,7 +65,7 @@ class TestUtil(unittest.TestCase):
                                        'oc1': Char(),
                                        'oc2': Char(),
                                        })
-        expected_actions = Space({'': [Integer(0, 4)]})
+        expected_actions = Space({'var_0': Integer(0, 4)})
         print actions._data, expected_actions._data
         self.assertEqual(observations, expected_observations)
         self.assertEqual(actions, expected_actions)
@@ -104,10 +105,13 @@ class TestTaskSpec(unittest.TestCase):
         self.assertEqual(task_spec.problem_type, 'episodic')
         self.assertEqual(task_spec.discount_factor, 1)
 
-        observations = Space({'': [Integer(0, 1), Integer(0, 1), Integer(0, 1),
-                                   Double(-1.2, 0.5), Double(-1.2, 0.5),
-                                   Double(-0.07, 0.07)]})
-        actions = Space({'': [Integer(0, 4)]})
+        observations = Space({'var_0': Integer(0, 1),
+                              'var_1': Integer(0, 1),
+                              'var_2': Integer(0, 1),
+                              'var_3': Double(-1.2, 0.5),
+                              'var_4': Double(-1.2, 0.5),
+                              'var_5': Double(-0.07, 0.07)})
+        actions = Space({'var_0': Integer(0, 4)})
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -163,7 +167,7 @@ class TestTaskSpec(unittest.TestCase):
                               'od3': Double(-0.07, 0.07),
                               'oc1': Char(), 'oc2': Char(),
                               })
-        actions = Space({'var0': [Integer(0, 4)]})
+        actions = Space({'var_0': Integer(0, 4)})
         self.assertEqual(task_spec.observations, observations)
         self.assertEqual(task_spec.actions, actions)
 
@@ -338,6 +342,8 @@ class TestTaskSpec(unittest.TestCase):
         task_spec = TaskSpec.parse(task_spec_str)
         self.assert_(not '' in task_spec.observations._data)
         self.assert_(not '' in task_spec.actions._data)
+
+
 class TestMessageHandler(unittest.TestCase):
     def setUp(self):
         class TestHandler(MessageHandler):
@@ -360,6 +366,15 @@ class TestMessageHandler(unittest.TestCase):
     def test_message_malformed(self):
         message = simplejson.dumps({'hola': 'mundo'})
         self.assertRaises(ValueError, self.handler.message, message)
+
+
+class TestArgParse(unittest.TestCase):
+    def test_boolean(self):
+        for val in ['1', 't', 'true', 'yes', 'on']:
+            self.assertTrue(boolean(val))
+        for val in ['0', 'f', 'false', 'no', 'off']:
+            self.assertFalse(boolean(val))
+        self.assertRaises(ValueError, boolean, '42')
 
 
 if __name__ == '__main__':

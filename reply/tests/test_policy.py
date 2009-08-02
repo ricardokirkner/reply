@@ -24,6 +24,9 @@ class TestPolicy(unittest.TestCase):
     def test_select_action(self):
         self.assertRaises(NotImplementedError, self.policy.select_action, None)
 
+    def test_on_episode_start(self):
+        self.assertEqual(self.policy.on_episode_start(), None)
+
 
 class TestEGreedyPolicy(unittest.TestCase):
     def setUp(self):
