@@ -13,7 +13,7 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(self.environment.initialized, False)
         self.assertEqual(self.environment.problem_type, 'episodic')
         self.assertEqual(self.environment.discount_factor, 1.0)
-        self.assertEqual(self.environment.rewards, Integer(0, 1))
+        self.assertEqual(self.environment.rewards, Double(0, 1))
         self.assertEqual(self.environment.model, Model())
 
     def test_environment_get_task_spec(self):
@@ -49,19 +49,12 @@ class TestEnviron(unittest.TestCase):
         self.assertEqual(task_spec, default_task_spec)
 
     def test_environment_start(self):
-        def start():
-            return {'o1': 1}
-        self.environment._start = start
         observation = self.environment.start()
-        self.assertEqual(self.environment.started, True)
-        self.assertEqual(observation, {'o1': 1})
+        self.assertEqual(observation, {})
 
     def test_environment_step(self):
-        def step(action):
-            return {'o1': 1}
-        self.environment._step = step
         observation = self.environment.step({})
-        self.assertEqual(observation, {'o1': 1})
+        self.assertEqual(observation, {'reward': 0, 'terminal': False})
 
     def test_environment_cleanup(self):
         self.assertEqual(self.environment.cleanup(), None)
