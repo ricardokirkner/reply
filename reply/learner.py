@@ -42,7 +42,8 @@ class QLearner(Learner):
     learning_rate = Parameter("The agents learning rate")
     learning_rate_decay = Parameter("The learning rate decay per episode. "\
                                     "(rate = decay * rate)", 1.0)
-    learning_rate_min = Parameter("The minimun value for the learning rate", 0.0)
+    learning_rate_min = Parameter("The minimun value for the learning rate",
+                                  0.0)
     value_discount = Parameter("The value discount", 1.0)
 
     def on_episode_start(self):

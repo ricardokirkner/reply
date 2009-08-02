@@ -1,4 +1,3 @@
-import simplejson
 
 class Experiment(object):
 
@@ -123,8 +122,7 @@ class Experiment(object):
         if self.glue_experiment is None:
             raise NotImplementedError(
                 "Glue Experiment has not been initialized yet.")
-        return self.glue_experiment.agent_call(function_name,
-                                               *args, **kwargs)
+        return self.glue_experiment.agent_call(function_name, *args, **kwargs)
 
     def agent_message(self, message):
         """Send a message to the agent, and return its response.
@@ -146,8 +144,7 @@ class Experiment(object):
         if self.glue_experiment is None:
             raise NotImplementedError(
                 "Glue Experiment has not been initialized yet.")
-        return self.glue_experiment.env_call(function_name,
-                                             *args, **kwargs)
+        return self.glue_experiment.env_call(function_name, *args, **kwargs)
 
     def env_message(self, message):
         """Send a message to the environment, and return its responde.

@@ -1,9 +1,8 @@
 """Storage classes."""
 import numpy
-from itertools import product
 
 from reply.base import AgentComponent, Parameter, PersistingObject
-from reply.datatypes import Integer, Space
+from reply.datatypes import Integer
 from reply.mapping import OffsetIdentityMapping
 
 
@@ -33,7 +32,8 @@ class Storage(AgentComponent, PersistingObject):
         """
         super(Storage, self).__init__(agent)
         if observations_mapping is None:
-            observations_mapping = OffsetIdentityMapping(self.model.observations)
+            observations_mapping = \
+                OffsetIdentityMapping(self.model.observations)
         if actions_mapping is None:
             actions_mapping = OffsetIdentityMapping(self.model.actions)
         self.observations_mapping = observations_mapping
@@ -100,10 +100,11 @@ class TableStorage(Storage):
             item_size = item.max - item.min + 1
             shape.append(item_size)
         self.data = numpy.zeros(shape)
-        self.all_actions = [ self.actions_mapping._inverse(item)
-                            for item in self.actions_mapping.image.get_items()]
-        self.all_observations = [ self.observations_mapping._inverse(item)
-                            for item in self.observations_mapping.image.get_items()]
+        self.all_actions = [self.actions_mapping.value(item, inverse=True)
+            for item in self.actions_mapping.image.get_items()]
+        self.all_observations = [self.observations_mapping.value(item,
+                                                                 inverse=True)
+            for item in self.observations_mapping.image.get_items()]
 
         self.observation_keys = observations_image.get_names_list()
         self.action_keys = actions_image.get_names_list()
