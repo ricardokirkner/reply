@@ -61,7 +61,7 @@ class PoleCartAgent(LearningAgent):
     def build_storage(self):
         self.storage = self.storage_class(self,
                 TileMapping(observations, dict(velocity=10, position=1, angle=20, angle_velocity=10)),
-                TileMapping(actions, dict(force=20)))
+                TileMapping(actions, dict(force=40)))
 
 def cap(n, m, M):
     return max(m, min(M, n))
@@ -131,6 +131,11 @@ class PoleCartEnvironment(Environment):
         if abs(math.degrees(self.theta)) > 80:
             terminal = True
             r = -1
+        else:
+            r = (10 - abs(math.degrees(self.theta)))/100.0
+            r -= abs(force/500)
+
+
         rot = self.get_state()
         rot.update(dict(reward=r, terminal=terminal))
         return rot
